@@ -1,3 +1,7 @@
+---
+tags: [index, navigation, overview]
+---
+
 # Raaz — Secrets & Config Manager
 
 A MERN + TypeScript secrets and environment-variable manager for teams,
@@ -21,6 +25,10 @@ rather than restating it.
 | [DATA_MODEL.md](./DATA_MODEL.md) | Entities, relationships, schema, constraints, migrations |
 | [API.md](./API.md) | Endpoints, contracts, errors, pagination, auth, versioning |
 | [FRONTEND.md](./FRONTEND.md) | Frontend blueprint: routes, pages, widgets, build phases, MVP boundary |
+| [MVP_BOARD.md](./MVP_BOARD.md) | Kanban board tracking MVP stories through Phases 1–5 |
+| [QUERIES.md](./QUERIES.md) | Dataview query reference for MVP scope, tasks, cross-refs |
+| [architecture.canvas](./architecture.canvas) | Visual architecture diagram (MERN, RBAC, Crypto, Deployment) |
+| [VAULT_README.md](./VAULT_README.md) | Obsidian vault setup guide for contributors and AI agents |
 
 ## Access Model (at a glance)
 

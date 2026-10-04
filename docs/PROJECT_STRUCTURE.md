@@ -1,3 +1,7 @@
+---
+tags: [structure, conventions, naming, boundaries, module-rules]
+---
+
 # Project Structure
 
 ## Folder Layout

@@ -1,0 +1,233 @@
+{
+  "nodes": [
+    {
+      "id": "1",
+      "type": "text",
+      "x": -800,
+      "y": -400,
+      "width": 300,
+      "height": 200,
+      "text": "**MERN ARCHITECTURE**\n\n```mermaid\nflowchart LR\n  Client[React SPA\n  client] --> Server[Express API\n  server]\n  Server --> DB[(MongoDB\n  Atlas)]\n  Server -.-> Crypto[AES-256-GCM\n  encrypt/decrypt]\n```\n\n[[ARCHITECTURE.md#System Overview]]\n[[../server/src/index.ts]]\n[[../client/src/main.tsx]]",
+      "color": "1"
+    },
+    {
+      "id": "2",
+      "type": "text",
+      "x": -400,
+      "y": -400,
+      "width": 300,
+      "height": 200,
+      "text": "**REPOSITORY BOUNDARIES**\n\n`client/` — presentation only\n- TanStack Query hooks\n- No business logic\n- No auth decisions\n\n`server/` — owns all\n- Authorization decisions\n- Encryption\n- Audit logging\n\n`packages/shared-schemas/` — Zod schemas\n- Client-safe at root\n- Server-only in `/internal`\n\n[[ARCHITECTURE.md#Repository Boundaries]]\n[[../server/src/middleware/]]\n[[../client/src/hooks/]]\n[[../packages/shared-schemas/src/]]",
+      "color": "2"
+    },
+    {
+      "id": "3",
+      "type": "text",
+      "x": 0,
+      "y": -400,
+      "width": 350,
+      "height": 250,
+      "text": "**RBAC MODEL**\n\n**Global**: `isPlatformAdmin: boolean`\n\n**Per-Project** (via `ProjectMembership`):\n- `projectAdmin` — full control\n- `developer` — dev write, all read + prod reveal (confirm)\n- `auditor` — metadata + audit only, never decrypt\n\n```mermaid\ngraph TD\n  PA[Platform Admin] -->|bypass| PM[Project Membership]\n  PM --> PA_R[projectAdmin]\n  PM --> DEV[developer]\n  PM --> AUD[auditor]\n```\n\n[[ARCHITECTURE.md#Access Model]]\n[[../server/src/middleware/require-project-role.middleware.ts]]\n[[../server/src/middleware/require-project-role-or-platform-admin.middleware.ts]]\n[[../server/src/models/ProjectMembership.ts]]",
+      "color": "3"
+    },
+    {
+      "id": "4",
+      "type": "text",
+      "x": -800,
+      "y": -100,
+      "width": 300,
+      "height": 250,
+      "text": "**AUTH FLOW**\n\n1. Login → bcrypt compare (timing-safe)\n2. JWT in httpOnly cookie (`SameSite=Lax`/`None`)\n3. `credentials: 'include'` on all requests\n4. `authenticate` middleware:\n   - Verify JWT signature\n   - Check `tokenVersion` match\n   - Attach `req.user`\n5. `tokenVersion` bump on bootstrap promotion\n\n[[ARCHITECTURE.md#Authentication Flow]]\n[[../server/src/middleware/authenticate.middleware.ts]]\n[[../server/src/controllers/auth.controller.ts]]\n[[../server/src/services/auth.service.ts]]",
+      "color": "4"
+    },
+    {
+      "id": "5",
+      "type": "text",
+      "x": -400,
+      "y": -100,
+      "width": 350,
+      "height": 300,
+      "text": "**RBAC MIDDLEWARE PIPELINE**\n\n```\nCSRF check → authenticate → requireProjectRole\n  → requireProjectStatus → handler\n```\n\n- **CSRF**: `Origin` == `CLIENT_ORIGIN` (pre-auth)\n- **authenticate**: JWT + `tokenVersion`\n- **requireProjectRole**: membership lookup\n  - No membership → **404** (existence hidden)\n  - Wrong role → **403** (logged if action enum)\n- **requireProjectRoleOrPlatformAdmin**: PA bypass\n- **requireProjectStatus**: `Project.status === 'active'`\n  - Order: membership FIRST, then status\n\n[[ARCHITECTURE.md#Authorization (RBAC) Pipeline]]\n[[../server/src/middleware/csrf.middleware.ts]]\n[[../server/src/middleware/require-project-role.middleware.ts]]\n[[../server/src/middleware/require-project-status.middleware.ts]]\n[[../server/src/services/membership.service.ts]]",
+      "color": "5"
+    },
+    {
+      "id": "6",
+      "type": "text",
+      "x": 0,
+      "y": -100,
+      "width": 350,
+      "height": 250,
+      "text": "**SECRET ENCRYPTION & REVEAL**\n\n```mermaid\nsequenceDiagram\n  Client->>Server: POST /secrets (plaintext)\n  Server->>Server: AES-256-GCM + random IV\n  Server->>DB: Store {ciphertext, iv, authTag}\n  Note: Plaintext never persisted\n\n  Client->>Server: POST /reveal (confirm: true)\n  Server->>Server: requireProjectRole check\n  alt authorized\n    Server->>DB: Fetch encrypted blob\n    Server->>Server: Decrypt + verify AAD\n    Server->>DB: Transaction: audit + metadata\n    Server-->>Client: Decrypted value\n  else denied\n    Server->>DB: Denied AuditLogEntry\n    Server-->>Client: 403\n  end\n```\n\n**AAD**: `${projectId}\|${secretId}\|${environment}\|${keyVersion}`\n\n[[ARCHITECTURE.md#Secret Encryption & Reveal Flow]]\n[[../server/src/services/encryption.service.ts]]\n[[../server/src/services/secrets.service.ts]]\n[[../server/src/controllers/secrets.controller.ts]]\n[[../client/src/components/SecretValueCell.tsx]]",
+      "color": "6"
+    },
+    {
+      "id": "7",
+      "type": "text",
+      "x": -800,
+      "y": 200,
+      "width": 300,
+      "height": 200,
+      "text": "**SESSION & AUTH POLICY**\n\n- JWT: 7 days (`JWT_EXPIRES_IN`)\n- `isActive` checked every request\n- Deactivation = immediate 401\n- Boot validation:\n  - `MASTER_KEY` = 32 bytes base64\n  - `MASTER_KEY_VERSION` = positive int\n  - `JWT_SECRET` ≥ 32 chars\n  - `algorithms: ['HS256']` pinned\n  - `COOKIE_SAMESITE` ∈ {Strict,Lax,None}\n  - `CLIENT_ORIGIN` required in prod\n\n[[ARCHITECTURE.md#Session & Auth Policy]]\n[[../server/src/index.ts (boot validation)]]\n[[../server/src/middleware/authenticate.middleware.ts]]",
+      "color": "7"
+    },
+    {
+      "id": "8",
+      "type": "text",
+      "x": -400,
+      "y": 200,
+      "width": 350,
+      "height": 250,
+      "text": "**CROSS-ORIGIN / CSRF**\n\n- Dev: same-site → `SameSite=Lax`\n- Prod (cross-site): `SameSite=None; Secure`\n- CORS: single `CLIENT_ORIGIN`, credentials\n- CSRF: `Origin` header == `CLIENT_ORIGIN`\n  - Missing `Origin` = 403\n- **Deployment topo**:\n  - Preferred: custom subdomains (`app/api.example.com`)\n  - Or: Vercel `/api/*` rewrite → Render\n  - Then `COOKIE_SAMESITE=Lax`\n- Logs: **must redact** `value` / `password`\n\n[[ARCHITECTURE.md#Cross-Origin Deployment & CSRF]]\n[[../server/src/middleware/csrf.middleware.ts]]\n[[../server/src/index.ts (CORS config)]]",
+      "color": "8"
+    },
+    {
+      "id": "9",
+      "type": "text",
+      "x": 0,
+      "y": 200,
+      "width": 350,
+      "height": 250,
+      "text": "**RATE LIMITING**\n\n| Endpoint | Key | Limit |\n|---|---|---|\n| `POST /auth/login` | IP | 30/15min |\n| `POST /auth/signup` | IP | 10/15min |\n| `POST /reveal` | User ID | 20/15min |\n\n- In-memory (resets on deploy)\n- `trust proxy` = exact hop count (critical!)\n- `skipSuccessfulRequests: true` on login\n- `429 RATE_LIMITED` in standard envelope\n- Not logged as `AuditLogEntry`\n\n[[ARCHITECTURE.md#Rate Limiting]]\n[[../server/src/middleware/rate-limiters.ts]]",
+      "color": "9"
+    },
+    {
+      "id": "10",
+      "type": "text",
+      "x": 400,
+      "y": 200,
+      "width": 300,
+      "height": 200,
+      "text": "**CLIENT CACHE POLICY**\n\n- Reveal = `useMutation` (not `useQuery`)\n- `retry: 0`, `gcTime: 0`\n- Value only in component state\n- Clears on: hide, unmount, env switch, `pagehide`\n- Auto-hide: 30s timer\n- `Cache-Control: no-store` on response\n- List/metadata = normal `useQuery` caching\n\n[[ARCHITECTURE.md#Client-Side Cache Policy]]\n[[../client/src/components/SecretValueCell.tsx]]\n[[../client/src/hooks/useSecrets.ts]]",
+      "color": "10"
+    },
+    {
+      "id": "11",
+      "type": "text",
+      "x": 400,
+      "y": -400,
+      "width": 300,
+      "height": 200,
+      "text": "**NON-FUNCTIONAL BOUNDARIES**\n\n- Decrypted value only via `/reveal`\n- Never in list/dashboard/metadata\n- Platform Admin ≠ project secret access\n- Denied attempts logged (if action enum)\n- Other denials: 404/403/429 not logged\n\n[[ARCHITECTURE.md#Non-Functional Boundaries]]",
+      "color": "11"
+    },
+    {
+      "id": "12",
+      "type": "text",
+      "x": 800,
+      "y": -400,
+      "width": 350,
+      "height": 250,
+      "text": "**AUDIT LOGGING PIPELINE**\n\n```mermaid\nflowchart LR\n  Middleware[Middleware\n  Denial] --> Service[Audit Service\n  writeEntry]\n  Handler[Route Handler\n  Success] --> Service\n  Service --> TX[(MongoDB\n  Transaction)]\n  TX --> Entry[AuditLogEntry\n  {action, result, env}]\n```\n\n- Middleware denials: role mismatch, archived project\n- Handler denials: dev write to prod, confirm missing\n- All writes in **single transaction** with action\n- `result: 'allowed' \| 'denied'`\n- 17 action enum values (12 project, 5 platform)\n- Append-only, no update/delete\n\n[[ARCHITECTURE.md#Authorization (RBAC) Pipeline]]\n[[DATA_MODEL.md#AuditLogEntry]]\n[[../server/src/services/audit.service.ts]]\n[[../server/src/models/AuditLogEntry.ts]]",
+      "color": "6"
+    },
+    {
+      "id": "13",
+      "type": "text",
+      "x": 800,
+      "y": -100,
+      "width": 350,
+      "height": 200,
+      "text": "**KEY ROTATION (POST-MVP)**\n\n```mermaid\ngraph LR\n  Current[MASTER_KEY v1\n  active] --> New[MASTER_KEY v2\n  staged]\n  New --> Reencrypt[Background Job:\n  re-encrypt secrets]\n  Reencrypt --> Retire[Retire v1\n  when refs=0]\n```\n\n- `Secret.encryptionKeyVersion` stored for future\n- **This build**: exactly 1 active key pair\n- Rotation = new subsystem (scheduler + re-encryption)\n- Additive schema change, no migration needed\n- See DATA_MODEL.md Encryption Key Lifecycle\n\n[[DATA_MODEL.md#Encryption Key Lifecycle]]\n[[../server/src/services/encryption.service.ts]]\n[[../packages/shared-schemas/src/internal/secret.ts]]",
+      "color": "11"
+    },
+    {
+      "id": "14",
+      "type": "text",
+      "x": 800,
+      "y": 200,
+      "width": 350,
+      "height": 250,
+      "text": "**DEPLOYMENT TOPOLOGY**\n\n```mermaid\ngraph LR\n  subgraph Same-Site [Preferred]\n    Vercel[app.example.com\n    Frontend]\n    Render[api.example.com\n    Backend]\n    Vercel -->|/api/* rewrite| Render\n  end\n  subgraph Cross-Site [Fallback]\n    Vercel2[vercel.app]\n    Render2[render.com]\n    Vercel2 -->|CORS + SameSite=None| Render2\n  end\n  Render --> Atlas[(MongoDB Atlas)]\n  Render2 --> Atlas\n```\n\n- **Same-site**: `COOKIE_SAMESITE=Lax`, stronger CSRF\n- **Cross-site**: `SameSite=None; Secure`, test 3PC blocking\n- `CLIENT_ORIGIN` must match browser Origin header\n- `COOKIE_DOMAIN` if subdomains used\n- No code changes — only env vars\n\n[[ARCHITECTURE.md#Cross-Origin Deployment & CSRF]]\n[[../server/.env.example]]\n[[../vercel.json (rewrite config)]]",
+      "color": "8"
+    },
+    {
+      "id": "15",
+      "type": "text",
+      "x": 800,
+      "y": -400,
+      "width": 350,
+      "height": 250,
+      "text": "**DATA MODEL (ER)**\n\n```mermaid\nerDiagram\n  USER ||--o{ PROJECT_MEMBERSHIP : has\n  PROJECT ||--o{ PROJECT_MEMBERSHIP : has\n  PROJECT ||--o{ SECRET : contains\n  USER ||--o{ AUDIT_LOG_ENTRY : performs\n  PROJECT ||--o{ AUDIT_LOG_ENTRY : scoped_to\n  SECRET ||--o{ AUDIT_LOG_ENTRY : referenced_by\n```\n\n**Key Constraints**:\n- `ProjectMembership`: unique (userId, projectId)\n- `Secret`: unique (projectId, environment, key)\n- `AuditLogEntry`: compound index (projectId, createdAt desc)\n- `PlatformConfig`: singleton `_id = 'singleton'`\n- `Environment`: enum on Secret, not separate collection\n\n[[DATA_MODEL.md#Entity Relationship Overview]]\n[[../server/src/models/User.ts]]\n[[../server/src/models/Project.ts]]\n[[../server/src/models/Secret.ts]]\n[[../server/src/models/ProjectMembership.ts]]\n[[../server/src/models/AuditLogEntry.ts]]",
+      "color": "2"
+    },
+    {
+      "id": "16",
+      "type": "text",
+      "x": -800,
+      "y": 450,
+      "width": 1200,
+      "height": 80,
+      "text": "**COLOR LEGEND**  🔴 **Auth/Session** (4,7)  |  🟢 **Authorization/RBAC** (3,5,11)  |  🔵 **Crypto/Secrets** (1,6,13)  |  🟡 **Cross-cutting Ops** (2,8,9,10,12)  |  ⚪ **Data/Infra** (14,15)  |  🟣 **Future/Post-MVP** (13)",
+      "color": "0"
+    },
+    {
+      "id": "17",
+      "type": "frame",
+      "x": -900,
+      "y": -500,
+      "width": 700,
+      "height": 350,
+      "label": "AUTHENTICATION",
+      "color": "4"
+    },
+    {
+      "id": "18",
+      "type": "frame",
+      "x": -500,
+      "y": -500,
+      "width": 900,
+      "height": 350,
+      "label": "AUTHORIZATION (RBAC)",
+      "color": "3"
+    },
+    {
+      "id": "19",
+      "type": "frame",
+      "x": -900,
+      "y": 100,
+      "width": 700,
+      "height": 400,
+      "label": "CRYPTOGRAPHY & SECRETS",
+      "color": "6"
+    },
+    {
+      "id": "20",
+      "type": "frame",
+      "x": 450,
+      "y": -500,
+      "width": 800,
+      "height": 600,
+      "label": "FUTURE / POST-MVP",
+      "color": "11"
+    },
+    {
+      "id": "21",
+      "type": "frame",
+      "x": 450,
+      "y": 100,
+      "width": 800,
+      "height": 400,
+      "label": "CROSS-CUTTING OPERATIONS",
+      "color": "8"
+    }
+  ],
+  "edges": [
+    {"from": "1", "to": "2"},
+    {"from": "1", "to": "3"},
+    {"from": "2", "to": "5"},
+    {"from": "3", "to": "5"},
+    {"from": "4", "to": "5"},
+    {"from": "5", "to": "6"},
+    {"from": "4", "to": "7"},
+    {"from": "7", "to": "8"},
+    {"from": "7", "to": "9"},
+    {"from": "6", "to": "10"},
+    {"from": "5", "to": "11"},
+    {"from": "5", "to": "12"},
+    {"from": "6", "to": "12"},
+    {"from": "6", "to": "13"},
+    {"from": "8", "to": "14"},
+    {"from": "2", "to": "15"},
+    {"from": "1", "to": "15"}
+  ]
+}

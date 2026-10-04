@@ -1,3 +1,7 @@
+---
+tags: [api, mvp, contract, endpoints, permissions]
+---
+
 # API
 
 ## Conventions

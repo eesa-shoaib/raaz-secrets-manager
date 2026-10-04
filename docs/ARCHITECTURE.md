@@ -1,3 +1,7 @@
+---
+tags: [architecture, mvp, decision, rbac, encryption, auth]
+---
+
 # Architecture
 
 ## System Overview
