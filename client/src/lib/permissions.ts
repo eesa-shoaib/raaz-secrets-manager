@@ -71,7 +71,10 @@ export function can(role: Role, action: Action, environment?: Environment): Perm
   return basePermission;
 }
 
-export function getRolePermissions(role: Role, environment?: Environment): Record<Action, Permission> {
+export function getRolePermissions(
+  role: Role,
+  environment?: Environment,
+): Record<Action, Permission> {
   const actions: Action[] = [
     'secrets.list',
     'secrets.create',

@@ -1,4 +1,13 @@
-import type { PublicUser, SignupInput, LoginInput, Project, ProjectCreateInput, SecretResponse, SecretCreateInput, AuditLogEntry } from '@raaz/shared-schemas';
+import type {
+  PublicUser,
+  SignupInput,
+  LoginInput,
+  Project,
+  ProjectCreateInput,
+  SecretResponse,
+  SecretCreateInput,
+  AuditLogEntry,
+} from '@raaz/shared-schemas';
 
 declare module '@tanstack/react-query' {
   interface Register {

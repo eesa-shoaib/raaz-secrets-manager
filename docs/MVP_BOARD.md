@@ -7,6 +7,7 @@ tags: [kanban, mvp, tracking]
 Source: [[PRODUCT.md#Cut from MVP]] | [[FRONTEND.md#Build Order]]
 
 ## Backlog
+
 - [ ] Story 1: Developer views a dev secret (AC: no confirm, audit logged)
 - [ ] Story 2: Developer reveals a production secret (AC: confirm modal, audit logged)
 - [ ] Story 3: Developer attempts to edit a production secret (AC: 403, denied audit)
@@ -21,6 +22,7 @@ Source: [[PRODUCT.md#Cut from MVP]] | [[FRONTEND.md#Build Order]]
 - [ ] Story 12: Audit records survive action failures (AC: transaction or 500)
 
 ## Phase 1 — Foundation
+
 - [ ] Project setup, routing shell
 - [ ] `AppShell` / `NavBar` / `TabNav`
 - [ ] `StatusPage`, `FullPageState`, `Toaster`
@@ -29,23 +31,27 @@ Source: [[PRODUCT.md#Cut from MVP]] | [[FRONTEND.md#Build Order]]
 - [ ] **Definition of Done**: Auth tests pass, 401 flow works
 
 ## Phase 2 — Auth and Projects
+
 - [ ] `LoginPage`, `SignupPage`
 - [ ] `ProjectsPage`, `ProjectCard`, create-project dialog
 - [ ] `ProjectLayout` with 404/403 branches
 - [ ] **Definition of Done**: Project list renders, create works, detail renders
 
 ## Phase 3 — Secrets
+
 - [ ] `SecretsPage`, `EnvironmentTabs`, `SecretsTable`
 - [ ] `SecretRow`, `SecretValueCell` (reveal lifecycle)
 - [ ] `RevealConfirmDialog`, create/edit/delete dialogs
 - [ ] **Definition of Done**: CRUD works, reveal dev works, prod confirm works, value never in cache
 
 ## Phase 4 — Members + Audit (Read-Only)
+
 - [ ] `MembersPage` (list + add dialog)
 - [ ] `ProjectAuditLogPage` (table + 3 filters, no pagination)
 - [ ] **Definition of Done**: Members add works, audit log renders with filters
 
 ## Phase 5 — MVP Hardening & Ship
+
 - [ ] P0 tests
 - [ ] Small browser smoke suite
 - [ ] Error and empty state pass
@@ -55,6 +61,7 @@ Source: [[PRODUCT.md#Cut from MVP]] | [[FRONTEND.md#Build Order]]
 - [ ] **Definition of Done**: All DoD items in [[FRONTEND.md#Definition of Done — MVP]]
 
 ## Post-MVP (Deferred)
+
 - [ ] Admin users UI (`/admin/users`) — backend exists
 - [ ] Admin projects UI (`/admin/projects`) — needs backend
 - [ ] Admin audit UI (`/admin/audit-log`) — needs backend

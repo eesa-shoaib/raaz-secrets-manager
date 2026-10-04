@@ -7,7 +7,9 @@ export const authLimiter = rateLimit({
   legacyHeaders: false,
   skipSuccessfulRequests: true,
   handler: (_req, res) => {
-    res.status(429).json({ error: { code: 'RATE_LIMITED', message: 'Too many attempts, try again in 15 minutes' } });
+    res.status(429).json({
+      error: { code: 'RATE_LIMITED', message: 'Too many attempts, try again in 15 minutes' },
+    });
   },
 });
 
@@ -17,7 +19,9 @@ export const signupLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   handler: (_req, res) => {
-    res.status(429).json({ error: { code: 'RATE_LIMITED', message: 'Too many attempts, try again in 15 minutes' } });
+    res.status(429).json({
+      error: { code: 'RATE_LIMITED', message: 'Too many attempts, try again in 15 minutes' },
+    });
   },
 });
 
@@ -28,7 +32,9 @@ export const revealLimiter = rateLimit({
   legacyHeaders: false,
   keyGenerator: (req) => req.user?.id ?? req.ip ?? 'unknown',
   handler: (_req, res) => {
-    res.status(429).json({ error: { code: 'RATE_LIMITED', message: 'Too many reveals, try again in 15 minutes' } });
+    res.status(429).json({
+      error: { code: 'RATE_LIMITED', message: 'Too many reveals, try again in 15 minutes' },
+    });
   },
 });
 

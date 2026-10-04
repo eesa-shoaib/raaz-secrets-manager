@@ -17,14 +17,24 @@ export function requireProjectRole(...allowedRoles: ('projectAdmin' | 'developer
     if (!allowedRoles.includes(role)) {
       const secretId = req.params.secretId;
       if (secretId) {
-        const secret = await SecretModel.findOne({ _id: secretId, projectId }, { environment: 1, key: 1 }).lean();
+        const secret = await SecretModel.findOne(
+          { _id: secretId, projectId },
+          { environment: 1, key: 1 },
+        ).lean();
         await writeDeniedAuditEntry({
           userId,
           projectId,
           secretId: secret?._id.toString() ?? secretId,
           secretKey: secret?.key ?? null,
           environment: secret?.environment ?? null,
-          action: req.method === 'POST' ? 'create' : req.method === 'PATCH' ? 'edit' : req.method === 'DELETE' ? 'delete' : 'reveal',
+          action:
+            req.method === 'POST'
+              ? 'create'
+              : req.method === 'PATCH'
+                ? 'edit'
+                : req.method === 'DELETE'
+                  ? 'delete'
+                  : 'reveal',
         });
       } else {
         await writeDeniedAuditEntry({
@@ -34,7 +44,9 @@ export function requireProjectRole(...allowedRoles: ('projectAdmin' | 'developer
         });
       }
 
-      res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Insufficient role for this action' } });
+      res
+        .status(403)
+        .json({ error: { code: 'FORBIDDEN', message: 'Insufficient role for this action' } });
       return;
     }
 

@@ -12,7 +12,10 @@ import { writeAuditEntry } from '../services/audit.service.js';
 const router = Router();
 
 router.get('/', authenticate, async (req, res) => {
-  const memberships = await mongoose.model('ProjectMembership').find({ userId: new Types.ObjectId(req.user!.id) }).lean();
+  const memberships = await mongoose
+    .model('ProjectMembership')
+    .find({ userId: new Types.ObjectId(req.user!.id) })
+    .lean();
   const projectIds = memberships.map((m) => m.projectId);
   const projects = await ProjectModel.find({ _id: { $in: projectIds } }).lean();
   const projectsWithRole = projects.map((p) => {
@@ -59,13 +62,19 @@ router.post('/', authenticate, validate(createProjectSchema), async (req, res) =
   }
 });
 
-router.get('/:projectId', authenticate, requireProjectRole('projectAdmin', 'developer', 'auditor'), requireProjectStatus, async (req, res) => {
-  const project = await ProjectModel.findById(req.params.projectId).lean();
-  if (!project) {
-    res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Project not found' } });
-    return;
-  }
-  res.json({ ...project, role: req.projectRole });
-});
+router.get(
+  '/:projectId',
+  authenticate,
+  requireProjectRole('projectAdmin', 'developer', 'auditor'),
+  requireProjectStatus,
+  async (req, res) => {
+    const project = await ProjectModel.findById(req.params.projectId).lean();
+    if (!project) {
+      res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Project not found' } });
+      return;
+    }
+    res.json({ ...project, role: req.projectRole });
+  },
+);
 
 export const projectRoutes = router;

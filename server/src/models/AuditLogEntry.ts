@@ -1,10 +1,23 @@
 import mongoose, { type Document } from 'mongoose';
 
 export type AuditAction =
-  | 'reveal' | 'create' | 'edit' | 'delete'
-  | 'member_added' | 'member_role_changed' | 'member_removed'
-  | 'project_created' | 'project_renamed' | 'project_environments_changed' | 'project_archived' | 'project_restored'
-  | 'user_activated' | 'user_deactivated' | 'platform_admin_granted' | 'platform_admin_revoked' | 'bootstrap_admin';
+  | 'reveal'
+  | 'create'
+  | 'edit'
+  | 'delete'
+  | 'member_added'
+  | 'member_role_changed'
+  | 'member_removed'
+  | 'project_created'
+  | 'project_renamed'
+  | 'project_environments_changed'
+  | 'project_archived'
+  | 'project_restored'
+  | 'user_activated'
+  | 'user_deactivated'
+  | 'platform_admin_granted'
+  | 'platform_admin_revoked'
+  | 'bootstrap_admin';
 
 export interface AuditLogEntryDoc extends Document {
   userId: mongoose.Types.ObjectId;
@@ -33,7 +46,7 @@ const auditSchema = new mongoose.Schema<AuditLogEntryDoc>(
     action: { type: String, required: true },
     result: { type: String, enum: ['allowed', 'denied'], required: true },
   },
-  { timestamps: { createdAt: true, updatedAt: false } }
+  { timestamps: { createdAt: true, updatedAt: false } },
 );
 
 auditSchema.index({ projectId: 1, createdAt: -1 });

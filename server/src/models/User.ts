@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema<UserDoc>(
     isPlatformAdmin: { type: Boolean, required: true, default: false },
     isActive: { type: Boolean, required: true, default: true },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export const UserModel = mongoose.model<UserDoc>('User', userSchema);

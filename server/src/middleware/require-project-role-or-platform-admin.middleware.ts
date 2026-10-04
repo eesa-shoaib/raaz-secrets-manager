@@ -1,7 +1,9 @@
 import type { Request, Response, NextFunction } from 'express';
 import { getUserRole } from '../services/membership.service.js';
 
-export function requireProjectRoleOrPlatformAdmin(...allowedRoles: ('projectAdmin' | 'developer' | 'auditor')[]) {
+export function requireProjectRoleOrPlatformAdmin(
+  ...allowedRoles: ('projectAdmin' | 'developer' | 'auditor')[]
+) {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     if (req.user!.isPlatformAdmin) {
       next();
@@ -18,7 +20,9 @@ export function requireProjectRoleOrPlatformAdmin(...allowedRoles: ('projectAdmi
     }
 
     if (!allowedRoles.includes(role)) {
-      res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Insufficient role for this action' } });
+      res
+        .status(403)
+        .json({ error: { code: 'FORBIDDEN', message: 'Insufficient role for this action' } });
       return;
     }
 

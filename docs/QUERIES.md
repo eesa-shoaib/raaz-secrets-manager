@@ -11,6 +11,7 @@ Save these in `docs/QUERIES.md` and pin in Obsidian for quick access.
 ## 📋 MVP Scope
 
 ### All MVP-tagged docs
+
 ```dataview
 TABLE file.link as Doc, tags, status
 FROM "docs"
@@ -19,6 +20,7 @@ SORT file.name
 ```
 
 ### MVP scope by domain
+
 ```dataview
 TABLE file.link as Doc, tags
 FROM "docs"
@@ -27,6 +29,7 @@ GROUP BY regexmatch(file.name, "(ARCHITECTURE|API|DATA_MODEL|FRONTEND|PRODUCT|PR
 ```
 
 ### Post-MVP items (from PRODUCT.md Cut table)
+
 ```dataview
 TABLE file.link as Doc, tags
 FROM "docs"
@@ -39,6 +42,7 @@ SORT file.name
 ## 🏷️ Tag Index
 
 ### All unique tags across docs
+
 ```dataview
 LIST tags
 FROM "docs"
@@ -47,19 +51,22 @@ GROUP BY tags
 ```
 
 ### Docs by tag
+
 ```dataview
 TABLE file.link as Doc
 FROM "docs"
 WHERE contains(tags, this.tag)
 SORT file.name
 ```
-*Usage: Replace `this.tag` with any tag (e.g., `mvp`, `architecture`, `api`, `rbac`, `encryption`)*
+
+_Usage: Replace `this.tag` with any tag (e.g., `mvp`, `architecture`, `api`, `rbac`, `encryption`)_
 
 ---
 
 ## ✅ Task Tracking
 
 ### All uncompleted tasks in docs
+
 ```dataview
 TASK FROM "docs"
 WHERE !completed
@@ -67,12 +74,14 @@ GROUP BY file.link
 ```
 
 ### Tasks by status
+
 ```dataview
 TASK FROM "docs"
 GROUP BY completed
 ```
 
 ### MVP Board tasks (from MVP_BOARD.md)
+
 ```dataview
 TASK FROM "docs/MVP_BOARD.md"
 WHERE !completed
@@ -84,19 +93,23 @@ GROUP BY section
 ## 🔗 Cross-References
 
 ### Backlinks to ARCHITECTURE.md
+
 ```dataview
 LIST
 FROM [[ARCHITECTURE.md]]
 ```
 
 ### Outgoing links from a doc
+
 ```dataview
 LIST
 FROM outgoing([[]])
 ```
-*Usage: Open any doc, run this to see what it links to*
+
+_Usage: Open any doc, run this to see what it links to_
 
 ### Orphaned docs (no incoming links)
+
 ```dataview
 LIST
 FROM "docs"
@@ -108,6 +121,7 @@ WHERE length(file.inlinks) = 0
 ## 📝 Frontmatter Queries
 
 ### All docs with their frontmatter
+
 ```dataview
 TABLE file.link as Doc, tags, status, date
 FROM "docs"
@@ -115,6 +129,7 @@ SORT file.name
 ```
 
 ### Docs missing frontmatter
+
 ```dataview
 TABLE file.link as Doc
 FROM "docs"
@@ -126,6 +141,7 @@ WHERE !tags
 ## 🎯 Phase Tracking (from FRONTEND.md)
 
 ### Phase completion status
+
 ```dataview
 TASK FROM "docs/FRONTEND.md"
 WHERE contains(text, "Phase")
@@ -137,6 +153,7 @@ GROUP BY status
 ## 🔍 Search Helpers
 
 ### Find all `TODO` comments in docs
+
 ```dataview
 LIST
 FROM "docs"
@@ -144,6 +161,7 @@ WHERE contains(file.content, "TODO")
 ```
 
 ### Find all `FIXME` / `XXX` in docs
+
 ```dataview
 LIST
 FROM "docs"
@@ -151,13 +169,15 @@ WHERE contains(file.content, "FIXME") OR contains(file.content, "XXX")
 ```
 
 ### Find docs mentioning a specific term
+
 ```dataview
 TABLE file.link as Doc
 FROM "docs"
 WHERE contains(lower(file.content), "encryption")
 SORT file.name
 ```
-*Replace `"encryption"` with any term*
+
+_Replace `"encryption"` with any term_
 
 ---
 
@@ -172,12 +192,12 @@ SORT file.name
 
 ## 🛠️ Dataview Tips
 
-| Tip | How |
-|-----|-----|
-| Inline query | `` `= this.tags` `` renders current note's tags |
-| Render as list | Add `LIST` instead of `TABLE` |
-| Limit results | Add `LIMIT 10` at end |
-| Date filtering | `WHERE date(file.ctime) >= date("2026-01-01")` |
-| Regex match | `WHERE regexmatch(file.name, "ARCHITECTURE|API")` |
+| Tip            | How                                             |
+| -------------- | ----------------------------------------------- |
+| Inline query   | `` `= this.tags` `` renders current note's tags |
+| Render as list | Add `LIST` instead of `TABLE`                   |
+| Limit results  | Add `LIMIT 10` at end                           |
+| Date filtering | `WHERE date(file.ctime) >= date("2026-01-01")`  |
+| Regex match    | `WHERE regexmatch(file.name, "ARCHITECTURE      | API")` |
 
 See: [Dataview Docs](https://blacksmithgu.github.io/obsidian-dataview/)

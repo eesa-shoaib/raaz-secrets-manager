@@ -1,7 +1,11 @@
 import type { Request, Response, NextFunction } from 'express';
 import { ProjectModel } from '../models/Project.js';
 
-export async function requireProjectStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function requireProjectStatus(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
   const projectId = req.params.projectId;
   const project = await ProjectModel.findById(projectId).select('status').lean();
   if (project?.status === 'archived') {

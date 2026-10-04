@@ -14,9 +14,12 @@ const membershipSchema = new mongoose.Schema<ProjectMembershipDoc>(
     projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true },
     role: { type: String, enum: ['projectAdmin', 'developer', 'auditor'], required: true },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 membershipSchema.index({ userId: 1, projectId: 1 }, { unique: true });
 
-export const ProjectMembershipModel = mongoose.model<ProjectMembershipDoc>('ProjectMembership', membershipSchema);
+export const ProjectMembershipModel = mongoose.model<ProjectMembershipDoc>(
+  'ProjectMembership',
+  membershipSchema,
+);

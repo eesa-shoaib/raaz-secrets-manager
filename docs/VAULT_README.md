@@ -39,24 +39,24 @@ raaz-secrets-manager/          ← Vault root
 
 ## Key Features
 
-| Feature | Files |
-|---------|-------|
-| **Tagged docs** | All `docs/*.md` have frontmatter tags (`#mvp`, `#architecture`, `#api`, etc.) |
-| **Code ↔ Doc links** | Wiki-links work across: `[[../server/src/middleware/auth.ts]]` |
-| **Visual architecture** | `architecture.canvas` — frames, legend, 15 nodes, code links |
-| **MVP tracking** | `MVP_BOARD.md` — Kanban with all 12 stories across 5 phases |
-| **Query reference** | `QUERIES.md` — Ready-to-paste Dataview queries |
-| **Templates** | `.obsidian/templates/` — Consistent note structure |
+| Feature                 | Files                                                                         |
+| ----------------------- | ----------------------------------------------------------------------------- |
+| **Tagged docs**         | All `docs/*.md` have frontmatter tags (`#mvp`, `#architecture`, `#api`, etc.) |
+| **Code ↔ Doc links**    | Wiki-links work across: `[[../server/src/middleware/auth.ts]]`                |
+| **Visual architecture** | `architecture.canvas` — frames, legend, 15 nodes, code links                  |
+| **MVP tracking**        | `MVP_BOARD.md` — Kanban with all 12 stories across 5 phases                   |
+| **Query reference**     | `QUERIES.md` — Ready-to-paste Dataview queries                                |
+| **Templates**           | `.obsidian/templates/` — Consistent note structure                            |
 
 ## Useful Shortcuts
 
-| Action | Shortcut |
-|--------|----------|
-| Quick open | `Ctrl+O` |
-| Command palette | `Ctrl+P` |
-| Graph view | `Ctrl+G` |
-| Daily note | `Ctrl+Shift+N` (with template) |
-| New from template | `Ctrl+N` → choose template |
+| Action            | Shortcut                       |
+| ----------------- | ------------------------------ |
+| Quick open        | `Ctrl+O`                       |
+| Command palette   | `Ctrl+P`                       |
+| Graph view        | `Ctrl+G`                       |
+| Daily note        | `Ctrl+Shift+N` (with template) |
+| New from template | `Ctrl+N` → choose template     |
 
 ## Maintenance
 

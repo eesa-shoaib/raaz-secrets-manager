@@ -36,6 +36,8 @@ export async function writeAuditEntry(params: WriteAuditEntryParams): Promise<vo
   }
 }
 
-export async function writeDeniedAuditEntry(params: Omit<WriteAuditEntryParams, 'result'>): Promise<void> {
+export async function writeDeniedAuditEntry(
+  params: Omit<WriteAuditEntryParams, 'result'>,
+): Promise<void> {
   await writeAuditEntry({ ...params, result: 'denied' });
 }

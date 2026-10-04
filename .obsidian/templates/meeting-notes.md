@@ -7,29 +7,38 @@ attendees: []
 # Team Sync — <% tp.date.now("MMMM Do, YYYY") %>
 
 ## Attendees
-- 
+
+-
 
 ## Agenda
-1. 
-2. 
-3. 
+
+1.
+2.
+3.
 
 ## Updates
+
 ### Person A
-- 
+
+-
 
 ### Person B
-- 
+
+-
 
 ## Decisions
-- 
+
+-
 
 ## Action Items
-- [ ]  — @person — due:
-- [ ]  — @person — due:
+
+- [ ] — @person — due:
+- [ ] — @person — due:
 
 ## Blockers
-- 
+
+-
 
 ## Parking Lot
+
 -

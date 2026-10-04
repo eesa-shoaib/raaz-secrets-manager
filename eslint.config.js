@@ -14,7 +14,12 @@ export default tseslint.config(
       ecmaVersion: 2022,
       sourceType: 'module',
       parserOptions: {
-        project: ['./tsconfig.base.json', './packages/*/tsconfig.json', './client/tsconfig.json', './server/tsconfig.json'],
+        project: [
+          './tsconfig.base.json',
+          './packages/*/tsconfig.json',
+          './client/tsconfig.json',
+          './server/tsconfig.json',
+        ],
         tsconfigRootDir: import.meta.dirname,
       },
     },
@@ -23,9 +28,15 @@ export default tseslint.config(
     },
     rules: {
       'import/no-unresolved': 'error',
-      'import/order': ['error', { 'groups': ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'], 'alphabetize': { order: 'asc' } }],
+      'import/order': [
+        'error',
+        {
+          groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
+          alphabetize: { order: 'asc' },
+        },
+      ],
       '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/no-unused-vars': ['error', { 'argsIgnorePattern': '^_' }],
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     },
   },
   {
@@ -37,11 +48,13 @@ export default tseslint.config(
           patterns: [
             {
               group: ['@raaz/shared-schemas/internal', '@raaz/shared-schemas/internal/*'],
-              message: 'Client cannot import server-only schemas from @raaz/shared-schemas/internal. Use the client-safe exports from @raaz/shared-schemas instead.',
+              message:
+                'Client cannot import server-only schemas from @raaz/shared-schemas/internal. Use the client-safe exports from @raaz/shared-schemas instead.',
             },
             {
               group: ['server/**', '../server/**', '../../server/**'],
-              message: 'Client cannot import from server. Shared code belongs in @raaz/shared-schemas.',
+              message:
+                'Client cannot import from server. Shared code belongs in @raaz/shared-schemas.',
             },
           ],
         },
@@ -63,5 +76,5 @@ export default tseslint.config(
         },
       ],
     },
-  }
+  },
 );

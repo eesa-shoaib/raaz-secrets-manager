@@ -30,7 +30,7 @@ const secretSchema = new mongoose.Schema<SecretDoc>(
     lastAccessedAt: { type: Date, default: null },
     lastAccessedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 secretSchema.index({ projectId: 1, environment: 1, key: 1 }, { unique: true });
