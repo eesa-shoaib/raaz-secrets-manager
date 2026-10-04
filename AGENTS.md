@@ -163,6 +163,8 @@ MVP ships routes 1–10 (FRONTEND.md §1) and Phases 1–5. **Do not build** the
 
 Errors always use the envelope `{ "error": { "code", "message" } }` with the codes in API.md. Request bodies, path params (ObjectIds), and query params are validated with Zod **before** controller logic; a malformed ObjectId is `422`, a well-formed missing id is `404`.
 
+**ESM imports:** Server and shared-schemas use ESM (`"type": "module"`). Relative imports in server source **must include `.js` extensions** (e.g. `import { x } from './x.js'`). `tsx` and `tsc` require this.
+
 ## Workflows
 
 **Adding or changing an endpoint**

@@ -85,6 +85,8 @@ since it only verifies the caller's role on Project A.
 tested concurrently (requires PATCH/DELETE `/members` endpoints, kept on
 backend for this test). The last-Platform-Admin race is documented in API.md but deferred, and the environment-removal race is post-MVP (no environment editing exists) — sequential tests cover the non-race logic.
 
+**Test database:** Tests use `MongoMemoryReplSet` (from `mongodb-memory-server`) for an in-memory replica set. This provides a real replica set so transactions behave as they will on Atlas. Local dev still uses Atlas per ARCHITECTURE.md; the in-memory replica set is only for tests.
+
 ## Tooling
 
 | Tool | Rationale |
