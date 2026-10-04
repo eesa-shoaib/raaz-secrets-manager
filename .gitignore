@@ -11,9 +11,14 @@ build/
 # Client build
 client/dist/
 client/.vite/
+client/src/**/*.js
+client/src/**/*.js.map
+client/vite.config.js.timestamp-*
 
 # Server build
 server/dist/
+server/src/**/*.js
+server/src/**/*.js.map
 
 # Shared schemas build
 packages/shared-schemas/dist/
