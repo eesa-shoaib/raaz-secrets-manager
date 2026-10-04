@@ -1,54 +1,75 @@
 # Raaz — Secrets & Config Manager
 
-A MERN + TypeScript secrets and environment-variable manager for teams, with role-based access control enforced at the data layer.
+A MERN + TypeScript secrets and environment-variable manager for teams,
+with role-based access control enforced at the data layer: some roles can
+confirm a secret exists without ever being able to retrieve its decrypted
+value.
 
-## Quick Start
+## Docs
 
-```bash
-git clone git@github.com:eesa-shoaib/raaz-secrets-manager.git
-cd raaz-secrets-manager
-npm install          # installs client, server, and shared-schemas via workspaces
+This table is the single index of `docs/` — add new docs here when they're
+created. **Scope authority:** PRODUCT.md's *Cut from MVP* table is the single
+source of truth for what is in or out of the MVP; other docs link to it
+rather than restating it.
 
-# copy and fill in environment variables
-cp server/.env.example server/.env
-npm run dev          # runs client + server concurrently
-```
+| Doc | Contents |
+|---|---|
+| [PRODUCT.md](./PRODUCT.md) | Problem, users, scope, non-goals, user stories, acceptance criteria |
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | System design, components, data flow, boundaries |
+| [TECH_STACK.md](./TECH_STACK.md) | Languages, frameworks, tools, versions, rationale |
+| [PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md) | Folder layout, module boundaries, naming rules |
+| [DATA_MODEL.md](./DATA_MODEL.md) | Entities, relationships, schema, constraints, migrations |
+| [API.md](./API.md) | Endpoints, contracts, errors, pagination, auth, versioning |
+| [FRONTEND.md](./FRONTEND.md) | Frontend blueprint: routes, pages, widgets, build phases, MVP boundary |
 
-- Client: `http://localhost:5173`
-- Server: `http://localhost:5000`
+## Access Model (at a glance)
 
-## Documentation
+One global flag plus three per-project roles — see ARCHITECTURE.md for
+the full reasoning:
 
-See [docs/README.md](./docs/README.md) for the full documentation index. What is in or out of the MVP is defined by the *Cut from MVP* table in [docs/PRODUCT.md](./docs/PRODUCT.md).
+- **`isPlatformAdmin`** (global) — manages users platform-wide (MVP: backend endpoint only, no UI); project archive and platform-wide project/audit views are post-MVP
+- **Project Admin** (per project) — full control over their project's secrets and team
+- **Developer** (per project) — free access in dev, logged reveal-only access in staging/prod
+- **Auditor** (per project) — metadata and audit history only, never decrypted values
 
-## Architecture Overview
+## Stack at a Glance
 
-```
-Client (React + Vite)  →  Server (Express)  →  MongoDB Atlas
-```
+React + TypeScript + Vite + Tailwind/DaisyUI on the frontend, Express +
+TypeScript + Mongoose on the backend, MongoDB Atlas for the database. See
+[TECH_STACK.md](./TECH_STACK.md) for the full breakdown and rationale, and
+[PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md) for the folder layout.
 
-- **Frontend**: React 18, TypeScript, Vite, Tailwind + DaisyUI, TanStack Query
-- **Backend**: Node 22, Express, TypeScript, Mongoose, JWT in httpOnly cookies
-- **Database**: MongoDB Atlas (free tier)
-- **Shared**: Zod schemas in `packages/shared-schemas`
+## Getting Started (local dev)
 
-## Key Features
+See the repository root `README.md` for the quick start. Environment
+variables (`server/.env`) — see `server/.env.example` for the canonical
+list. This table is the full set; not all are required for local dev.
 
-- Project-scoped secrets with environment isolation (dev/staging/prod)
-- Role-based access: Project Admin, Developer, Auditor
-- Audited secret reveals with production confirmation modal
-- Per-project team management (add member in the MVP)
-- Read-only audit log with filtering
+| Variable | Required for local dev? | Notes |
+|---|---|---|
+| `MONGO_URI` | Yes | MongoDB Atlas connection string, used even locally |
+| `JWT_SECRET` | Yes | Random string, at least 32 characters (checked at boot). Signs the auth cookie's JWT |
+| `MASTER_KEY` | Yes | 32-byte AES-256-GCM key, base64-encoded. Validated at boot |
+| `MASTER_KEY_VERSION` | Yes | Identifies the single active encryption key for this build (no rotation implemented — see DATA_MODEL.md's Encryption Key Lifecycle). Stored on each secret so a future rotation feature wouldn't require a schema change |
+| `PORT` | No (defaults) | Server port, defaults to `5000` |
+| `NODE_ENV` | No (defaults to `development`) | Drives cookie `SameSite` behavior — see ARCHITECTURE.md |
+| `CLIENT_ORIGIN` | No locally (defaults to `http://localhost:5173`) | Required in production for CORS + the Origin-based CSRF check |
+| `JWT_EXPIRES_IN` | No (defaults to `7d`) | See ARCHITECTURE.md's Session & Auth Policy |
+| `COOKIE_DOMAIN` | No locally | Required in production if client/server are on different subdomains |
+| `COOKIE_SAMESITE` | No (defaults based on `NODE_ENV`) | Overrides the `Lax`/`None` default — set to `Lax` even in production if client/server end up same-site, e.g. via a Vercel `/api` rewrite or custom subdomains (see ARCHITECTURE.md's Cross-Origin Deployment & CSRF) |
+| `PLATFORM_ADMIN_EMAIL` / `PLATFORM_ADMIN_PASSWORD` | No, but needed once | Set on first boot only, to seed the very first Platform Admin — see PRODUCT.md story 11 |
+| `SIGNUP_ALLOWED_DOMAINS` | No (defaults to open signup) | Comma-separated email domains (e.g. `acme.com,acme.io`); if set, signup rejects any other domain — see API.md's `/auth/signup` row |
+| `LOG_LEVEL` | No (defaults to `info`) | |
 
-## Environment Variables
+### Client (`client/.env`)
 
-See `server/.env.example` for the full list. Required for local dev:
+See `client/.env.example`.
 
-- `MONGO_URI` — MongoDB Atlas connection string
-- `JWT_SECRET` — 32+ char random string
-- `MASTER_KEY` — 32-byte base64 AES-256-GCM key
-- `MASTER_KEY_VERSION` — Positive integer (e.g., `1`)
+| Variable | Required for local dev? | Notes |
+|---|---|---|
+| `VITE_API_BASE_URL` | No (defaults to `http://localhost:5000/api`) | Base URL for the centralized `API_BASE_URL` constant (API.md, Versioning). Use `/api` when the SPA reaches the API through a same-origin Vercel rewrite |
 
-## License
+## Status
 
-MIT
+In development — see [PRODUCT.md](./PRODUCT.md) for what's in scope for
+the current build versus deferred as future work.
