@@ -1,23 +1,79 @@
-# Obsidian
-.obsidian/plugins/*/main.js
-.obsidian/plugins/*/manifest.json
-.obsidian/plugins/*/styles.css
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Client build
+client/dist/
+client/.vite/
+client/src/**/*.js
+client/src/**/*.js.map
+client/vite.config.js.timestamp-*
+
+# Server build
+server/dist/
+server/src/**/*.js
+server/src/**/*.js.map
+
+# Shared schemas build
+packages/shared-schemas/dist/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+
+# IDE & Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 
 # OS
 .DS_Store
 Thumbs.db
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
 # Logs
 *.log
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# Environment
-.env
-.env.local
-.env.*.local
+# Testing
+coverage/
+.nyc_output/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Turbo (if used)
+.turbo/
+
+# Vite
+*.local
+
+# Misc
+*.tgz
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+
+# Obsidian (keep config, ignore plugin binaries)
+.obsidian/plugins/*/main.js
+.obsidian/plugins/*/manifest.json
+.obsidian/plugins/*/styles.css
+
+# Test artifacts
+*.test.ts.snap
+*.spec.ts.snap

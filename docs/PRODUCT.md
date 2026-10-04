@@ -17,12 +17,12 @@ being able to retrieve its decrypted value.
 
 ## Users
 
-| Persona | Description | Primary need |
-|---|---|---|
-| Project Admin | Team lead responsible for a project's secrets and team | Full control over their project's secrets and who's on the team |
-| Developer | Builds against the project day-to-day | Fast, low-friction access to dev secrets; occasional, logged access to prod |
-| Auditor | Compliance/security reviewer | Visibility into what secrets exist and who accessed them, without needing the values themselves |
-| Platform Admin | Person running the Raaz instance for the org | Oversight of users (MVP: via API only); project-level oversight is post-MVP |
+| Persona        | Description                                            | Primary need                                                                                    |
+| -------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| Project Admin  | Team lead responsible for a project's secrets and team | Full control over their project's secrets and who's on the team                                 |
+| Developer      | Builds against the project day-to-day                  | Fast, low-friction access to dev secrets; occasional, logged access to prod                     |
+| Auditor        | Compliance/security reviewer                           | Visibility into what secrets exist and who accessed them, without needing the values themselves |
+| Platform Admin | Person running the Raaz instance for the org           | Oversight of users (MVP: via API only); project-level oversight is post-MVP                     |
 
 ## Scope (MVP)
 
@@ -44,8 +44,8 @@ being able to retrieve its decrypted value.
 ## Non-Goals (this build)
 
 - Automated secret rotation policies and expiry reminders (rotating the
-  *values* teams store, e.g. auto-generating a new API key on a schedule)
-- Master encryption-key rotation (rotating the *server's own* AES key
+  _values_ teams store, e.g. auto-generating a new API key on a schedule)
+- Master encryption-key rotation (rotating the _server's own_ AES key
   used to encrypt everything at rest) — a distinct concern from the
   above. This build supports exactly one active `MASTER_KEY` /
   `MASTER_KEY_VERSION` pair. `Secret.encryptionKeyVersion` is stored so
@@ -74,18 +74,19 @@ about role-based access control.
 
 This table is the single source of truth for scope; other docs link here.
 
-| Story | Cut | Reason | Target |
-|---|---|---|---|
-| 5 — Project Admin manages their team | Partial | Add member kept (UI + API); change-role and remove are backend-only, no UI | UI post-MVP |
-| 6 — Project Admin reviews project activity | Partial | Read-only log with 3 filters kept; pagination deferred (capped at 100 most recent) | Post-MVP |
-| 7 — Platform Admin deactivates a malicious user | UI only | `PATCH /api/admin/users/:userId` retained as a backend endpoint; no admin UI | UI post-MVP |
-| 8 — Platform Admin archives a project | Full | No archive/restore endpoint or UI. `Project.status` and the status check exist, but nothing sets `archived` | Post-MVP |
-| — Project rename / environment editing | Full | No `PATCH /projects/:projectId` | Post-MVP |
-| — Platform project overview and platform audit view | Full | `/admin/projects` and `/admin/audit-log` are not built | Post-MVP |
+| Story                                               | Cut     | Reason                                                                                                      | Target      |
+| --------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------- | ----------- |
+| 5 — Project Admin manages their team                | Partial | Add member kept (UI + API); change-role and remove are backend-only, no UI                                  | UI post-MVP |
+| 6 — Project Admin reviews project activity          | Partial | Read-only log with 3 filters kept; pagination deferred (capped at 100 most recent)                          | Post-MVP    |
+| 7 — Platform Admin deactivates a malicious user     | UI only | `PATCH /api/admin/users/:userId` retained as a backend endpoint; no admin UI                                | UI post-MVP |
+| 8 — Platform Admin archives a project               | Full    | No archive/restore endpoint or UI. `Project.status` and the status check exist, but nothing sets `archived` | Post-MVP    |
+| — Project rename / environment editing              | Full    | No `PATCH /projects/:projectId`                                                                             | Post-MVP    |
+| — Platform project overview and platform audit view | Full    | `/admin/projects` and `/admin/audit-log` are not built                                                      | Post-MVP    |
 
 ## User Stories & Acceptance Criteria
 
 ### 1. Developer views a dev secret
+
 **As a** Developer, **I want to** view secret values in the development
 environment **so that** I can run the app locally without asking anyone.
 
@@ -96,6 +97,7 @@ environment **so that** I can run the app locally without asking anyone.
   `result: allowed`.
 
 ### 2. Developer reveals a production secret
+
 **As a** Developer, **I want to** reveal a production value when I
 genuinely need it **so that** I can debug a prod issue, while my access
 is tracked.
@@ -109,6 +111,7 @@ is tracked.
   client under any circumstance.
 
 ### 3. Developer attempts to edit a production secret
+
 **As the** system, **I want to** block Developers from editing prod
 values **so that** production changes require elevated permission.
 
@@ -116,6 +119,7 @@ values **so that** production changes require elevated permission.
   then the request is rejected with 403 and logged with `result: denied`.
 
 ### 4. Auditor reviews a project without seeing values
+
 **As an** Auditor, **I want to** see that a secret exists and its access
 history **so that** I can do a compliance review without holding the
 secret myself.
@@ -156,6 +160,7 @@ on my project **so that** I control who has what level of access.
 - User email is displayed via the populated `user` field in the audit response.
 
 ### 7. Platform Admin deactivates a malicious user
+
 **As a** Platform Admin, **I want to** deactivate a user platform-wide
 **so that** I can respond to a security incident without deleting their
 audit trail.
@@ -167,6 +172,7 @@ audit trail.
 **MVP scope:** backend endpoint only (`PATCH /api/admin/users/:userId`); no admin UI.
 
 ### 8. Platform Admin archives a project
+
 **As a** Platform Admin, **I want to** archive a problematic project
 **so that** its members lose access to it without destroying its audit
 history. ("Stops appearing" would be the wrong framing — see below: it
@@ -186,16 +192,17 @@ stays visible as archived, just locked.)
 **Post-MVP.** No archive/restore endpoint exists in the MVP. `Project.status` and the status check are in place, but nothing sets `archived` yet.
 
 ### 9. Platform Admin does not implicitly see decrypted secrets
+
 **As the** system, **I want to** keep Platform Admin's power scoped to
 platform management **so that** the most powerful role isn't also the
 biggest single point of decryption risk.
 
 - Given a Platform Admin is not a member of a specific project, when they request anything under that project's `/projects/:projectId/*` routes, then they get `404` like any non-member, and no `/admin/*` route returns any project or secret data (the platform user list is not project data). (A platform-wide project overview showing name, member count and secret count is post-MVP and must stay metadata-only when it ships.)
 - **Scope of this guarantee, stated precisely:** "implicitly" is the
-  load-bearing word. A Platform Admin can still *explicitly* grant
+  load-bearing word. A Platform Admin can still _explicitly_ grant
   themselves a `ProjectMembership` with **any** role — including
   `projectAdmin`, not only `developer` — since `POST
-  /projects/:projectId/members` takes any role value and accepts them as
+/projects/:projectId/members` takes any role value and accepts them as
   an alternate caller, same as a Project Admin. Granted `projectAdmin`,
   they could edit or delete any secret and remove the project's actual
   team, not only reveal values. Nothing technical prevents any of it.
@@ -206,6 +213,7 @@ biggest single point of decryption risk.
   Auditor. See API.md's Permissions Matrix notes for the full trade-off.
 
 ### 10. New signup has no default project role
+
 **As the** system, **I want to** require explicit role/project
 assignment **so that** no one gains access to a project simply by
 existing on the platform.
@@ -215,6 +223,7 @@ existing on the platform.
   Admin adds them to a project.
 
 ### 11. Bootstrapping the first Platform Admin
+
 **As the** system, **I want to** provide a way for the very first Platform
 Admin to exist **so that** the platform isn't unmanageable on day one.
 
@@ -229,7 +238,7 @@ Admin to exist **so that** the platform isn't unmanageable on day one.
   using exactly the email in `PLATFORM_ADMIN_EMAIL` before the operator's
   first boot, that pre-existing account — with whatever password its
   original registrant set — would silently become Platform Admin, not the
-  operator. But the password reset *alone* doesn't fully close that hole
+  operator. But the password reset _alone_ doesn't fully close that hole
   either: if the squatter happened to be logged in at the moment of
   promotion, their existing JWT (valid up to 7 days) would still pass
   `authenticate` and become a Platform Admin session the moment the flag
@@ -238,7 +247,7 @@ Admin to exist **so that** the platform isn't unmanageable on day one.
   that cookie immediately, regardless of its remaining lifetime. See
   ARCHITECTURE.md's Authentication Flow for the full mechanism.
 - **Promotion also sets `isActive: true`**, not just `isPlatformAdmin:
-  true`. Without this, promoting an account that happens to be
+true`. Without this, promoting an account that happens to be
   `isActive: false` leaves a flagged admin who still can't log in — and
   bootstrap won't fire again to fix it, since its trigger condition ("no
   user with `isPlatformAdmin: true` exists") is no longer true once that
@@ -247,7 +256,7 @@ Admin to exist **so that** the platform isn't unmanageable on day one.
 - **This check re-runs on every boot, not just the first** — "no user
   with `isPlatformAdmin: true` exists yet" is a condition evaluated every
   startup, not a one-time flag that gets permanently consumed. In
-  practice that means it almost always only *does* anything on the very
+  practice that means it almost always only _does_ anything on the very
   first boot against a fresh database, but it is not a one-time-forever
   guarantee: it would fire again after any reset that removes every
   Platform Admin, including a routine drop-and-recreate of this project's
@@ -273,6 +282,7 @@ Admin to exist **so that** the platform isn't unmanageable on day one.
   `PATCH /api/admin/users/:userId` (see API.md).
 
 ### 12. Audit records survive action failures
+
 **As the** system, **I want to** preserve an accurate audit trail
 **so that** success is never reported without its required audit record.
 

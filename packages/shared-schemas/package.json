@@ -1,0 +1,35 @@
+{
+  "name": "@raaz/shared-schemas",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "development": "./src/index.ts",
+      "production": "./dist/index.js",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./internal": {
+      "source": "./src/internal/index.ts",
+      "development": "./src/internal/index.ts",
+      "production": "./dist/internal/index.js",
+      "types": "./dist/internal/index.d.ts",
+      "default": "./dist/internal/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch --preserveWatchOutput",
+    "lint": "eslint src --ext .ts"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "zod": "^3.22.4"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}

@@ -79,18 +79,18 @@ raaz/
 
 ## Naming Rules
 
-| Item | Convention | Example |
-|---|---|---|
-| React components | PascalCase file + component name | `SecretCard.tsx` |
-| Hooks | camelCase, `use` prefix | `useSecrets.ts` |
-| Server route files | kebab-case, `.routes.ts` suffix | `secrets.routes.ts` |
-| Server controllers | kebab-case, `.controller.ts` suffix | `secrets.controller.ts` |
-| Server services | kebab-case, `.service.ts` suffix | `encryption.service.ts` |
-| Server middleware | kebab-case, `.middleware.ts` suffix | `require-project-role.middleware.ts` |
-| Mongoose models | PascalCase, singular | `Secret.ts` exporting model `Secret` |
-| Shared schemas | camelCase, matches entity | `secret.ts` exporting `secretResponseSchema` + inferred type; the server-only `secretSchema` lives in `internal/secret.ts` |
-| Test files | mirrors source file, `.test.ts` suffix | `secrets.controller.test.ts` |
-| Env variables | SCREAMING_SNAKE_CASE | `MASTER_KEY`, `MONGO_URI` |
+| Item               | Convention                             | Example                                                                                                                    |
+| ------------------ | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| React components   | PascalCase file + component name       | `SecretCard.tsx`                                                                                                           |
+| Hooks              | camelCase, `use` prefix                | `useSecrets.ts`                                                                                                            |
+| Server route files | kebab-case, `.routes.ts` suffix        | `secrets.routes.ts`                                                                                                        |
+| Server controllers | kebab-case, `.controller.ts` suffix    | `secrets.controller.ts`                                                                                                    |
+| Server services    | kebab-case, `.service.ts` suffix       | `encryption.service.ts`                                                                                                    |
+| Server middleware  | kebab-case, `.middleware.ts` suffix    | `require-project-role.middleware.ts`                                                                                       |
+| Mongoose models    | PascalCase, singular                   | `Secret.ts` exporting model `Secret`                                                                                       |
+| Shared schemas     | camelCase, matches entity              | `secret.ts` exporting `secretResponseSchema` + inferred type; the server-only `secretSchema` lives in `internal/secret.ts` |
+| Test files         | mirrors source file, `.test.ts` suffix | `secrets.controller.test.ts`                                                                                               |
+| Env variables      | SCREAMING_SNAKE_CASE                   | `MASTER_KEY`, `MONGO_URI`                                                                                                  |
 
 ## Import Direction (by convention, plus one ESLint rule)
 
@@ -104,4 +104,4 @@ No arrow points back into `client/` or `server/` from anywhere else. If a
 future change requires the server to know about a client-only concept,
 that's a signal the concept belongs in `shared-schemas` instead.
 
-**`shared-schemas/internal`** holds the server-only base schemas (the ones with `passwordHash`, `ciphertext`, etc.). They are built by *extending* the client-safe schemas, not the other way round, so the client bundle never contains those field names. `client/` is blocked from importing it by an ESLint `no-restricted-imports` rule, and the package's `exports` map exposes only `"."` and `"./internal"`.
+**`shared-schemas/internal`** holds the server-only base schemas (the ones with `passwordHash`, `ciphertext`, etc.). They are built by _extending_ the client-safe schemas, not the other way round, so the client bundle never contains those field names. `client/` is blocked from importing it by an ESLint `no-restricted-imports` rule, and the package's `exports` map exposes only `"."` and `"./internal"`.

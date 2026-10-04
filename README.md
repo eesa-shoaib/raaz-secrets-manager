@@ -19,7 +19,7 @@ npm run dev          # runs client + server concurrently
 
 ## Documentation
 
-See [docs/README.md](./docs/README.md) for the full documentation index. What is in or out of the MVP is defined by the *Cut from MVP* table in [docs/PRODUCT.md](./docs/PRODUCT.md).
+See [docs/README.md](./docs/README.md) for the full documentation index. What is in or out of the MVP is defined by the _Cut from MVP_ table in [docs/PRODUCT.md](./docs/PRODUCT.md).
 
 ## Architecture Overview
 

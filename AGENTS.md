@@ -19,18 +19,18 @@ able to retrieve its decrypted value**, enforced at the data layer, not the UI.
 
 ## Where to look (doc map and authority)
 
-| Question | Source of truth |
-|---|---|
-| Is X in or out of the MVP? | `PRODUCT.md` → **Cut from MVP** table (single scope authority) |
-| Who can do what? | `API.md` → **Permissions Matrix** (single access authority) |
-| Endpoint contract, error codes, pagination | `API.md` |
-| Schema, indexes, audit `action` enum | `DATA_MODEL.md` |
-| Middleware order, auth, encryption, CSRF, rate limits, cache policy | `ARCHITECTURE.md` |
-| Folder layout, module boundaries, naming | `PROJECT_STRUCTURE.md` |
-| Versions, testing priorities | `TECH_STACK.md` |
-| Routes, widgets, reveal lifecycle, build phases, frontend DoD | `FRONTEND.md` (authoritative; the widget list is a ceiling) |
-| Task tracking | `MVP_BOARD.md` |
-| Env vars | `README.md` (table) and `server/.env.example` / `client/.env.example` |
+| Question                                                            | Source of truth                                                       |
+| ------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Is X in or out of the MVP?                                          | `PRODUCT.md` → **Cut from MVP** table (single scope authority)        |
+| Who can do what?                                                    | `API.md` → **Permissions Matrix** (single access authority)           |
+| Endpoint contract, error codes, pagination                          | `API.md`                                                              |
+| Schema, indexes, audit `action` enum                                | `DATA_MODEL.md`                                                       |
+| Middleware order, auth, encryption, CSRF, rate limits, cache policy | `ARCHITECTURE.md`                                                     |
+| Folder layout, module boundaries, naming                            | `PROJECT_STRUCTURE.md`                                                |
+| Versions, testing priorities                                        | `TECH_STACK.md`                                                       |
+| Routes, widgets, reveal lifecycle, build phases, frontend DoD       | `FRONTEND.md` (authoritative; the widget list is a ceiling)           |
+| Task tracking                                                       | `MVP_BOARD.md`                                                        |
+| Env vars                                                            | `README.md` (table) and `server/.env.example` / `client/.env.example` |
 
 Docs live in `docs/`. When you add a doc, add it to the index table in `docs/README.md`.
 
@@ -65,6 +65,7 @@ dev or test runs at a database that holds data anyone wants to keep.
 ## Architecture rules you must not break
 
 ### Module boundaries
+
 - `client/` imports only from `packages/shared-schemas` **package root**. Never `/internal`, never anything from `server/`.
 - `server/` never imports from `client/`.
 - `packages/shared-schemas` is a leaf: it depends on neither app.
@@ -72,9 +73,11 @@ dev or test runs at a database that holds data anyone wants to keep.
 - Server layering: **routes → controllers → services → models.** Controllers only parse the request and call a service: no crypto, no DB queries, no authorization. **Only services touch Mongoose models.** Middleware calls services (`membership.service`, `audit.service`, `secrets.service`), never models directly.
 
 ### Authorization pipeline (order matters)
+
 ```
 CSRF (Origin check) → authenticate → requireProjectRole | requireProjectRoleOrPlatformAdmin | requirePlatformAdmin → requireProjectStatus → handler
 ```
+
 - Membership check runs **before** the status check, always. Reversing it leaks the existence of archived projects.
 - No membership → `404` (not logged). Member with insufficient role → `403` (logged as a denied `AuditLogEntry` when the action has an `action` enum value).
 - Membership routes (`POST/PATCH/DELETE .../members`) use `requireProjectRoleOrPlatformAdmin`, a separate middleware, not a flag on `requireProjectRole`.
@@ -84,6 +87,7 @@ CSRF (Origin check) → authenticate → requireProjectRole | requireProjectRole
 - Production reveal without `confirm: true` is `422 VALIDATION_ERROR` and is **not** logged as denied. It's a request-shape check, not a role gate. Don't merge it with the Developer write restriction.
 
 ### Secrets and encryption
+
 - Only `POST .../secrets/:secretId/reveal` ever returns a decrypted value. Never add `value` to list, metadata, audit, dashboard, or error responses.
 - AES-256-GCM via Node `crypto`. Fresh random 12-byte IV on **every** encrypt, including edits. `authTagLength: 16` set explicitly on decipher.
 - AAD on every encrypt/decrypt: `` `${projectId}|${secretId}|${environment}|${encryptionKeyVersion}` ``. On create, generate the id first (`new mongoose.Types.ObjectId()`), use it in the AAD, and insert with that same `_id`.
@@ -94,6 +98,7 @@ CSRF (Origin check) → authenticate → requireProjectRole | requireProjectRole
 - Every `:secretId` lookup is scoped: `Secret.findOne({ _id: secretId, projectId })`. Never `findById(secretId)` alone.
 
 ### Auth
+
 - JWT in an httpOnly cookie, never in a response body or `localStorage`. `jwt.verify` always passes `algorithms: ['HS256']`.
 - `authenticate` re-fetches the user every request: checks signature **and** `tokenVersion`, and rejects `isActive: false` with `401`.
 - Login always runs `bcrypt.compare` (against a fixed dummy hash if the email is unknown) and returns the same generic `401` for unknown email, wrong password, and deactivated account.
@@ -101,6 +106,7 @@ CSRF (Origin check) → authenticate → requireProjectRole | requireProjectRole
 - State-changing requests (POST/PATCH/DELETE) must have an `Origin` equal to `CLIENT_ORIGIN`; a **missing** `Origin` is a mismatch → `403`.
 
 ### Audit log
+
 - State-changing action + its allowed audit entry commit in **one MongoDB transaction**. If the audit write fails, the action fails with `500 INTERNAL_ERROR`. Never report success without the audit record.
 - Denied project actions write the denied entry **before** returning `403`; if that write fails, return `500`.
 - Entries are append-only: no update/delete endpoint, ever.
@@ -109,10 +115,12 @@ CSRF (Origin check) → authenticate → requireProjectRole | requireProjectRole
 - Not logged as `AuditLogEntry`: no-membership 404, CSRF 403, non-admin on `/admin/*`, any 429, failed login.
 
 ### Last-admin invariants
+
 - Use the atomic counters (`Project.activeAdminCount`, `PlatformConfig.activePlatformAdminCount`) with a conditional `findOneAndUpdate({ ..., count: { $gt: 1 } }, { $inc: { count: -1 } })`. A transaction with a count-then-write check is **not** sufficient (snapshot-isolation write skew).
 - Violations return `409 CONFLICT`. Platform Admin invariant covers both demotion and deactivation.
 
 ### Logging
+
 - Redact `value` (and `password` on auth routes) from every request-body log and error handler. Configure pino redaction explicitly; it is not a default.
 - Never log, print, commit, or echo `MASTER_KEY`, `JWT_SECRET`, `.env` contents, or decrypted values (including in tests, fixtures, and error messages).
 
@@ -151,21 +159,24 @@ MVP ships routes 1–10 (FRONTEND.md §1) and Phases 1–5. **Do not build** the
 
 ## Conventions
 
-| Item | Rule |
-|---|---|
-| React components | `PascalCase.tsx` |
-| Hooks | `useThing.ts`, TanStack Query hooks in `client/src/hooks/` |
-| Server files | kebab-case with suffix: `.routes.ts`, `.controller.ts`, `.service.ts`, `.middleware.ts` |
-| Mongoose models | PascalCase singular (`Secret.ts`) |
-| Shared schemas | camelCase file per entity; server-only in `internal/` |
-| Tests | mirror the source file, `.test.ts` suffix |
-| Env vars | `SCREAMING_SNAKE_CASE` |
+| Item             | Rule                                                                                    |
+| ---------------- | --------------------------------------------------------------------------------------- |
+| React components | `PascalCase.tsx`                                                                        |
+| Hooks            | `useThing.ts`, TanStack Query hooks in `client/src/hooks/`                              |
+| Server files     | kebab-case with suffix: `.routes.ts`, `.controller.ts`, `.service.ts`, `.middleware.ts` |
+| Mongoose models  | PascalCase singular (`Secret.ts`)                                                       |
+| Shared schemas   | camelCase file per entity; server-only in `internal/`                                   |
+| Tests            | mirror the source file, `.test.ts` suffix                                               |
+| Env vars         | `SCREAMING_SNAKE_CASE`                                                                  |
 
 Errors always use the envelope `{ "error": { "code", "message" } }` with the codes in API.md. Request bodies, path params (ObjectIds), and query params are validated with Zod **before** controller logic; a malformed ObjectId is `422`, a well-formed missing id is `404`.
+
+**ESM imports:** Server and shared-schemas use ESM (`"type": "module"`). Relative imports in server source **must include `.js` extensions** (e.g. `import { x } from './x.js'`). `tsx` and `tsc` require this.
 
 ## Workflows
 
 **Adding or changing an endpoint**
+
 1. Check `PRODUCT.md` Cut table (is it in scope?) and `API.md` Permissions Matrix (who may call it?).
 2. Update `API.md` first if the contract changes (record contract issues there, not in code comments or FRONTEND.md).
 3. Add/adjust the Zod schema in `shared-schemas` (client-safe at root; sensitive fields in `internal/`).
@@ -175,6 +186,7 @@ Errors always use the envelope `{ "error": { "code", "message" } }` with the cod
 7. Update `DATA_MODEL.md` if the schema or audit `action` usage changes.
 
 **Adding a frontend feature**
+
 1. Find the route/page/widget in `FRONTEND.md`. If it isn't listed, it's probably out of scope; ask.
 2. API function in `client/src/api/`, hook in `client/src/hooks/`, query keys per FRONTEND.md §1.5 table.
 3. Gate controls through `usePermissions`, never inline role checks.

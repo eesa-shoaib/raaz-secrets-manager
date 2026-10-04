@@ -33,7 +33,7 @@ in list/metadata responses.
   project membership are looked up server-side on every request.
 - **`packages/shared-schemas/`** — Zod schemas are the single source of
   truth for both validation and typing, but "one schema per entity" means
-  one definition *lineage* per entity, not one object reused unchanged
+  one definition _lineage_ per entity, not one object reused unchanged
   everywhere. The lineage runs from client-safe to server-only, never the
   other way round, so sensitive field names don't end up in the client bundle:
   - **Client-safe schemas (package root):** `secretResponseSchema`
@@ -59,7 +59,7 @@ in list/metadata responses.
   or `ciphertext` out of it — parsing it is.** A TypeScript type is a
   compile-time annotation; it doesn't touch the object at runtime, so if a
   handler accidentally sends the full Mongoose document (which still has
-  `passwordHash` on it) while merely *claiming* the response is typed as
+  `passwordHash` on it) while merely _claiming_ the response is typed as
   `publicUserSchema`, nothing stops the extra field from being serialized
   over the wire — the type checker has no runtime presence to object.
   The actual guarantee comes from calling `publicUserSchema.parse(user)` /
@@ -92,7 +92,7 @@ same kind:
    with `.select('+passwordHash')` — `passwordHash` is `select: false` by
    default (DATA_MODEL.md), so login is the one query in the codebase
    that deliberately opts back in, since it's the one place that
-   genuinely needs the hash to compare against. **To avoid a timing side channel, login always runs bcrypt whether or not a matching account exists** — it runs `bcrypt.compare()` against *something* — the real `passwordHash` if found, a fixed dummy hash (a precomputed valid bcrypt hash of a constant placeholder string, checked into the codebase) if not. This isn't optional: a generic error **message** alone doesn't close a timing side channel — skipping the deliberately-slow bcrypt call entirely for unknown emails makes "no such account" measurably faster than "wrong password," which an attacker can use to enumerate valid emails even though the message itself never says so. A deactivated (`isActive: false`) account that supplies the *correct* password gets the same outcome as a wrong password — generic `401`, no distinct message — a deliberate choice, not an oversight: a distinct "this account is deactivated" message would confirm the email is both registered and currently deactivated, which is exactly the information you don't want to hand back to someone deactivated for a security incident (PRODUCT.md story 7).
+   genuinely needs the hash to compare against. **To avoid a timing side channel, login always runs bcrypt whether or not a matching account exists** — it runs `bcrypt.compare()` against _something_ — the real `passwordHash` if found, a fixed dummy hash (a precomputed valid bcrypt hash of a constant placeholder string, checked into the codebase) if not. This isn't optional: a generic error **message** alone doesn't close a timing side channel — skipping the deliberately-slow bcrypt call entirely for unknown emails makes "no such account" measurably faster than "wrong password," which an attacker can use to enumerate valid emails even though the message itself never says so. A deactivated (`isActive: false`) account that supplies the _correct_ password gets the same outcome as a wrong password — generic `401`, no distinct message — a deliberate choice, not an oversight: a distinct "this account is deactivated" message would confirm the email is both registered and currently deactivated, which is exactly the information you don't want to hand back to someone deactivated for a security incident (PRODUCT.md story 7).
 2. On success, the server issues a JWT and sets it as an **httpOnly
    cookie** — `SameSite=Lax` by default, `None` in production unless
    `COOKIE_SAMESITE` overrides it (see Cross-Origin Deployment & CSRF,
@@ -106,11 +106,11 @@ same kind:
 
 **`tokenVersion`, and why it exists:** `User.tokenVersion` (number,
 default `0`) is embedded in the JWT at login and compared against the
-user document's *current* `tokenVersion` on every request; a mismatch is
+user document's _current_ `tokenVersion` on every request; a mismatch is
 treated as an invalid token (`401`), the same as a bad signature. This
 closes a real hole in the bootstrap promotion flow (PRODUCT.md story 11):
 resetting a squatter's `passwordHash` on promotion stops them logging in
-*again*, but does nothing about a JWT they already hold — cookies live up
+_again_, but does nothing about a JWT they already hold — cookies live up
 to 7 days, and `authenticate` re-checking `isPlatformAdmin` on every
 request doesn't invalidate a token just because the password behind it
 changed. Bumping `tokenVersion` alongside the password reset makes that
@@ -131,11 +131,11 @@ CSRF check  →  authenticate  →  requireProjectRole / requireProjectRoleOrPla
 
 - **CSRF check** — state-changing requests (POST/PATCH/DELETE) verify the `Origin` header matches `CLIENT_ORIGIN`. Fails with 403 before `authenticate` runs. Not logged as `AuditLogEntry`.
 - **`authenticate`** — verifies JWT (signature **and** `tokenVersion` match), attaches `req.user` (id, `isPlatformAdmin`).
-- **`requireProjectRole(['projectAdmin', 'developer'])`** — used on routes only a project member can ever reach (secrets, project audit log, `GET /projects/:projectId`). Looks up the caller's `ProjectMembership` for the `:projectId` in the route and attaches `req.projectRole`. Two different failures get two different responses: no `ProjectMembership` at all returns **404** (existence isn't revealed to non-members, matching API.md's error table), and this case does **not** write an `AuditLogEntry` — there's no project team for such an entry to be visible to, and no `action` enum value represents a bare access probe. A membership that *does* exist but whose role isn't in the allowed list returns **403**, logged as a denied `AuditLogEntry` when the underlying action has a corresponding `action` value (create/edit/delete/reveal, membership changes) — a plain read that fails this check has nothing to log against either, same as the 404 case.
+- **`requireProjectRole(['projectAdmin', 'developer'])`** — used on routes only a project member can ever reach (secrets, project audit log, `GET /projects/:projectId`). Looks up the caller's `ProjectMembership` for the `:projectId` in the route and attaches `req.projectRole`. Two different failures get two different responses: no `ProjectMembership` at all returns **404** (existence isn't revealed to non-members, matching API.md's error table), and this case does **not** write an `AuditLogEntry` — there's no project team for such an entry to be visible to, and no `action` enum value represents a bare access probe. A membership that _does_ exist but whose role isn't in the allowed list returns **403**, logged as a denied `AuditLogEntry` when the underlying action has a corresponding `action` value (create/edit/delete/reveal, membership changes) — a plain read that fails this check has nothing to log against either, same as the 404 case.
 - **`requireProjectRoleOrPlatformAdmin(['projectAdmin'])`** — a distinct
   middleware, not a parameter on `requireProjectRole`, used on the three
   Project Membership routes (`POST`/`PATCH`/`DELETE
-  /projects/:projectId/members`) whose own Access column says "`projectAdmin`
+/projects/:projectId/members`) whose own Access column says "`projectAdmin`
   or `isPlatformAdmin`". Plain `requireProjectRole` can't express that: a
   Platform Admin with no `ProjectMembership` on the target project would
   hit its 404 branch and never reach the handler. This middleware checks
@@ -151,7 +151,7 @@ CSRF check  →  authenticate  →  requireProjectRole / requireProjectRoleOrPla
   `requireProjectRoleOrPlatformAdmin`'s bypass. **Order matters here, and
   it's membership first, status second, never the other way round:** the
   membership check (404 for non-members, above) always runs before the
-  status check. If status ran first, a non-member probing an *archived*
+  status check. If status ran first, a non-member probing an _archived_
   project's URL would get 403 ("exists, but you can't touch it") instead
   of 404 ("no membership that would reveal even its existence") — leaking
   exactly the existence information the 404 branch exists to hide, just
@@ -209,8 +209,8 @@ sequenceDiagram
 
 Auditor requests to the reveal endpoint are denied at `requireProjectRole`
 before any decryption code runs — the request is rejected and logged the
-same way any other denied attempt is. Separately, an Auditor's *list and
-metadata* endpoints never select the `ciphertext`/`iv`/`authTag` fields in
+same way any other denied attempt is. Separately, an Auditor's _list and
+metadata_ endpoints never select the `ciphertext`/`iv`/`authTag` fields in
 the first place, so there's no decrypted value in memory to leak even from
 a server-side bug on their read paths.
 
@@ -220,7 +220,7 @@ middleware rejects before any service code runs, so — unlike a
 service-layer denial, which already has the document loaded — it has
 no `environment`/`secretKey` to write onto the `AuditLogEntry` unless it
 goes and gets them. Without this, an Auditor's denied reveal attempt
-against a *production* secret would log with `environment` unset, and
+against a _production_ secret would log with `environment` unset, and
 the project audit log's `?environment=production` filter — the exact
 query someone would run to check "did anyone try to touch prod they
 shouldn't have" — would silently miss it. So for any denial on a
@@ -236,7 +236,7 @@ made on role alone; it only makes the resulting denied entry complete.
 as AAD via `cipher.setAAD()` / `decipher.setAAD()`, and `authTagLength: 16`
 is set explicitly on the decipher rather than left to the library default.
 On **create**, `secretId` can't come from Mongo's own auto-assigned `_id`
-the usual way — encryption has to happen *before* the document exists to
+the usual way — encryption has to happen _before_ the document exists to
 be inserted, so the normal "insert, then Mongo hands back `_id`" order
 doesn't work here. The service generates the id itself first
 (`new mongoose.Types.ObjectId()`), uses that value in the AAD and the
@@ -321,10 +321,10 @@ drop the reliability guarantee the audit log depends on.
 
 ## Cross-Origin Deployment & CSRF
 
-Local dev is same-site (`localhost:5173` → `localhost:5000`), but the default Vercel → Render deployment is cross-site unless one of the same-site options under *Deployment topology* below is used, which changes cookie behavior:
+Local dev is same-site (`localhost:5173` → `localhost:5000`), but the default Vercel → Render deployment is cross-site unless one of the same-site options under _Deployment topology_ below is used, which changes cookie behavior:
 
 - **Cookie attributes:** `SameSite=Lax` in development, `SameSite=None;
-  Secure` in production (`NODE_ENV`-driven), since a cross-site request
+Secure` in production (`NODE_ENV`-driven), since a cross-site request
   won't carry a `SameSite=Lax` cookie at all.
 - **CORS:** the server sets `Access-Control-Allow-Credentials: true` and
   restricts `Access-Control-Allow-Origin` to a single explicit
@@ -345,7 +345,7 @@ Local dev is same-site (`localhost:5173` → `localhost:5000`), but the default 
   when set. This matters because `NODE_ENV=production` doesn't
   necessarily mean cross-site — if the "Deployment topology" advice below
   is followed and client/server end up on the same site via custom
-  subdomains, `Lax` is the *stronger* choice even in production (real
+  subdomains, `Lax` is the _stronger_ choice even in production (real
   browser-enforced CSRF protection, not just the Origin-header check
   above as a backstop), and hard-coding `None` there would throw that
   away for no reason.
@@ -371,7 +371,7 @@ if unbounded), and reveal because it's the single highest-value endpoint
 in the app and worth throttling even for authorized users. Keys and limits are listed below. Email-keyed per-account login limiters are deferred to post-MVP.
 
 - **`trust proxy` behind Render:** the server sets `app.set('trust
-  proxy', N)` in production, where `N` is the exact number of reverse
+proxy', N)` in production, where `N` is the exact number of reverse
   proxy hops between the client and the server — one, if Render sits
   directly in front with nothing else in between, but **this needs
   verifying against the actual deployment, not assumed**: too low (e.g.
@@ -389,8 +389,8 @@ in the app and worth throttling even for authorized users. Keys and limits are l
   restart), just worth stating rather than leaving implicit.
 - **Login/signup: per-IP limiter** — keyed on `req.ip` alone. Bounds total volume from one source regardless of which account it's aimed at. 30 requests per 15 minutes per IP on login; 10 per 15 minutes per IP on signup.
 - **Reveal: per-user limiter** — keyed on `req.user.id`. Bounds volume per authenticated user. 20 requests per 15 minutes per user.
-- **`skipSuccessfulRequests`:** `true` on login's limiter — a successful login shouldn't eat into a budget meant to catch repeated *wrong* guesses, so an office full of people logging in normally never approaches the limit. `false` (the default) on reveal's limiter — reveal's purpose is bounding volume on the single highest-value endpoint regardless of outcome.
-- **Ordering is endpoint-specific:** for **login** and **signup**, the per-IP limiter runs before `authenticate` (there's no session yet). The limiter can run first since it's IP-only and doesn't need validation. For **reveal**, the per-user limiter runs *after* `authenticate` (so `req.user.id` exists) but before `requireProjectRole`. This isn't a gap on the reveal side: reveal already requires a valid session to reach at all, so a missing or invalid cookie is rejected by `authenticate` with `401` before the limiter runs — there's no meaningful pre-auth traffic on that route to catch earlier.
+- **`skipSuccessfulRequests`:** `true` on login's limiter — a successful login shouldn't eat into a budget meant to catch repeated _wrong_ guesses, so an office full of people logging in normally never approaches the limit. `false` (the default) on reveal's limiter — reveal's purpose is bounding volume on the single highest-value endpoint regardless of outcome.
+- **Ordering is endpoint-specific:** for **login** and **signup**, the per-IP limiter runs before `authenticate` (there's no session yet). The limiter can run first since it's IP-only and doesn't need validation. For **reveal**, the per-user limiter runs _after_ `authenticate` (so `req.user.id` exists) but before `requireProjectRole`. This isn't a gap on the reveal side: reveal already requires a valid session to reach at all, so a missing or invalid cookie is rejected by `authenticate` with `401` before the limiter runs — there's no meaningful pre-auth traffic on that route to catch earlier.
 - **Limits are conservative defaults** for this build's scope, not tuned
   production values, and configurable via `express-rate-limit`'s
   `windowMs`/`max` options.
@@ -399,7 +399,7 @@ in the app and worth throttling even for authorized users. Keys and limits are l
   default plaintext body.
 - **Not logged:** a `429` from any limiter does not write an
   `AuditLogEntry`. For login and signup, there's no authenticated user
-  yet to attribute an entry to. For reveal, there *is* an authenticated
+  yet to attribute an entry to. For reveal, there _is_ an authenticated
   user by the time the reveal limiter runs, but there's still no `action`
   enum value for "rate limited" distinct from "denied" — conflating the
   two would make a busy legitimate developer indistinguishable from
