@@ -1,0 +1,28 @@
+{
+  "name": "raaz-secrets-manager",
+  "version": "0.0.0",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server",
+    "packages/shared-schemas"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev -w server\" \"npm run dev -w client\"",
+    "build": "npm run build -w packages/shared-schemas && npm run build -w server && npm run build -w client",
+    "lint": "eslint . --ext .ts,.tsx",
+    "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
+    "test": "npm run test -w server && npm run test -w client",
+    "test:server": "npm run test -w server",
+    "test:client": "npm run test -w client"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "packageManager": "npm@10.5.0",
+  "dependencies": {
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-router-dom": "7.18.4"
+  }
+}

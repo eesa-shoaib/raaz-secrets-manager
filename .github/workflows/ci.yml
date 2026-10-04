@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches: [main, feat/**]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: 26
+  MONGOMS_VERSION: 8.0.4
+
+jobs:
+  lint-and-format:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format -- --check
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: lint-and-format
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build
+
+  test-server:
+    name: Test Server
+    runs-on: ubuntu-latest
+    needs: lint-and-format
+    env:
+      MONGO_URI: mongodb://localhost:27017
+      JWT_SECRET: test-secret-that-is-at-least-32-characters-long
+      MASTER_KEY: dGVzdC1tYXN0ZXJrZXktdGhhdC1pcy1leGFjdGx5LTMyLWJ5dGVz
+      MASTER_KEY_VERSION: 1
+      NODE_ENV: test
+      CLIENT_ORIGIN: http://localhost:5173
+      JWT_EXPIRES_IN: 7d
+      LOG_LEVEL: silent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - name: Cache MongoDB binary
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/mongodb-memory-server
+            ~/.mongodb-memory-server
+          key: mongodb-memory-server-${{ env.MONGOMS_VERSION }}-${{ runner.os }}
+      - run: npm ci
+      - run: npm run build -w packages/shared-schemas
+      - run: npm run build -w server
+      - run: npm run test -w server
+
+  test-client:
+    name: Test Client
+    runs-on: ubuntu-latest
+    needs: lint-and-format
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build -w packages/shared-schemas
+      - run: npm run build -w client
+      - run: npm run test -w client
