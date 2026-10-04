@@ -1,3 +1,7 @@
+---
+tags: [tech-stack, decisions, versions, rationale, testing, tooling]
+---
+
 # Tech Stack
 
 ## Repository Structure

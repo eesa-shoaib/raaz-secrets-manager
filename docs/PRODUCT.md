@@ -1,3 +1,7 @@
+---
+tags: [product, mvp, scope, stories, non-goals]
+---
+
 # Product
 
 ## Problem

@@ -1,3 +1,7 @@
+---
+tags: [frontend, mvp, ui, components, routes, phase-gate]
+---
+
 # Frontend Blueprint
 
 Pages, routes, and UI widgets for the time-constrained build.

@@ -1,3 +1,7 @@
+---
+tags: [data-model, mvp, schema, entities, migrations]
+---
+
 # Data Model
 
 ## Entity Relationship Overview
