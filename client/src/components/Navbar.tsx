@@ -48,7 +48,7 @@ function UserMenu({ email }: UserMenuProps) {
 export default function NavBar() {
   return (
     <div className="navbar bg-base-200 shadow-xl border-base-300 border-2 border-solid max-w-6xl mx-auto px-8 py-4">
-      <div className="navbar-start flex items-center gap-6">
+      <div className="navbar-start flex items-center gap-2">
         <NavbarStyle to="/" className="text-xl">
           Raaz App
         </NavbarStyle>
