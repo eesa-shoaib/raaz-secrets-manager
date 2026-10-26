@@ -17,7 +17,12 @@ export type AuditAction =
   | 'user_deactivated'
   | 'platform_admin_granted'
   | 'platform_admin_revoked'
-  | 'bootstrap_admin';
+  | 'bootstrap_admin'
+  | 'secret_created'
+  | 'secret_edited'
+  | 'secret_deleted'
+  | 'secret_revealed'
+  | 'secret_reveal_failed';
 
 export interface AuditLogEntryDoc extends Document {
   userId: mongoose.Types.ObjectId;
