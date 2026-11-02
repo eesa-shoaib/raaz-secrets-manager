@@ -9,6 +9,10 @@ import { RequireAuth, PublicOnly } from '../components/Guards';
 import LoginPage from './LoginPage';
 import SignupPage from './SignupPage';
 import ProjectsPage from './ProjectsPage';
+import ProjectLayout from './ProjectLayout';
+import SecretsPage from './SecretsPage';
+import MembersPage from './MembersPage';
+import ProjectAuditLogPage from './ProjectAuditLogPage';
 import StatusPage from './StatusPage';
 
 export function App() {
@@ -31,6 +35,12 @@ export function App() {
               <Route element={<RequireAuth />}>
                 <Route element={<AppShell />}>
                   <Route path="/projects" element={<ProjectsPage />} />
+                  <Route path="/projects/:projectId" element={<ProjectLayout />}>
+                    <Route index element={<Navigate to="secrets" replace />} />
+                    <Route path="secrets" element={<SecretsPage />} />
+                    <Route path="members" element={<MembersPage />} />
+                    <Route path="audit-log" element={<ProjectAuditLogPage />} />
+                  </Route>
                 </Route>
               </Route>
 
