@@ -1,0 +1,59 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Raaz API",
+    "version": "1.0.0",
+    "description": "MVP contract from API.md. Secret routes are currently incorrectly mounted; audit-log and admin routes are not implemented. State-changing requests require an Origin matching CLIENT_ORIGIN. Login sets an httpOnly cookie; configure Hoppscotch to send cookies."
+  },
+  "servers": [{ "url": "http://localhost:5000/api", "description": "Local server" }],
+  "security": [{ "cookieAuth": [] }],
+  "components": {
+    "securitySchemes": { "cookieAuth": { "type": "apiKey", "in": "cookie", "name": "token" } },
+    "parameters": {
+      "projectId": { "name": "projectId", "in": "path", "required": true, "schema": { "type": "string" } },
+      "userId": { "name": "userId", "in": "path", "required": true, "schema": { "type": "string" } },
+      "secretId": { "name": "secretId", "in": "path", "required": true, "schema": { "type": "string" } },
+      "origin": { "name": "Origin", "in": "header", "required": true, "schema": { "type": "string", "example": "http://localhost:5173" } }
+    },
+    "schemas": {
+      "credentials": { "type": "object", "required": ["email", "password"], "properties": { "email": { "type": "string", "format": "email", "example": "user@example.com" }, "password": { "type": "string", "format": "password", "minLength": 8, "maxLength": 72 } } },
+      "role": { "type": "string", "enum": ["projectAdmin", "developer", "auditor"] },
+      "environment": { "type": "string", "enum": ["development", "staging", "production"] }
+    }
+  },
+  "paths": {
+    "/auth/signup": { "post": { "summary": "Sign up", "security": [], "parameters": [{ "$ref": "#/components/parameters/origin" }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/credentials" } } } }, "responses": { "201": { "description": "Account created" }, "422": { "description": "Invalid input" } } } },
+    "/auth/login": { "post": { "summary": "Log in and set cookie", "security": [], "parameters": [{ "$ref": "#/components/parameters/origin" }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/credentials" } } } }, "responses": { "200": { "description": "Logged in" }, "401": { "description": "Invalid credentials" } } } },
+    "/auth/logout": { "post": { "summary": "Log out", "parameters": [{ "$ref": "#/components/parameters/origin" }], "responses": { "204": { "description": "Logged out" } } } },
+    "/auth/me": { "get": { "summary": "Current user", "responses": { "200": { "description": "Current user" }, "401": { "description": "Unauthenticated" } } } },
+    "/projects": {
+      "get": { "summary": "List projects", "responses": { "200": { "description": "Projects" } } },
+      "post": { "summary": "Create project", "parameters": [{ "$ref": "#/components/parameters/origin" }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["name"], "properties": { "name": { "type": "string", "example": "Demo" } } } } } }, "responses": { "201": { "description": "Project created" } } }
+    },
+    "/projects/{projectId}": { "parameters": [{ "$ref": "#/components/parameters/projectId" }], "get": { "summary": "Get project", "responses": { "200": { "description": "Project" }, "404": { "description": "Not found or not a member" } } } },
+    "/projects/{projectId}/members": {
+      "parameters": [{ "$ref": "#/components/parameters/projectId" }],
+      "get": { "summary": "List members", "responses": { "200": { "description": "Members" } } },
+      "post": { "summary": "Add member", "parameters": [{ "$ref": "#/components/parameters/origin" }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["email", "role"], "properties": { "email": { "type": "string", "format": "email" }, "role": { "$ref": "#/components/schemas/role" } } } } } }, "responses": { "201": { "description": "Member added" } } }
+    },
+    "/projects/{projectId}/members/{userId}": {
+      "parameters": [{ "$ref": "#/components/parameters/projectId" }, { "$ref": "#/components/parameters/userId" }],
+      "patch": { "summary": "Change member role", "parameters": [{ "$ref": "#/components/parameters/origin" }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["role"], "properties": { "role": { "$ref": "#/components/schemas/role" } } } } } }, "responses": { "200": { "description": "Role changed" }, "409": { "description": "Last admin" } } },
+      "delete": { "summary": "Remove member", "parameters": [{ "$ref": "#/components/parameters/origin" }], "responses": { "204": { "description": "Removed" }, "409": { "description": "Last admin" } } }
+    },
+    "/projects/{projectId}/secrets": {
+      "parameters": [{ "$ref": "#/components/parameters/projectId" }],
+      "get": { "summary": "List secrets (unfinished)", "parameters": [{ "name": "environment", "in": "query", "required": true, "schema": { "$ref": "#/components/schemas/environment" } }], "responses": { "200": { "description": "Masked secrets" } } },
+      "post": { "summary": "Create secret (unfinished)", "parameters": [{ "$ref": "#/components/parameters/origin" }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["key", "environment", "value"], "properties": { "key": { "type": "string", "example": "API_KEY" }, "environment": { "$ref": "#/components/schemas/environment" }, "value": { "type": "string" } } } } } }, "responses": { "201": { "description": "Created" } } }
+    },
+    "/projects/{projectId}/secrets/{secretId}": {
+      "parameters": [{ "$ref": "#/components/parameters/projectId" }, { "$ref": "#/components/parameters/secretId" }],
+      "patch": { "summary": "Edit secret value (unfinished)", "parameters": [{ "$ref": "#/components/parameters/origin" }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["value"], "properties": { "value": { "type": "string" } } } } } }, "responses": { "200": { "description": "Updated" } } },
+      "delete": { "summary": "Delete secret (unfinished)", "parameters": [{ "$ref": "#/components/parameters/origin" }], "responses": { "204": { "description": "Deleted" } } }
+    },
+    "/projects/{projectId}/secrets/{secretId}/reveal": { "parameters": [{ "$ref": "#/components/parameters/projectId" }, { "$ref": "#/components/parameters/secretId" }], "post": { "summary": "Reveal secret (unfinished)", "parameters": [{ "$ref": "#/components/parameters/origin" }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "confirm": { "type": "boolean", "default": false } } } } } }, "responses": { "200": { "description": "Decrypted value" }, "422": { "description": "Production confirmation required" } } } },
+    "/projects/{projectId}/audit-log": { "parameters": [{ "$ref": "#/components/parameters/projectId" }], "get": { "summary": "Project audit log (not implemented)", "parameters": [{ "name": "action", "in": "query", "schema": { "type": "string" } }, { "name": "result", "in": "query", "schema": { "type": "string", "enum": ["allowed", "denied"] } }, { "name": "environment", "in": "query", "schema": { "$ref": "#/components/schemas/environment" } }, { "name": "limit", "in": "query", "schema": { "type": "integer", "maximum": 100 } }], "responses": { "200": { "description": "Audit entries" } } } },
+    "/admin/users": { "get": { "summary": "List users (not implemented)", "parameters": [{ "name": "page", "in": "query", "schema": { "type": "integer" } }, { "name": "limit", "in": "query", "schema": { "type": "integer" } }], "responses": { "200": { "description": "Users" } } } },
+    "/admin/users/{userId}": { "parameters": [{ "$ref": "#/components/parameters/userId" }], "patch": { "summary": "Update user status or admin role (not implemented)", "parameters": [{ "$ref": "#/components/parameters/origin" }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "isActive": { "type": "boolean" }, "isPlatformAdmin": { "type": "boolean" } } } } } }, "responses": { "200": { "description": "Updated" }, "409": { "description": "Last active platform admin" } } } }
+  }
+}
