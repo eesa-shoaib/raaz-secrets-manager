@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
+import { writeDeniedAuditEntry } from '../services/audit.service.js';
 import { getUserRole } from '../services/membership.service.js';
 import { getSecretAuditMetadata } from '../services/secrets.service.js';
-import { writeDeniedAuditEntry } from '../services/audit.service.js';
 import { asyncHandler } from '../utils/async-handler.js';
 
 export function requireProjectRole(...allowedRoles: ('projectAdmin' | 'developer' | 'auditor')[]) {

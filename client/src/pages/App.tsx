@@ -1,8 +1,8 @@
 import React from 'react';
-import Navbar from '../components/Navbar';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import ProjectsPage from './ProjectsPage';
+import Navbar from '../components/Navbar';
 import LoginPage from './LoginPage';
+import ProjectsPage from './ProjectsPage';
 
 function Layout({ children }: { children: React.ReactNode }) {
   return (

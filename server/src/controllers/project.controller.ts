@@ -1,8 +1,8 @@
-import type { Request, Response } from 'express';
 import { projectResponseSchema } from '@raaz/shared-schemas';
-import { createProject, getProject, listProjectsForUser } from '../services/projects.service.js';
+import type { Request, Response } from 'express';
+import { createProject, getProject, listProjectsForUser, type ProjectView } from '../services/projects.service.js';
 
-function response(project: any, role?: string) {
+function response(project: ProjectView, role?: Request['projectRole']) {
   return projectResponseSchema.parse({
     id: project._id.toString(), name: project.name, environments: project.environments, status: project.status,
     createdBy: project.createdBy.toString(), createdAt: project.createdAt, updatedAt: project.updatedAt, role: role ?? project.role,

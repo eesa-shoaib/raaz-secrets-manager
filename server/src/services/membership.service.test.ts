@@ -1,9 +1,9 @@
 import mongoose from 'mongoose';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { UserModel } from '../models/User.js';
+import { AuditLogEntryModel } from '../models/AuditLogEntry.js';
 import { ProjectModel } from '../models/Project.js';
 import { ProjectMembershipModel } from '../models/ProjectMembership.js';
-import { AuditLogEntryModel } from '../models/AuditLogEntry.js';
+import { UserModel } from '../models/User.js';
 import { addProjectMember } from './membership.service.js';
 
 describe('adding a project member', () => {

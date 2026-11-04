@@ -1,11 +1,18 @@
 import mongoose, { Types } from 'mongoose';
 import { ProjectModel } from '../models/Project.js';
-import { createMembership } from './membership.service.js';
-import { writeAuditEntry } from './audit.service.js';
+import type { ProjectDoc } from '../models/Project.js';
+import { ProjectMembershipModel } from '../models/ProjectMembership.js';
 import { AppError } from '../utils/app-error.js';
+import { writeAuditEntry } from './audit.service.js';
+import { createMembership } from './membership.service.js';
 
-export async function listProjectsForUser(userId: string): Promise<any[]> {
-  const memberships = await mongoose.model('ProjectMembership').find({ userId: new Types.ObjectId(userId) }).lean();
+export type ProjectView = Pick<ProjectDoc, 'name' | 'environments' | 'status' | 'createdBy' | 'createdAt' | 'updatedAt'> & {
+  _id: Types.ObjectId;
+  role?: 'projectAdmin' | 'developer' | 'auditor';
+};
+
+export async function listProjectsForUser(userId: string): Promise<ProjectView[]> {
+  const memberships = await ProjectMembershipModel.find({ userId: new Types.ObjectId(userId) }).lean();
   const projects = await ProjectModel.find({ _id: { $in: memberships.map((membership) => membership.projectId) } }).lean();
   return projects.map((project) => ({
     ...project,
@@ -13,7 +20,7 @@ export async function listProjectsForUser(userId: string): Promise<any[]> {
   }));
 }
 
-export async function createProject(userId: string, name: string): Promise<any> {
+export async function createProject(userId: string, name: string): Promise<ProjectView> {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
@@ -37,7 +44,7 @@ export async function createProject(userId: string, name: string): Promise<any> 
   }
 }
 
-export async function getProject(projectId: string): Promise<any> {
+export async function getProject(projectId: string): Promise<ProjectView> {
   const project = await ProjectModel.findById(projectId).lean();
   if (!project) throw new AppError(404, 'NOT_FOUND', 'Project not found');
   return project;

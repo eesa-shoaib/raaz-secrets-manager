@@ -1,6 +1,6 @@
+import { loginInputSchema, signupInputSchema } from '@raaz/shared-schemas';
 import { Router } from 'express';
 import { z } from 'zod';
-import { loginInputSchema, signupInputSchema } from '@raaz/shared-schemas';
 import {
   currentUserController,
   loginController,

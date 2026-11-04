@@ -6,7 +6,6 @@ import {
   createProjectSchema,
   projectResponseSchema,
   createSecretSchema,
-  editSecretSchema,
   revealSecretSchema,
   secretResponseSchema,
   auditLogQuerySchema,
@@ -14,7 +13,7 @@ import {
   MASKED_SECRET_VALUE,
   CANONICAL_ENVIRONMENTS,
 } from '../dist/index.js';
-import { internalUserSchema, internalSecretSchema } from '../dist/internal/index.js';
+import { internalUserSchema } from '../dist/internal/index.js';
 
 console.log('Running shared-schemas test suite...');
 

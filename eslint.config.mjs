@@ -4,11 +4,15 @@ import importPlugin from 'eslint-plugin-import';
 import prettierConfig from 'eslint-config-prettier';
 
 export default tseslint.config(
+  { ignores: ['**/dist/**', '**/node_modules/**', '.obsidian/**', '**/*.config.js', '**/*.config.mjs', '**/*.config.ts'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   prettierConfig,
   {
-    ignores: ['dist/', 'node_modules/', '.obsidian/', '*.config.js', '*.config.ts'],
+    files: ['**/*.js', '**/*.mjs'],
+    languageOptions: { globals: { console: 'readonly', process: 'readonly', URL: 'readonly', fetch: 'readonly' } },
+  },
+  {
     files: ['**/*.ts', '**/*.tsx'],
     languageOptions: {
       ecmaVersion: 2022,
@@ -25,6 +29,11 @@ export default tseslint.config(
     },
     plugins: {
       import: importPlugin,
+    },
+    settings: {
+      'import/resolver': {
+        typescript: { project: ['./client/tsconfig.json', './server/tsconfig.json', './packages/*/tsconfig.json'], noWarnOnMultipleProjects: true },
+      },
     },
     rules: {
       'import/no-unresolved': 'error',

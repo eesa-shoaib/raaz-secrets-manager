@@ -1,17 +1,17 @@
 import mongoose, { Types } from 'mongoose';
-import { SecretModel } from '../models/Secret.js';
 import { ProjectModel } from '../models/Project.js';
-import { encrypt, decrypt } from '../services/encryption.service.js';
-import { writeAuditEntry } from './audit.service.js';
-import { AppError } from '../utils/app-error.js';
 import { ProjectMembershipDoc } from '../models/ProjectMembership.js';
+import { SecretModel } from '../models/Secret.js';
 import type { SecretDoc } from '../models/Secret.js';
+import { encrypt, decrypt } from '../services/encryption.service.js';
+import { AppError } from '../utils/app-error.js';
+import { writeAuditEntry } from './audit.service.js';
 
 export async function listSecretsForUser(
   userId: string,
   projectId: string,
   environment: string,
-): Promise<any[]> {
+) {
   const membership = await mongoose
     .model('ProjectMembership')
     .findOne({ userId: new Types.ObjectId(userId), projectId: new Types.ObjectId(projectId) })
@@ -209,7 +209,7 @@ export async function deleteSecret(
 export async function getSecretMetadata(
   projectId: string,
   secretId: string,
-): Promise<any> {
+) {
   return SecretModel.findOne({ _id: secretId, projectId }).lean();
 }
 
@@ -235,7 +235,6 @@ export async function revealSecret(
     throw new AppError(422, 'VALIDATION_ERROR', 'Confirmation required for production reveal');
   }
 
-  try {
     const value = decrypt(
       secret.ciphertext,
       secret.iv,
@@ -270,7 +269,4 @@ export async function revealSecret(
     }
 
     return { value };
-  } catch (error) {
-    throw error;
-  }
 }

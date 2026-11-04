@@ -1,5 +1,5 @@
-import request from 'supertest';
 import jwt from 'jsonwebtoken';
+import request from 'supertest';
 import { describe, it, expect } from 'vitest';
 import { createApp } from '../index.js';
 import { issueToken } from '../services/auth.service.js';

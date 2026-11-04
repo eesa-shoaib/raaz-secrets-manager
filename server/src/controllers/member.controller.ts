@@ -1,5 +1,5 @@
-import type { Request, Response } from 'express';
 import { memberResponseSchema } from '@raaz/shared-schemas';
+import type { Request, Response } from 'express';
 import { addProjectMember, changeProjectMemberRole, listProjectMembers, removeProjectMember } from '../services/membership.service.js';
 export async function listMembersController(req: Request, res: Response) { res.json((await listProjectMembers(req.params.projectId)).map((member) => memberResponseSchema.parse(member))); }
 export async function addMemberController(req: Request, res: Response) { await addProjectMember(req.user!.id, req.params.projectId, req.body.email, req.body.role); res.status(201).json({ message: 'Member added' }); }

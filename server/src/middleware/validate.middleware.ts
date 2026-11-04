@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import { AnyZodObject, ZodError } from 'zod';
-import { asyncHandler } from '../utils/async-handler.js';
 import { AppError } from '../utils/app-error.js';
+import { asyncHandler } from '../utils/async-handler.js';
 
 const fieldGuidance: Record<string, string> = {
   'params.projectId': 'projectId must be a valid 24-character hexadecimal ID',

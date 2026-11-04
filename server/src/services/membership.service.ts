@@ -1,8 +1,8 @@
 import mongoose, { Types, type ClientSession } from 'mongoose';
-import { ProjectMembershipModel, type ProjectMembershipDoc } from '../models/ProjectMembership.js';
 import { ProjectModel } from '../models/Project.js';
-import { AppError } from '../utils/app-error.js';
+import { ProjectMembershipModel, type ProjectMembershipDoc } from '../models/ProjectMembership.js';
 import { UserModel } from '../models/User.js';
+import { AppError } from '../utils/app-error.js';
 import { writeAuditEntry } from './audit.service.js';
 
 export async function listProjectMembers(projectId: string) {

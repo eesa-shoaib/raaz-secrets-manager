@@ -1,4 +1,4 @@
-import mongoose, { Types, type ClientSession } from 'mongoose';
+import { Types, type ClientSession } from 'mongoose';
 import { AuditLogEntryModel, type AuditLogEntryDoc } from '../models/AuditLogEntry.js';
 
 interface WriteAuditEntryParams {

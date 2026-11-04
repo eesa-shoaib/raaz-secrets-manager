@@ -1,18 +1,19 @@
 import express from 'express';
+import type { NextFunction, Request, Response } from 'express';
 import request from 'supertest';
 import { describe, expect, it, vi } from 'vitest';
 
-vi.mock('../middleware/authenticate.middleware.js', () => ({ authenticate: (req: any, _res: any, next: any) => { req.user = { id: 'aaaaaaaaaaaaaaaaaaaaaaaa' }; next(); } }));
-vi.mock('../middleware/require-project-role.middleware.js', () => ({ requireProjectRole: () => (_req: any, _res: any, next: any) => next() }));
-vi.mock('../middleware/require-project-status.middleware.js', () => ({ requireProjectStatus: (_req: any, _res: any, next: any) => next() }));
-vi.mock('../middleware/rate-limiters.middleware.js', () => ({ revealLimiter: (_req: any, _res: any, next: any) => next() }));
+vi.mock('../middleware/authenticate.middleware.js', () => ({ authenticate: (req: Request, _res: Response, next: NextFunction) => { req.user = { id: 'aaaaaaaaaaaaaaaaaaaaaaaa', email: 'test@example.com', isPlatformAdmin: false, isActive: true, createdAt: new Date(), updatedAt: new Date() }; next(); } }));
+vi.mock('../middleware/require-project-role.middleware.js', () => ({ requireProjectRole: () => (_req: Request, _res: Response, next: NextFunction) => next() }));
+vi.mock('../middleware/require-project-status.middleware.js', () => ({ requireProjectStatus: (_req: Request, _res: Response, next: NextFunction) => next() }));
+vi.mock('../middleware/rate-limiters.middleware.js', () => ({ revealLimiter: (_req: Request, _res: Response, next: NextFunction) => next() }));
 vi.mock('../services/secrets.service.js', () => ({
   createSecret: vi.fn(async () => ({ _id: 'bbbbbbbbbbbbbbbbbbbbbbbb', key: 'API_KEY', environment: 'development', createdAt: new Date(), updatedAt: new Date(), ciphertext: 'must-not-leak' })),
   listSecretsForUser: vi.fn(), editSecret: vi.fn(), deleteSecret: vi.fn(), getSecretMetadata: vi.fn(), revealSecret: vi.fn(),
 }));
 
-import { secretRoutes } from './secret.routes.js';
 import { errorHandler } from '../middleware/error.middleware.js';
+import { secretRoutes } from './secret.routes.js';
 
 describe('secret creation route', () => {
   const app = express();

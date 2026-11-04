@@ -1,10 +1,10 @@
-import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import type { Response } from 'express';
-import { UserModel, type UserDoc } from '../models/User.js';
+import jwt from 'jsonwebtoken';
 import { PlatformConfigModel } from '../models/PlatformConfig.js';
-import { getJwtSecret, getCookieOptions } from './boot-validation.service.js';
+import { UserModel, type UserDoc } from '../models/User.js';
 import { AppError } from '../utils/app-error.js';
+import { getJwtSecret, getCookieOptions } from './boot-validation.service.js';
 
 const DUMMY_HASH = '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy';
 

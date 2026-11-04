@@ -1,5 +1,5 @@
-import type { Request, Response } from 'express';
 import { secretResponseSchema } from '@raaz/shared-schemas';
+import type { Request, Response } from 'express';
 import { listSecretsForUser, createSecret, editSecret, deleteSecret, getSecretMetadata, revealSecret } from '../services/secrets.service.js';
 
 export async function listSecretsController(req: Request, res: Response): Promise<void> {

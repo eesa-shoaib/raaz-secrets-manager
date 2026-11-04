@@ -1,6 +1,6 @@
-import type { Request, Response } from 'express';
 import { publicUserSchema } from '@raaz/shared-schemas';
-import { clearAuthCookie, issueToken, login, setAuthCookie, signup } from '../services/auth.service.js';
+import type { Request, Response } from 'express';
+import { clearAuthCookie, login, setAuthCookie, signup } from '../services/auth.service.js';
 
 export async function signupController(req: Request, res: Response): Promise<void> {
   const user = await signup(req.body.email, req.body.password);

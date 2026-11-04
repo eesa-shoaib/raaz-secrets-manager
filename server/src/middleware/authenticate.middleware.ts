@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
-import { verifyToken } from '../services/auth.service.js';
 import { UserModel } from '../models/User.js';
+import { verifyToken } from '../services/auth.service.js';
 import { asyncHandler } from '../utils/async-handler.js';
 
 export const authenticate = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
