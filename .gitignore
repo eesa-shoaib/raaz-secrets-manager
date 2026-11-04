@@ -70,6 +70,7 @@ coverage/
 .stylelintcache
 
 # Obsidian (keep config, ignore plugin binaries)
+.obsidian/workspace.json
 .obsidian/plugins/*/main.js
 .obsidian/plugins/*/manifest.json
 .obsidian/plugins/*/styles.css
