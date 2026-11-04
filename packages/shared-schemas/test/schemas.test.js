@@ -6,7 +6,6 @@ import {
   createProjectSchema,
   projectResponseSchema,
   createSecretSchema,
-  editSecretSchema,
   revealSecretSchema,
   secretResponseSchema,
   auditLogQuerySchema,
@@ -14,7 +13,7 @@ import {
   MASKED_SECRET_VALUE,
   CANONICAL_ENVIRONMENTS,
 } from '../dist/index.js';
-import { internalUserSchema, internalSecretSchema } from '../dist/internal/index.js';
+import { internalUserSchema } from '../dist/internal/index.js';
 
 console.log('Running shared-schemas test suite...');
 
@@ -79,12 +78,13 @@ assert.strictEqual(secret.key, 'DATABASE_URL_2');
 
 const secretRes = secretResponseSchema.parse({
   id: 'sec_1',
-  projectId: 'proj_1',
   environment: 'production',
   key: 'DATABASE_URL_2',
+  maskedValue: MASKED_SECRET_VALUE,
   createdAt: new Date(),
+  updatedAt: new Date(),
 });
-assert.strictEqual(secretRes.value, MASKED_SECRET_VALUE);
+assert.strictEqual(secretRes.maskedValue, MASKED_SECRET_VALUE);
 
 const reveal = revealSecretSchema.parse({ confirm: true });
 assert.strictEqual(reveal.confirm, true);

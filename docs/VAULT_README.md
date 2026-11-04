@@ -10,16 +10,16 @@ This repo root is the Obsidian vault. Open the folder in Obsidian to use.
 
 1. **Open vault** → Select this repo root (`raaz-secrets-manager/`)
 2. **Enable community plugins** (Settings → Community plugins):
-   - `obsidian-git` — Git in sidebar (configure: auto-commit 5min, auto-pull)
-   - `dataview` — Live queries in notes
-   - `obsidian-tasks-plugin` — Task tracking across notes
-   - `advanced-canvas` — Mermaid in canvas
-   - `obsidian-kanban` — Kanban boards from markdown
+    - `obsidian-git` — Git in sidebar (configure: auto-commit 5min, auto-pull)
+    - `dataview` — Live queries in notes
+    - `obsidian-tasks-plugin` — Task tracking across notes
+    - `advanced-canvas` — Mermaid in canvas
+    - `obsidian-kanban` — Kanban boards from markdown
 3. **Open key files**:
-   - `Ctrl+O` → `architecture.canvas` — Visual architecture + code links
-   - `Ctrl+O` → `MVP_BOARD.md` → `Ctrl+P` → "Open as Kanban board"
-   - `Ctrl+O` → `QUERIES.md` — Copy query blocks into any note
-   - `Ctrl+N` → Select template (daily-note, adr, feature-spec, meeting-notes)
+    - `Ctrl+O` → `architecture.canvas` — Visual architecture + code links
+    - `Ctrl+O` → `MVP_BOARD.md` → `Ctrl+P` → "Open as Kanban board"
+    - `Ctrl+O` → `QUERIES.md` — Copy query blocks into any note
+    - `Ctrl+N` → Select template (daily-note, adr, feature-spec, meeting-notes)
 
 ## Structure
 

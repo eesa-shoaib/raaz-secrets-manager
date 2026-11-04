@@ -217,13 +217,13 @@ noted, not omitted.
 
 - **States:**
 
-  - loading — three `Skeleton card`;
+    - loading — three `Skeleton card`;
 
-  - error — `ErrorState` + Retry;
+    - error — `ErrorState` + Retry;
 
-  - empty (story 10) — "You're not a member of any projects yet. Create
-    a project, or ask a Project Admin to add you using your email
-    address: **{me.email}**." Primary action: New project.
+    - empty (story 10) — "You're not a member of any projects yet. Create
+      a project, or ask a Project Admin to add you using your email
+      address: **{me.email}**." Primary action: New project.
 
 - **On create:** navigate to the new project's secrets page.
 
@@ -240,12 +240,12 @@ noted, not omitted.
 
 - **States:**
 
-  - `404` → `StatusPage variant="not-found"` — a missing project and a
-    no-membership project are identical by design;
+    - `404` → `StatusPage variant="not-found"` — a missing project and a
+      no-membership project are identical by design;
 
-  - `403` → `ProjectArchivedNotice` — post-MVP (unreachable until archive ships; in the MVP, treat as "other error");
+    - `403` → `ProjectArchivedNotice` — post-MVP (unreachable until archive ships; in the MVP, treat as "other error");
 
-  - other error → `ErrorState` + Retry.
+    - other error → `ErrorState` + Retry.
 
 - **Malformed `:projectId`:** preferred, not required, to render the
   not-found page without a request. One-line check; skip if it costs
@@ -348,12 +348,12 @@ Invariants (correctness properties, not features — see §9):
 
 - **Columns:** Time · User · Action · Details · Result.
 
-  - Time in the viewer's local timezone; ISO in the `datetime` attribute.
+    - Time in the viewer's local timezone; ISO in the `datetime` attribute.
 
-  - User shows `user.email` from the response; a `null` user renders as "Unknown user".
+    - User shows `user.email` from the response; a `null` user renders as "Unknown user".
 
-  - Details: `secretKey` + environment badge for secret actions; target
-    user + role change for membership actions.
+    - Details: `secretKey` + environment badge for secret actions; target
+      user + role change for membership actions.
 
 - **Action labels (17 total; the 12 project-scoped shown here):**
 
