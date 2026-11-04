@@ -1,18 +1,20 @@
-import { Types } from 'mongoose';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import type { Response } from 'express';
 import { UserModel, type UserDoc } from '../models/User.js';
 import { PlatformConfigModel } from '../models/PlatformConfig.js';
-import { getJwtSecret, getCookieOptions, logger } from './boot-validation.service.js';
+import { getJwtSecret, getCookieOptions } from './boot-validation.service.js';
+import { AppError } from '../utils/app-error.js';
 
-const DUMMY_HASH = '$2b$10$dummyhashdummyhashdummyh';
+const DUMMY_HASH = '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy';
 
 export async function signup(email: string, password: string): Promise<UserDoc> {
   const existing = await UserModel.findOne({ email: email.toLowerCase() }).lean();
   if (existing) {
-    throw new Error('CONFLICT:already registered');
+    throw new AppError(409, 'CONFLICT', 'An account with that email already exists');
   }
+
+  assertSignupDomainAllowed(email);
 
   const passwordHash = await bcrypt.hash(password, 10);
   const user = new UserModel({
@@ -41,15 +43,24 @@ export async function login(
     return null;
   }
 
-  const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
-  const token = jwt.sign(
-    { sub: user.id, tv: user.tokenVersion, pa: user.isPlatformAdmin },
-    getJwtSecret(),
-    { algorithm: 'HS256', expiresIn: expiresIn as jwt.SignOptions['expiresIn'] },
-  );
+  const token = issueToken(user._id.toString(), user.tokenVersion, user.isPlatformAdmin);
 
-  const userWithoutHash = { ...user, passwordHash: undefined } as unknown as UserDoc;
-  return { user: userWithoutHash, token };
+  return { user: user as unknown as UserDoc, token };
+}
+
+function assertSignupDomainAllowed(email: string): void {
+  const rawDomains = process.env.SIGNUP_ALLOWED_DOMAINS;
+  if (!rawDomains) return;
+
+  const domains = rawDomains
+    .split(',')
+    .map((domain) => domain.trim().toLowerCase())
+    .filter(Boolean);
+  const domain = email.slice(email.lastIndexOf('@') + 1).toLowerCase();
+
+  if (!domains.includes(domain)) {
+    throw new AppError(422, 'VALIDATION_ERROR', 'Email domain is not allowed for signup');
+  }
 }
 
 export async function bootstrapPlatformAdmin(): Promise<void> {

@@ -1,10 +1,11 @@
 import type { Request, Response, NextFunction } from 'express';
 import { getUserRole } from '../services/membership.service.js';
+import { asyncHandler } from '../utils/async-handler.js';
 
 export function requireProjectRoleOrPlatformAdmin(
   ...allowedRoles: ('projectAdmin' | 'developer' | 'auditor')[]
 ) {
-  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  return asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     if (req.user!.isPlatformAdmin) {
       next();
       return;
@@ -28,5 +29,5 @@ export function requireProjectRoleOrPlatformAdmin(
 
     req.projectRole = role;
     next();
-  };
+  });
 }

@@ -17,6 +17,10 @@ export function validateBootConfig(): void {
     throw new Error('MASTER_KEY must be 32 bytes (base64-encoded)');
   }
 
+  if (!/^\d+$/.test(process.env.MASTER_KEY_VERSION!)) {
+    throw new Error('MASTER_KEY_VERSION must be a positive integer');
+  }
+
   const masterKeyVersion = Number.parseInt(process.env.MASTER_KEY_VERSION!, 10);
   if (!Number.isInteger(masterKeyVersion) || masterKeyVersion <= 0) {
     throw new Error('MASTER_KEY_VERSION must be a positive integer');
@@ -63,5 +67,18 @@ export const getCookieOptions = () => {
   };
 };
 
-const logger = pino.default({ level: process.env.LOG_LEVEL || 'info' });
+const logger = pino.default({
+  level: process.env.LOG_LEVEL || 'info',
+  redact: {
+    paths: [
+      'password',
+      'value',
+      'body.password',
+      'body.value',
+      'req.body.password',
+      'req.body.value',
+    ],
+    censor: '[Redacted]',
+  },
+});
 export { logger };

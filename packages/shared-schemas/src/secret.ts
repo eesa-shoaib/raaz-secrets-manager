@@ -18,6 +18,7 @@ export const secretResponseSchema = z.object({
   key: z.string(),
   environment: projectEnvironmentEnum,
   maskedValue: z.string().length(8),
+  lastAccessedAt: z.coerce.date().nullable().optional(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 });

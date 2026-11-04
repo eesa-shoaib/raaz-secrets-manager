@@ -13,5 +13,6 @@ declare namespace NodeJS {
     LOG_LEVEL: 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace';
     PLATFORM_ADMIN_EMAIL?: string;
     PLATFORM_ADMIN_PASSWORD?: string;
+    SIGNUP_ALLOWED_DOMAINS?: string;
   }
 }

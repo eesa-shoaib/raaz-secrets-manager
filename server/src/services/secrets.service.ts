@@ -1,7 +1,6 @@
-import mongoose, { Types, type ClientSession } from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import { SecretModel } from '../models/Secret.js';
 import { ProjectModel } from '../models/Project.js';
-import { UserModel } from '../models/User.js';
 import { encrypt, decrypt } from '../services/encryption.service.js';
 import { writeAuditEntry } from './audit.service.js';
 import { AppError } from '../utils/app-error.js';
@@ -11,6 +10,7 @@ import type { SecretDoc } from '../models/Secret.js';
 export async function listSecretsForUser(
   userId: string,
   projectId: string,
+  environment: string,
 ): Promise<any[]> {
   const membership = await mongoose
     .model('ProjectMembership')
@@ -18,9 +18,11 @@ export async function listSecretsForUser(
     .lean() as ProjectMembershipDoc | null;
   if (!membership) return [];
 
-  const secrets = await SecretModel.find({ projectId: new Types.ObjectId(projectId) })
+  const project = await ProjectModel.findById(projectId).lean();
+  if (!project?.environments.includes(environment as SecretDoc['environment'])) throw new AppError(422, 'VALIDATION_ERROR', 'Invalid environment');
+  const secrets = await SecretModel.find({ projectId: new Types.ObjectId(projectId), environment })
     .lean()
-    .select('key environment ciphertext iv authTag encryptionKeyVersion');
+    .select('key environment createdAt updatedAt lastAccessedAt');
 
   return secrets.map((secret) => {
     const role = membership.role;
@@ -37,6 +39,7 @@ export async function listSecretsForUser(
       maskedValue,
       createdAt: secret.createdAt,
       updatedAt: secret.updatedAt,
+      lastAccessedAt: secret.lastAccessedAt,
     };
   });
 }
@@ -48,6 +51,13 @@ export async function createSecret(
   environment: string,
   value: string,
 ): Promise<SecretDoc> {
+  const project = await ProjectModel.findById(projectId).lean();
+  if (!project?.environments.includes(environment as SecretDoc['environment'])) throw new AppError(422, 'VALIDATION_ERROR', 'Invalid environment');
+  const role = await mongoose.model('ProjectMembership').findOne({ userId, projectId }).lean() as ProjectMembershipDoc | null;
+  if (role?.role === 'developer' && environment !== 'development') {
+    await writeAuditEntry({ userId, projectId, secretKey: key, environment: environment as SecretDoc['environment'], action: 'create', result: 'denied' });
+    throw new AppError(403, 'FORBIDDEN', 'Developers can only create secrets in development');
+  }
   // Generate secret ID before encryption
   const secretId = new Types.ObjectId();
 
@@ -74,6 +84,7 @@ export async function createSecret(
   session.startTransaction();
   try {
     await secret.save({ session });
+    await writeAuditEntry({ session, userId, projectId, secretId: secretId.toString(), secretKey: key, environment: secret.environment, action: 'create', result: 'allowed' });
     await session.commitTransaction();
     return secret;
   } catch (error) {
@@ -88,8 +99,6 @@ export async function editSecret(
   userId: string,
   projectId: string,
   secretId: string,
-  key: string,
-  environment: string,
   value: string,
 ): Promise<void> {
   const secretObjectId = new Types.ObjectId(secretId);
@@ -104,26 +113,25 @@ export async function editSecret(
     throw new AppError(403, 'FORBIDDEN', 'Insufficient role for this action');
   }
 
-  // Developer write restriction: only allowed in development environment
-  if (membership.role === 'developer' && environment !== 'development') {
-    throw new AppError(403, 'FORBIDDEN', 'Developers can only edit secrets in development environment');
-  }
-
-  const oldSecret = await SecretModel.findById(secretObjectId).lean();
+  const oldSecret = await SecretModel.findOne({ _id: secretObjectId, projectId }).lean();
   if (!oldSecret) {
     throw new AppError(404, 'NOT_FOUND', 'Secret not found');
   }
 
-  const encrypted = encrypt(value, projectId, secretId, environment);
+  if (membership.role === 'developer' && oldSecret.environment !== 'development') {
+    await writeAuditEntry({ userId, projectId, secretId, secretKey: oldSecret.key, environment: oldSecret.environment, action: 'edit', result: 'denied' });
+    throw new AppError(403, 'FORBIDDEN', 'Developers can only edit secrets in development environment');
+  }
+
+  const encrypted = encrypt(value, projectId, secretId, oldSecret.environment);
 
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    await SecretModel.findOneAndUpdate(
-      { _id: secretObjectId },
+    const updated = await SecretModel.findOneAndUpdate(
+      { _id: secretObjectId, projectId },
       {
         $set: {
-          key,
           ciphertext: encrypted.ciphertext,
           iv: encrypted.iv,
           authTag: encrypted.authTag,
@@ -134,13 +142,16 @@ export async function editSecret(
       },
       { new: true, session },
     ).exec();
+    if (!updated) throw new AppError(404, 'NOT_FOUND', 'Secret not found');
 
     await writeAuditEntry({
       session,
       userId,
       projectId,
       secretId,
-      action: 'secret_edited',
+      secretKey: oldSecret.key,
+      environment: oldSecret.environment,
+      action: 'edit',
       result: 'allowed',
     });
 
@@ -172,14 +183,17 @@ export async function deleteSecret(
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    await SecretModel.deleteOne({ _id: secretObjectId }, { session }).exec();
+    const deleted = await SecretModel.findOneAndDelete({ _id: secretObjectId, projectId }, { session }).lean();
+    if (!deleted) throw new AppError(404, 'NOT_FOUND', 'Secret not found');
 
     await writeAuditEntry({
       session,
       userId,
       projectId,
       secretId,
-      action: 'secret_deleted',
+      secretKey: deleted.key,
+      environment: deleted.environment,
+      action: 'delete',
       result: 'allowed',
     });
 
@@ -193,15 +207,21 @@ export async function deleteSecret(
 }
 
 export async function getSecretMetadata(
+  projectId: string,
   secretId: string,
 ): Promise<any> {
-  return SecretModel.findById(secretId).lean();
+  return SecretModel.findOne({ _id: secretId, projectId }).lean();
+}
+
+export async function getSecretAuditMetadata(projectId: string, secretId: string) {
+  return SecretModel.findOne({ _id: secretId, projectId }, { environment: 1, key: 1 }).lean();
 }
 
 export async function revealSecret(
   userId: string,
   projectId: string,
   secretId: string,
+  confirm: boolean,
 ): Promise<{ value: string } | null> {
   const secret = await SecretModel.findOne(
     { _id: new Types.ObjectId(secretId), projectId: new Types.ObjectId(projectId) },
@@ -210,6 +230,10 @@ export async function revealSecret(
   ).exec();
 
   if (!secret) return null;
+
+  if (secret.environment === 'production' && !confirm) {
+    throw new AppError(422, 'VALIDATION_ERROR', 'Confirmation required for production reveal');
+  }
 
   try {
     const value = decrypt(
@@ -232,9 +256,11 @@ export async function revealSecret(
         projectId,
         secretId,
         environment: secret.environment,
-        action: 'secret_revealed',
+        secretKey: secret.key,
+        action: 'reveal',
         result: 'allowed',
       });
+      await SecretModel.updateOne({ _id: secretId, projectId }, { $set: { lastAccessedAt: new Date(), lastAccessedBy: userId } }, { session });
       await session.commitTransaction();
     } catch (error) {
       await session.abortTransaction();
@@ -245,26 +271,6 @@ export async function revealSecret(
 
     return { value };
   } catch (error) {
-    // Log decryption failure and write denied audit entry
-    const session = await mongoose.startSession();
-    session.startTransaction();
-    try {
-      await writeAuditEntry({
-        session,
-        userId,
-        projectId,
-        secretId,
-        environment: secret?.environment ?? null,
-        action: 'secret_reveal_failed',
-        result: 'denied',
-      });
-      await session.commitTransaction();
-    } catch (error2) {
-      await session.abortTransaction();
-      throw error2;
-    } finally {
-      await session.endSession();
-    }
-    return null;
+    throw error;
   }
 }

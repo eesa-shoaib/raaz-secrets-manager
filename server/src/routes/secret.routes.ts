@@ -14,41 +14,36 @@ import { requireProjectStatus } from '../middleware/require-project-status.middl
 import { validate } from '../middleware/validate.middleware.js';
 import { asyncHandler } from '../utils/async-handler.js';
 import { revealLimiter } from '../middleware/rate-limiters.middleware.js';
+import { createSecretSchema, editSecretSchema, revealSecretSchema, projectEnvironmentEnum } from '@raaz/shared-schemas';
 
 const router = Router();
 
 const listSchema = z.object({
   params: z.object({ projectId: z.string().regex(/^[a-f\d]{24}$/i, 'Invalid ObjectId') }),
+  query: z.object({ environment: projectEnvironmentEnum }),
 });
 
 const createSchema = z.object({
-  body: z.object({
-    key: z.string().regex(/^[A-Z0-9_]{1,100}$/),
-    environment: z.enum(['development', 'staging', 'production']),
-    value: z.string(),
-    confirm: z.boolean().default(false),
-  }),
+  params: listSchema.shape.params,
+  body: createSecretSchema,
 });
 
 const editSchema = z.object({
-  params: z.object({ secretId: z.string().regex(/^[a-f\d]{24}$/i, 'Invalid ObjectId') }),
-  body: z.object({
-    key: z.string().regex(/^[A-Z0-9_]{1,100}$/).optional(),
-    environment: z.enum(['development', 'staging', 'production']).optional(),
-    value: z.string(),
-  }),
+  params: listSchema.shape.params.extend({ secretId: z.string().regex(/^[a-f\d]{24}$/i, 'Invalid ObjectId') }),
+  body: editSecretSchema.strict(),
 });
 
 const deleteSchema = z.object({
-  params: z.object({ secretId: z.string().regex(/^[a-f\d]{24}$/i, 'Invalid ObjectId') }),
+  params: editSchema.shape.params,
 });
 
 const metadataSchema = z.object({
-  params: z.object({ secretId: z.string().regex(/^[a-f\d]{24}$/i, 'Invalid ObjectId') }),
+  params: editSchema.shape.params,
 });
 
 const revealSchema = z.object({
-  params: z.object({ secretId: z.string().regex(/^[a-f\d]{24}$/i, 'Invalid ObjectId') }),
+  params: editSchema.shape.params,
+  body: revealSecretSchema,
 });
 
 router.get(
@@ -82,7 +77,7 @@ router.delete(
   '/:projectId/secrets/:secretId',
   authenticate,
   validate(deleteSchema),
-  requireProjectRole('projectAdmin', 'developer'),
+  requireProjectRole('projectAdmin'),
   requireProjectStatus,
   asyncHandler(deleteSecretController),
 );
@@ -101,7 +96,7 @@ router.post(
   authenticate,
   revealLimiter,
   validate(revealSchema),
-  requireProjectRole('projectAdmin', 'developer', 'auditor'),
+  requireProjectRole('projectAdmin', 'developer'),
   requireProjectStatus,
   asyncHandler(revealSecretController),
 );

@@ -1,10 +1,11 @@
 import type { Request, Response, NextFunction } from 'express';
 import { getUserRole } from '../services/membership.service.js';
-import { SecretModel } from '../models/Secret.js';
+import { getSecretAuditMetadata } from '../services/secrets.service.js';
 import { writeDeniedAuditEntry } from '../services/audit.service.js';
+import { asyncHandler } from '../utils/async-handler.js';
 
 export function requireProjectRole(...allowedRoles: ('projectAdmin' | 'developer' | 'auditor')[]) {
-  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  return asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const projectId = req.params.projectId;
     const userId = req.user!.id;
 
@@ -17,10 +18,7 @@ export function requireProjectRole(...allowedRoles: ('projectAdmin' | 'developer
     if (!allowedRoles.includes(role)) {
       const secretId = req.params.secretId;
       if (secretId) {
-        const secret = await SecretModel.findOne(
-          { _id: secretId, projectId },
-          { environment: 1, key: 1 },
-        ).lean();
+        const secret = await getSecretAuditMetadata(projectId, secretId);
         await writeDeniedAuditEntry({
           userId,
           projectId,
@@ -29,7 +27,7 @@ export function requireProjectRole(...allowedRoles: ('projectAdmin' | 'developer
           environment: secret?.environment ?? null,
           action:
             req.method === 'POST'
-              ? 'create'
+              ? 'reveal'
               : req.method === 'PATCH'
                 ? 'edit'
                 : req.method === 'DELETE'
@@ -52,5 +50,5 @@ export function requireProjectRole(...allowedRoles: ('projectAdmin' | 'developer
 
     req.projectRole = role;
     next();
-  };
+  });
 }

@@ -9,4 +9,4 @@ export const apiRoutes = Router();
 apiRoutes.use('/auth', authRoutes);
 apiRoutes.use('/projects', projectRoutes);
 apiRoutes.use('/projects/:projectId/members', memberRoutes);
-apiRoutes.use('/projects/:projectId/secrets', secretRoutes);
+apiRoutes.use('/projects', secretRoutes);

@@ -1,5 +1,3 @@
-import type { PublicUser } from '@raaz/shared-schemas';
-
 declare global {
   namespace Express {
     interface Request {

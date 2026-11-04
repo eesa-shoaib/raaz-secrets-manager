@@ -1,9 +1,9 @@
 import type { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '../services/auth.service.js';
 import { UserModel } from '../models/User.js';
-import { Types } from 'mongoose';
+import { asyncHandler } from '../utils/async-handler.js';
 
-export async function authenticate(req: Request, res: Response, next: NextFunction): Promise<void> {
+export const authenticate = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const token = req.cookies?.token;
   if (!token) {
     res
@@ -29,7 +29,7 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
   }
 
   req.user = {
-    id: user.id,
+    id: user._id.toString(),
     email: user.email,
     isPlatformAdmin: user.isPlatformAdmin,
     isActive: user.isActive,
@@ -37,4 +37,4 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
     updatedAt: user.updatedAt,
   };
   next();
-}
+});
