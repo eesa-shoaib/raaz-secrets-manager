@@ -26,6 +26,7 @@ rather than restating it.
 | [API.md](./API.md)                             | Endpoints, contracts, errors, pagination, auth, versioning             |
 | [openapi.json](./openapi.json)                 | Importable MVP API requests and implementation status                  |
 | [FRONTEND.md](./FRONTEND.md)                   | Frontend blueprint: routes, pages, widgets, build phases, MVP boundary |
+| [CLIENT_TODO.md](./CLIENT_TODO.md)             | Client implementation checklist and developer handoff                  |
 | [MVP_BOARD.md](./MVP_BOARD.md)                 | Kanban board tracking MVP stories through Phases 1–5                   |
 | [QUERIES.md](./QUERIES.md)                     | Dataview query reference for MVP scope, tasks, cross-refs              |
 | [architecture.canvas](./architecture.canvas)   | Visual architecture diagram (MERN, RBAC, Crypto, Deployment)           |
