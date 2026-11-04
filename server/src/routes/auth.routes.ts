@@ -2,10 +2,10 @@ import { loginInputSchema, signupInputSchema } from '@raaz/shared-schemas';
 import { Router } from 'express';
 import { z } from 'zod';
 import {
-  currentUserController,
-  loginController,
-  logoutController,
-  signupController,
+    currentUserController,
+    loginController,
+    logoutController,
+    signupController,
 } from '../controllers/auth.controller.js';
 import { authenticate } from '../middleware/authenticate.middleware.js';
 import { authLimiter, signupLimiter } from '../middleware/rate-limiters.middleware.js';

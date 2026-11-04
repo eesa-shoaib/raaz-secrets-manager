@@ -11,18 +11,28 @@ export const createProjectSchema = z.object({ name: z.string().trim().min(1).max
 export type CreateProjectInput = z.infer<typeof createProjectSchema>;
 export type ProjectCreateInput = CreateProjectInput;
 export const projectResponseSchema = z.object({
-  id: z.string(), name: z.string(), environments: z.array(projectEnvironmentEnum),
-  status: projectStatusEnum, createdBy: z.string(), role: projectRoleEnum.optional(),
-  createdAt: z.string().or(z.date()), updatedAt: z.string().or(z.date()),
+    id: z.string(),
+    name: z.string(),
+    environments: z.array(projectEnvironmentEnum),
+    status: projectStatusEnum,
+    createdBy: z.string(),
+    role: projectRoleEnum.optional(),
+    createdAt: z.string().or(z.date()),
+    updatedAt: z.string().or(z.date()),
 });
 export type ProjectResponse = z.infer<typeof projectResponseSchema>;
 export type Project = ProjectResponse;
-export const addMemberSchema = z.object({ email: z.string().trim().email().toLowerCase(), role: projectRoleEnum });
+export const addMemberSchema = z.object({
+    email: z.string().trim().email().toLowerCase(),
+    role: projectRoleEnum,
+});
 export type AddMemberInput = z.infer<typeof addMemberSchema>;
 export const updateMemberRoleSchema = z.object({ role: projectRoleEnum });
 export type UpdateMemberRoleInput = z.infer<typeof updateMemberRoleSchema>;
 export const memberResponseSchema = z.object({
-  userId: z.string(), email: z.string().email(), role: projectRoleEnum,
-  createdAt: z.string().or(z.date()),
+    userId: z.string(),
+    email: z.string().email(),
+    role: projectRoleEnum,
+    createdAt: z.string().or(z.date()),
 });
 export type MemberResponse = z.infer<typeof memberResponseSchema>;

@@ -43,10 +43,10 @@ All error responses use the same envelope:
 
 ```json
 {
-  "error": {
-    "code": "FORBIDDEN",
-    "message": "You do not have permission to perform this action."
-  }
+    "error": {
+        "code": "FORBIDDEN",
+        "message": "You do not have permission to perform this action."
+    }
 }
 ```
 
@@ -58,8 +58,8 @@ All error responses use the same envelope:
 | 409         | `CONFLICT`         | Duplicate key (e.g. secret key already exists in that project+environment), or a business invariant would be violated (e.g. removing the last `projectAdmin` or the last Platform Admin)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | 422         | `VALIDATION_ERROR` | Request body failed schema validation, or a business-rule check that depends on data not known until the service layer loads it (e.g. `confirm` missing on a production reveal — see the reveal endpoint below)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 
-| 429         | `RATE_LIMITED`     | Too many requests against a rate limiter (per-IP on login/signup, per-user on reveal) (see ARCHITECTURE.md's Rate Limiting section). Uses this same envelope (see Conventions, above)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| 500         | `INTERNAL_ERROR`   | Unhandled server error                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| 429 | `RATE_LIMITED` | Too many requests against a rate limiter (per-IP on login/signup, per-user on reveal) (see ARCHITECTURE.md's Rate Limiting section). Uses this same envelope (see Conventions, above) |
+| 500 | `INTERNAL_ERROR` | Unhandled server error |
 
 ## Pagination
 

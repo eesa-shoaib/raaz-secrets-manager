@@ -36,40 +36,40 @@ in list/metadata responses.
   one definition _lineage_ per entity, not one object reused unchanged
   everywhere. The lineage runs from client-safe to server-only, never the
   other way round, so sensitive field names don't end up in the client bundle:
-  - **Client-safe schemas (package root):** `secretResponseSchema`
-    (metadata only — no `value`, no `ciphertext`/`iv`/`authTag`),
-    `secretCreateInputSchema` (`{ environment, key, value }`) and
-    `publicUserSchema`. They share small field validators (e.g. the `key`
-    pattern) so rules aren't duplicated. A reveal response is
-    `secretResponseSchema` plus a decrypted `value`, as its own small schema.
-  - **Server-only base schemas (`shared-schemas/internal`):**
-    `secretSchema = secretResponseSchema.extend({ ciphertext, iv, authTag })`
-    and `userSchema = publicUserSchema.extend({ passwordHash })`. Only
-    `server/` imports these; `client/` is blocked by an ESLint
-    `no-restricted-imports` rule (PROJECT_STRUCTURE.md). Deriving the
-    client-safe shapes from the base with `.omit()` would not work: the
-    derivation runs at import time, so the base — with the `passwordHash` and
-    `ciphertext` field names — would be bundled into the client.
+    - **Client-safe schemas (package root):** `secretResponseSchema`
+      (metadata only — no `value`, no `ciphertext`/`iv`/`authTag`),
+      `secretCreateInputSchema` (`{ environment, key, value }`) and
+      `publicUserSchema`. They share small field validators (e.g. the `key`
+      pattern) so rules aren't duplicated. A reveal response is
+      `secretResponseSchema` plus a decrypted `value`, as its own small schema.
+    - **Server-only base schemas (`shared-schemas/internal`):**
+      `secretSchema = secretResponseSchema.extend({ ciphertext, iv, authTag })`
+      and `userSchema = publicUserSchema.extend({ passwordHash })`. Only
+      `server/` imports these; `client/` is blocked by an ESLint
+      `no-restricted-imports` rule (PROJECT_STRUCTURE.md). Deriving the
+      client-safe shapes from the base with `.omit()` would not work: the
+      derivation runs at import time, so the base — with the `passwordHash` and
+      `ciphertext` field names — would be bundled into the client.
 
-  TypeScript types are inferred from whichever schema is relevant with
-  `z.infer<typeof schema>`, so there's still no separate, hand-written
-  interface to drift out of sync with the validation rules — the shared lineage is what keeps a create-input type, a response type, and an internal type honest against each other, instead of three independently-maintained ones.
+    TypeScript types are inferred from whichever schema is relevant with
+    `z.infer<typeof schema>`, so there's still no separate, hand-written
+    interface to drift out of sync with the validation rules — the shared lineage is what keeps a create-input type, a response type, and an internal type honest against each other, instead of three independently-maintained ones.
 
-  **Typing a response as the narrow schema isn't what keeps `passwordHash`
-  or `ciphertext` out of it — parsing it is.** A TypeScript type is a
-  compile-time annotation; it doesn't touch the object at runtime, so if a
-  handler accidentally sends the full Mongoose document (which still has
-  `passwordHash` on it) while merely _claiming_ the response is typed as
-  `publicUserSchema`, nothing stops the extra field from being serialized
-  over the wire — the type checker has no runtime presence to object.
-  The actual guarantee comes from calling `publicUserSchema.parse(user)` /
-  `secretResponseSchema.parse(secret)` before sending the response: Zod's
-  default `.parse()` behavior strips any key not declared on the schema
-  (no `.passthrough()`), so even a handler that forgot `select: false`
-  somewhere, or passed the raw document instead of a plain object, gets
-  the sensitive fields dropped at serialization time regardless. This is
-  genuine defense-in-depth, not redundant with `select: false` — the two
-  catch the same mistake at two different layers.
+    **Typing a response as the narrow schema isn't what keeps `passwordHash`
+    or `ciphertext` out of it — parsing it is.** A TypeScript type is a
+    compile-time annotation; it doesn't touch the object at runtime, so if a
+    handler accidentally sends the full Mongoose document (which still has
+    `passwordHash` on it) while merely _claiming_ the response is typed as
+    `publicUserSchema`, nothing stops the extra field from being serialized
+    over the wire — the type checker has no runtime presence to object.
+    The actual guarantee comes from calling `publicUserSchema.parse(user)` /
+    `secretResponseSchema.parse(secret)` before sending the response: Zod's
+    default `.parse()` behavior strips any key not declared on the schema
+    (no `.passthrough()`), so even a handler that forgot `select: false`
+    somewhere, or passed the raw document instead of a plain object, gets
+    the sensitive fields dropped at serialization time regardless. This is
+    genuine defense-in-depth, not redundant with `select: false` — the two
+    catch the same mistake at two different layers.
 
 See PROJECT_STRUCTURE.md for the full folder layout and module boundaries.
 
@@ -287,37 +287,37 @@ drop the reliability guarantee the audit log depends on.
   exactly one active key/version pair (see DATA_MODEL.md's Encryption Key
   Lifecycle), so the key checks just confirm both exist and parse, there's
   no table of multiple keys to resolve against:
-  - `MASTER_KEY` is present and base64-decodes to exactly 32 bytes.
-  - `MASTER_KEY_VERSION` is present **and parses to a positive integer**
-    (not merely non-empty — see DATA_MODEL.md's `encryptionKeyVersion`
-    row for why a typo'd, non-numeric value needs to fail here rather
-    than produce `NaN` comparisons later).
-  - `JWT_SECRET` is present and at least 32 characters — short enough
-    that a weak secret is easy to overlook, but HMAC-SHA256 signing
-    security depends on the secret's entropy, so a minimum is worth
-    enforcing rather than trusting whatever gets typed into `.env`.
-    Separately, wherever the server calls `jwt.verify()`, it passes
-    `algorithms: ['HS256']` explicitly rather than accepting whatever
-    algorithm the token's own header claims — algorithm-confusion attacks
-    (e.g. an attacker-crafted token claiming `alg: none`, or a public key
-    misused as an HMAC secret) are a well-known JWT vulnerability class
-    that an unpinned `verify()` call is exposed to.
-  - `COOKIE_SAMESITE`, if set, is one of `Strict`/`Lax`/`None` — an
-    invalid value fails loudly at boot instead of behaving unpredictably
-    the first time a cookie is actually set.
-  - `CLIENT_ORIGIN` is present **when `NODE_ENV=production`** — it's
-    optional locally (defaults to `http://localhost:5173`), but silently
-    falling back to that default in a real deployment would mean CORS
-    and the Origin-based CSRF check both compare against a `localhost`
-    URL no real client will ever send, effectively locking out the actual
-    frontend rather than protecting against anything.
-  - Independent of all of the above: the cookie's `Secure` attribute is
-    `NODE_ENV === 'production'`-driven on its own, not tied to whichever
-    `SameSite` value ends up in effect. If `COOKIE_SAMESITE=Lax` is used
-    in production (the same-site custom-domain case from Cross-Origin
-    Deployment & CSRF, below), `Secure` must still be `true` — HTTPS-only
-    transmission is about the deployment being on HTTPS at all, not about
-    which `SameSite` policy happens to be active.
+    - `MASTER_KEY` is present and base64-decodes to exactly 32 bytes.
+    - `MASTER_KEY_VERSION` is present **and parses to a positive integer**
+      (not merely non-empty — see DATA_MODEL.md's `encryptionKeyVersion`
+      row for why a typo'd, non-numeric value needs to fail here rather
+      than produce `NaN` comparisons later).
+    - `JWT_SECRET` is present and at least 32 characters — short enough
+      that a weak secret is easy to overlook, but HMAC-SHA256 signing
+      security depends on the secret's entropy, so a minimum is worth
+      enforcing rather than trusting whatever gets typed into `.env`.
+      Separately, wherever the server calls `jwt.verify()`, it passes
+      `algorithms: ['HS256']` explicitly rather than accepting whatever
+      algorithm the token's own header claims — algorithm-confusion attacks
+      (e.g. an attacker-crafted token claiming `alg: none`, or a public key
+      misused as an HMAC secret) are a well-known JWT vulnerability class
+      that an unpinned `verify()` call is exposed to.
+    - `COOKIE_SAMESITE`, if set, is one of `Strict`/`Lax`/`None` — an
+      invalid value fails loudly at boot instead of behaving unpredictably
+      the first time a cookie is actually set.
+    - `CLIENT_ORIGIN` is present **when `NODE_ENV=production`** — it's
+      optional locally (defaults to `http://localhost:5173`), but silently
+      falling back to that default in a real deployment would mean CORS
+      and the Origin-based CSRF check both compare against a `localhost`
+      URL no real client will ever send, effectively locking out the actual
+      frontend rather than protecting against anything.
+    - Independent of all of the above: the cookie's `Secure` attribute is
+      `NODE_ENV === 'production'`-driven on its own, not tied to whichever
+      `SameSite` value ends up in effect. If `COOKIE_SAMESITE=Lax` is used
+      in production (the same-site custom-domain case from Cross-Origin
+      Deployment & CSRF, below), `Secure` must still be `true` — HTTPS-only
+      transmission is about the deployment being on HTTPS at all, not about
+      which `SameSite` policy happens to be active.
 
 ## Cross-Origin Deployment & CSRF
 
