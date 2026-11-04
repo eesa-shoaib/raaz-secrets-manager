@@ -1,6 +1,6 @@
 # Server TODO
 
-Foundation, auth, project, membership and secret routes are implemented; audit and admin routes remain empty. Secret routes still need database integration coverage.
+Foundation, auth, project, membership and secret routes are present; project audit-log and Platform Admin routes remain empty. Presence of a route does not establish MVP completion: database integration coverage and security review remain outstanding.
 
 ## Foundation
 
@@ -29,14 +29,15 @@ Foundation, auth, project, membership and secret routes are implemented; audit a
 
 ## Secrets
 
-- [ ] Implement list, create, edit, delete, metadata, and reveal routes/controllers.
-- [ ] Scope every secret lookup by both `_id` and `projectId`.
-- [ ] Generate secret ID before encryption; encrypt with fresh 12-byte IV and documented AAD.
-- [ ] Return decrypted value only from reveal endpoint.
-- [ ] Use fixed-width `••••••••` mask in lists.
-- [ ] Apply per-user reveal limiter after authentication and before role check.
-- [ ] Enforce Developer write restriction outside `development` in service, with denied audit entry.
-- [ ] Require `confirm: true` for production reveal; reject missing confirmation with 422 without denied audit.
+- [x] Add list, create, edit, delete, metadata, and reveal routes/controllers.
+- [x] Scope secret lookups by both `_id` and `projectId`.
+- [x] Generate the secret ID before encryption; use a fresh 12-byte IV and documented AAD.
+- [x] Return decrypted value only from reveal endpoint.
+- [x] Use fixed-width `••••••••` mask in lists.
+- [x] Apply per-user reveal limiter after authentication and before role check.
+- [x] Enforce Developer write restriction outside `development` in service, with denied audit entry.
+- [x] Require `confirm: true` for production reveal; reject missing confirmation with 422 without denied audit.
+- [ ] Verify the preceding behavior end to end against a disposable replica set, including response shapes and audit failure handling.
 
 ## Audit and administration
 
@@ -49,7 +50,7 @@ Foundation, auth, project, membership and secret routes are implemented; audit a
 
 ## Tests and verification
 
-- [ ] Replace smoke-only test with Supertest suite and disposable replica-set database setup.
+- [ ] Add Supertest database integration coverage and disposable replica-set database setup; existing server tests cover foundation behavior, mocked secret routing, and mocked membership counter behavior.
 - [ ] Test Developer denied staging create/edit and production edit.
 - [ ] Test Auditor reveal denial records environment and secret key.
 - [ ] Test Platform Admin membership substitution.
