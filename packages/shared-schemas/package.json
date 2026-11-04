@@ -23,6 +23,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch --preserveWatchOutput",
+    "test": "node test/schemas.test.js",
     "lint": "eslint src --ext .ts"
   },
   "devDependencies": {
