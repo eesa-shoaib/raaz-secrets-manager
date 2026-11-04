@@ -6,6 +6,8 @@ tags: [kanban, mvp, tracking]
 
 Source: [[PRODUCT.md#Cut from MVP]] | [[FRONTEND.md#Build Order]]
 
+Implementation note: server auth, project, membership, and secret routes exist, but require further integration and security testing. The project audit-log and Platform Admin routes are not yet implemented. Client API modules, hooks, and most MVP pages remain to be built. Phase checkboxes remain open until their definitions of done are met.
+
 ## Backlog
 
 - [ ] Story 1: Developer views a dev secret (AC: no confirm, audit logged)
@@ -62,7 +64,7 @@ Source: [[PRODUCT.md#Cut from MVP]] | [[FRONTEND.md#Build Order]]
 
 ## Post-MVP (Deferred)
 
-- [ ] Admin users UI (`/admin/users`) — backend exists
+- [ ] Admin users UI (`/admin/users`) — backend endpoints also remain to be implemented
 - [ ] Admin projects UI (`/admin/projects`) — needs backend
 - [ ] Admin audit UI (`/admin/audit-log`) — needs backend
 - [ ] Project archive/restore — needs backend

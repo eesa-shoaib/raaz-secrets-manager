@@ -6,8 +6,11 @@
 - Auth: signup, login, logout, current user, httpOnly JWT cookie, token-version and active-user checks, rate limiting, optional signup-domain allowlist.
 - Projects: list, create, get. Creation atomically creates creator's `projectAdmin` membership and audit entry.
 - Members: list, add, change role, remove. Membership mutations include audit entries and atomic last-Project-Admin protection.
+- Secrets: list by environment, create, edit value, delete, metadata, and reveal. The response uses a fixed-width mask; production reveal requires confirmation. Developer writes are limited to development.
 
 Secret endpoints are implemented but still need replica-set integration coverage. Not implemented: audit-log endpoint, Platform Admin routes, database integration suite.
+
+The client is still a routing and UI skeleton: its API modules, hooks, and most MVP pages are not yet implemented. The API specification describes the intended contract; implementation and security behavior still need integration verification.
 
 ## Setup
 
@@ -39,6 +42,8 @@ Copy returned project `id`, then list projects and members:
 curl -i -b cookies.txt http://localhost:5000/api/projects
 curl -i -b cookies.txt http://localhost:5000/api/projects/<projectId>/members
 ```
+
+Create a secret as a project admin using `POST /api/projects/<projectId>/secrets` with JSON fields `key`, `environment`, and `value`. Keys use uppercase letters, numbers, and underscores; environments are `development`, `staging`, and `production`. List metadata at `GET /api/projects/<projectId>/secrets?environment=development`. Reveal using `POST /api/projects/<projectId>/secrets/<secretId>/reveal` with `{"confirm":false}`, or `{"confirm":true}` for production. State-changing requests require the configured `Origin` and an authentication cookie. Do not use real credentials or secrets in shared examples or logs.
 
 Add member:
 

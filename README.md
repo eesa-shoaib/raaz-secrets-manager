@@ -11,7 +11,9 @@ npm install          # installs client, server, and shared-schemas via workspace
 
 # copy and fill in environment variables
 cp server/.env.example server/.env
-npm run dev          # runs client + server concurrently
+# fill in server/.env, then run these in separate terminals:
+npm run dev -w server
+npm run dev -w client
 ```
 
 - Client: `http://localhost:5173`
@@ -32,13 +34,19 @@ Client (React + Vite)  →  Server (Express)  →  MongoDB Atlas
 - **Database**: MongoDB Atlas (free tier)
 - **Shared**: Zod schemas in `packages/shared-schemas`
 
-## Key Features
+## MVP Status
+
+The server has authentication, project, membership, and secret routes. Secret and membership security behavior still needs replica-set integration tests. The project audit-log and Platform Admin endpoints are not implemented yet. The client currently has a routing/UI skeleton; API integration and most MVP pages remain to be built.
+
+The intended MVP includes:
 
 - Project-scoped secrets with environment isolation (dev/staging/prod)
 - Role-based access: Project Admin, Developer, Auditor
 - Audited secret reveals with production confirmation modal
 - Per-project team management (add member in the MVP)
 - Read-only audit log with filtering
+
+For current server setup, manual testing, and mock data generation, see [server/IMPLEMENTED.md](./server/IMPLEMENTED.md). See [server/TODO.md](./server/TODO.md) for remaining server work.
 
 ## Environment Variables
 
@@ -48,6 +56,8 @@ See `server/.env.example` for the full list. Required for local dev:
 - `JWT_SECRET` — 32+ char random string
 - `MASTER_KEY` — 32-byte base64 AES-256-GCM key
 - `MASTER_KEY_VERSION` — Positive integer (e.g., `1`)
+
+MongoDB must support transactions (Atlas or a replica set). Use only a disposable development database. The database named in `MONGO_URI` is the one the server will use.
 
 ## License
 
