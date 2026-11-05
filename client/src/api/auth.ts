@@ -4,8 +4,9 @@ import apiClient from './axios';
 
 export async function getMe(): Promise<PublicUser | null> {
     try {
-        const res = await apiClient.get<{ user: PublicUser }>('/auth/me');
-        return res.data.user;
+        const res = await apiClient.get<PublicUser | { user: PublicUser }>('/auth/me');
+        const data = res.data as { user?: PublicUser } & PublicUser;
+        return data.user ?? data;
     } catch (err) {
         if (isApiError(err) && err.status === 401) {
             return null;
@@ -15,13 +16,15 @@ export async function getMe(): Promise<PublicUser | null> {
 }
 
 export async function login(data: LoginInput): Promise<PublicUser> {
-    const res = await apiClient.post<{ user: PublicUser }>('/auth/login', data);
-    return res.data.user;
+    const res = await apiClient.post<PublicUser | { user: PublicUser }>('/auth/login', data);
+    const body = res.data as { user?: PublicUser } & PublicUser;
+    return body.user ?? body;
 }
 
 export async function signup(data: SignupInput): Promise<PublicUser> {
-    const res = await apiClient.post<{ user: PublicUser }>('/auth/signup', data);
-    return res.data.user;
+    const res = await apiClient.post<PublicUser | { user: PublicUser }>('/auth/signup', data);
+    const body = res.data as { user?: PublicUser } & PublicUser;
+    return body.user ?? body;
 }
 
 export async function logout(): Promise<void> {
