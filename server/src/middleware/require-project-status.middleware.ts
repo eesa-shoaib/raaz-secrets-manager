@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import { ProjectModel } from '../models/Project.js';
+import { getProjectStatus } from '../services/projects.service.js';
 import { asyncHandler } from '../utils/async-handler.js';
 
 export const requireProjectStatus = asyncHandler(async function requireProjectStatus(
@@ -8,7 +8,7 @@ export const requireProjectStatus = asyncHandler(async function requireProjectSt
     next: NextFunction,
 ): Promise<void> {
     const projectId = req.params.projectId;
-    const project = await ProjectModel.findById(projectId).select('status').lean();
+    const project = await getProjectStatus(projectId);
     if (!project) {
         res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Project not found' } });
         return;

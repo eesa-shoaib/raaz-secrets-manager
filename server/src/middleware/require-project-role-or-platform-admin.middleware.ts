@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
+import { writeDeniedAuditEntry } from '../services/audit.service.js';
 import { getUserRole } from '../services/membership.service.js';
 import { asyncHandler } from '../utils/async-handler.js';
 
@@ -21,6 +22,18 @@ export function requireProjectRoleOrPlatformAdmin(
         }
 
         if (!allowedRoles.includes(role)) {
+            const action =
+                req.method === 'POST'
+                    ? 'member_added'
+                    : req.method === 'PATCH'
+                      ? 'member_role_changed'
+                      : 'member_removed';
+            await writeDeniedAuditEntry({
+                userId,
+                projectId,
+                targetUserId: req.params.userId,
+                action,
+            });
             res.status(403).json({
                 error: { code: 'FORBIDDEN', message: 'Insufficient role for this action' },
             });
