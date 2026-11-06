@@ -28,7 +28,7 @@ export function Navbar() {
 
     return (
         <header className="w-full bg-base-200 border-b border-base-300/80 sticky top-0 z-40">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div className="page-gutter max-w-7xl mx-auto h-16 flex items-center justify-between">
                 {/* Left: Brand + Navigation */}
                 <div className="flex items-center gap-6">
                     <Link
@@ -66,7 +66,7 @@ export function Navbar() {
                             <button
                                 type="button"
                                 onClick={() => setDropdownOpen((prev) => !prev)}
-                                className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-base-300/80 hover:bg-base-300 text-sm font-ui border border-base-300 transition-colors"
+                                className="button-textured flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-base-300/80 hover:bg-base-300 text-sm font-ui border border-base-300 transition-colors"
                                 aria-expanded={dropdownOpen}
                                 aria-haspopup="true"
                             >

@@ -37,18 +37,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
                     <p className="text-xs font-ui text-base-content/70 italic mt-2">
                         Archived — a Platform Admin can restore it.
                     </p>
-                ) : (
-                    <div className="flex flex-wrap gap-1.5 mt-3">
-                        {project.environments?.map((env) => (
-                            <span
-                                key={env}
-                                className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-base-300 text-base-content/80 border border-base-300"
-                            >
-                                {env}
-                            </span>
-                        ))}
-                    </div>
-                )}
+                ) : null}
             </div>
 
             <div className="pt-4 mt-4 border-t border-base-300/60 flex items-center justify-between text-xs font-ui text-base-content/70">
