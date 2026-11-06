@@ -1,3 +1,6 @@
-node_modules/
-dist/
-.obsidian/
+node_modules
+**/node_modules/**
+dist
+**/dist/**
+.obsidian
+**/.obsidian/**

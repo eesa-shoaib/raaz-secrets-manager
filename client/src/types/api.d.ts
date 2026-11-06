@@ -2,28 +2,35 @@ import type {
     PublicUser,
     SignupInput,
     LoginInput,
-    Project,
-    ProjectCreateInput,
+    ProjectResponse,
+    CreateProjectInput,
     SecretResponse,
-    SecretCreateInput,
-    AuditLogEntry,
+    CreateSecretInput,
+    EditSecretInput,
+    RevealSecretResponse,
+    AuditLogEntryResponse,
+    MemberResponse,
+    AddMemberInput,
+    ProjectRole,
+    ProjectEnvironment,
 } from '@raaz/shared-schemas';
 
 export type {
     PublicUser,
     SignupInput,
     LoginInput,
-    Project,
-    ProjectCreateInput,
+    ProjectResponse,
+    CreateProjectInput,
     SecretResponse,
-    SecretCreateInput,
-    AuditLogEntry,
+    CreateSecretInput,
+    EditSecretInput,
+    RevealSecretResponse,
+    AuditLogEntryResponse,
+    MemberResponse,
+    AddMemberInput,
+    ProjectRole,
+    ProjectEnvironment,
 };
-
-export interface AuthTokens {
-    accessToken: string;
-    refreshToken?: string;
-}
 
 export interface ApiError {
     status: number;
@@ -32,17 +39,6 @@ export interface ApiError {
     details?: Record<string, string[]>;
 }
 
-export interface PaginatedResponse<T> {
-    data: T[];
-    page: number;
-    limit: number;
-    total: number;
-}
-
 export interface SecretWithMask extends SecretResponse {
-    value: string;
-}
-
-export interface RevealSecretResponse {
     value: string;
 }

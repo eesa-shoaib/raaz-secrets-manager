@@ -38,6 +38,18 @@ export function encrypt(
     return { ciphertext, iv, authTag, encryptionKeyVersion: keyVersion };
 }
 
+function toBuffer(val: unknown): Buffer {
+    if (Buffer.isBuffer(val)) return val;
+    if (val && typeof val === 'object' && 'buffer' in val) {
+        const buf = (val as { buffer: unknown }).buffer;
+        if (Buffer.isBuffer(buf)) return buf;
+        if (buf instanceof ArrayBuffer || ArrayBuffer.isView(buf)) {
+            return Buffer.from(buf as ArrayBuffer);
+        }
+    }
+    return Buffer.from(val as any);
+}
+
 export function decrypt(
     ciphertext: Buffer,
     iv: Buffer,
@@ -56,13 +68,17 @@ export function decrypt(
         );
     }
 
+    const ivBuf = toBuffer(iv);
+    const cipherBuf = toBuffer(ciphertext);
+    const tagBuf = toBuffer(authTag);
+
     const aad = buildAAD(projectId, secretId, environment, storedKeyVersion);
-    const decipher = createDecipheriv('aes-256-gcm', masterKey, iv, {
+    const decipher = createDecipheriv('aes-256-gcm', masterKey, ivBuf, {
         authTagLength: AUTH_TAG_LENGTH,
     });
     decipher.setAAD(aad);
-    decipher.setAuthTag(authTag);
+    decipher.setAuthTag(tagBuf);
 
-    const plaintext = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+    const plaintext = Buffer.concat([decipher.update(cipherBuf), decipher.final()]);
     return plaintext.toString('utf8');
 }
