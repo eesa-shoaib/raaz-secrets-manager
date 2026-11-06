@@ -27,5 +27,26 @@ describe('project card', () => {
         expect(screen.queryByText('development')).toBeNull();
         expect(screen.queryByText('staging')).toBeNull();
         expect(screen.queryByText('production')).toBeNull();
+        expect(screen.queryByText('Active')).toBeNull();
+    });
+    it('shows the status of an archived project', () => {
+        render(
+            <MemoryRouter>
+                <ProjectCard
+                    project={{
+                        id: 'project-id',
+                        name: 'Example',
+                        environments: ['development'],
+                        status: 'archived',
+                        role: 'developer',
+                        createdBy: 'user-id',
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                    }}
+                />
+            </MemoryRouter>,
+        );
+        expect(screen.getByText('Archived')).toBeTruthy();
+        expect(screen.queryByRole('link')).toBeNull();
     });
 });

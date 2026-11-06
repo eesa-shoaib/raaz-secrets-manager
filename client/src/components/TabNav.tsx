@@ -25,9 +25,9 @@ export function TabNav({ items, className = '' }: TabNavProps) {
                     key={item.to}
                     to={item.to}
                     className={({ isActive }) =>
-                        `tab h-11 whitespace-nowrap border-b-2 px-5 font-heading text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${
+                        `tab h-12 whitespace-nowrap !border-b-[3px] px-5 font-heading text-base font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${
                             isActive
-                                ? 'tab-active !border-primary !text-primary font-bold'
+                                ? 'tab-active !border-primary !text-primary'
                                 : 'border-transparent text-base-content/70 hover:text-base-content'
                         }`
                     }

@@ -30,7 +30,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
                             </h2>
                         </div>
                     </div>
-                    <Badge variant="projectStatus" value={project.status} />
+                    {isArchived && <Badge variant="projectStatus" value={project.status} />}
                 </div>
 
                 {isArchived ? (
@@ -43,7 +43,9 @@ export function ProjectCard({ project }: ProjectCardProps) {
             <div className="pt-4 mt-4 border-t border-base-300/60 flex items-center justify-between text-xs font-ui text-base-content/70">
                 <div className="flex items-center gap-1.5">
                     <span>Role:</span>
-                    <Badge variant="role" value={project.role} />
+                    <span className="font-semibold text-base-content capitalize">
+                        {project.role === 'projectAdmin' ? 'Project Admin' : project.role}
+                    </span>
                 </div>
                 {!isArchived && (
                     <span className="text-primary font-medium flex items-center gap-1 hover:underline">

@@ -2,13 +2,13 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-const mocks = vi.hoisted(() => ({ navigate: vi.fn() }));
+const mocks = vi.hoisted(() => ({ navigate: vi.fn(), status: 'active' }));
 vi.mock('react-router-dom', async (importOriginal) => ({
     ...(await importOriginal<typeof import('react-router-dom')>()),
     useNavigate: () => mocks.navigate,
     useParams: () => ({ projectId: 'aaaaaaaaaaaaaaaaaaaaaaaa' }),
     useLocation: () => ({ pathname: '/projects/aaaaaaaaaaaaaaaaaaaaaaaa/secrets' }),
-    Outlet: () => null,
+    Outlet: () => <div>Project content</div>,
 }));
 vi.mock('../hooks/useProjects', () => ({
     useProject: () => ({
@@ -16,7 +16,7 @@ vi.mock('../hooks/useProjects', () => ({
             id: 'aaaaaaaaaaaaaaaaaaaaaaaa',
             name: 'Test project',
             role: 'developer',
-            status: 'active',
+            status: mocks.status,
         },
         isLoading: false,
         isError: false,
@@ -30,7 +30,23 @@ describe('project back navigation', () => {
     afterEach(() => {
         cleanup();
         vi.clearAllMocks();
+        mocks.status = 'active';
         window.history.replaceState(originalState, '');
+    });
+    it('shows project details separately from the routed content', () => {
+        render(<ProjectLayout />);
+        expect(
+            screen.getByRole('complementary', { name: 'Project information' }).textContent,
+        ).toContain('Test project');
+        expect(screen.getByText('Project')).toBeTruthy();
+        expect(screen.getByText('Role')).toBeTruthy();
+        expect(screen.queryByText('Active')).toBeNull();
+        expect(screen.getByText('Project content')).toBeTruthy();
+    });
+    it('shows project status when archived', () => {
+        mocks.status = 'archived';
+        render(<ProjectLayout />);
+        expect(screen.getByText('Archived')).toBeTruthy();
     });
     it('navigates to the previous in-app page when history exists', () => {
         window.history.replaceState({ idx: 1 }, '');

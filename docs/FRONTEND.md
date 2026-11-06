@@ -206,7 +206,7 @@ noted, not omitted.
 
 - **Data:** `useProjects()` → `GET /projects`. Each entry carries `status` and the caller's `role`; archived entries (post-MVP) render as locked cards.
 
-- Active project cards show the project name, status, and role without displaying database IDs or environment labels. IDs remain in links and API requests.
+- Active project cards show the project name and role without displaying status, database IDs, or environment labels. Archived cards display their status. IDs remain in links and API requests.
 
 - **Widgets:** `PageHeader`, grid of `ProjectCard`, `EmptyState`,
   `ErrorState`, `Skeleton`, `Toaster`.
@@ -241,6 +241,8 @@ noted, not omitted.
   `ProjectArchivedNotice`, `StatusPage`, `ErrorState`, `Skeleton`.
 
 - **Tabs:** Secrets, Members, Audit log (all members).
+
+- **Layout:** project navigation and routed content occupy the main column; a subtly shadowed, divided information sidebar on the right shows a Project label, project name, and role. Status appears only for archived projects. The project page adds a small inset within the shared page gutter. On smaller screens, the columns stack. Project descriptions are not currently part of the project data model.
 
 - **Back:** an inline back control returns to the previous in-app history entry; when opened directly, it returns to `/projects`. The project header does not display the database ID.
 
