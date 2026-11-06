@@ -27,13 +27,13 @@ export function Navbar() {
     };
 
     return (
-        <header className="sticky top-2 z-40 mx-auto mt-4 w-[88%] max-w-9xl rounded-sm border-2 border-solid border-base-300 bg-base-200">
+        <header className="sticky top-2 z-40 mx-auto mt-4 w-[84%] max-w-9xl rounded-sm border-2 border-solid border-base-300 bg-base-200">
             <div className="mx-auto flex h-24 items-center justify-between gap-2 px-4 sm:px-6">
                 {/* Left: Brand + Navigation */}
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-6 pl-4 sm:pl-6">
                     <Link
                         to="/projects"
-                        className="flex items-center gap-2.5 font-heading font-bold text-xl text-primary tracking-tight hover:opacity-90 transition-opacity"
+                        className="flex items-center gap-2.5 font-heading font-bold text-2xl text-primary tracking-tight hover:opacity-90 transition-opacity"
                     >
                         <span>Raaz</span>
                     </Link>
@@ -43,7 +43,7 @@ export function Navbar() {
                             <NavLink
                                 to="/projects"
                                 className={({ isActive }) =>
-                                    `px-3 py-1.5 rounded-lg text-sm font-heading font-medium transition-colors ${
+                                    `px-3 py-1.5 rounded-lg text-base font-heading font-medium transition-colors ${
                                         isActive
                                             ? 'bg-base-300 text-base-content font-bold'
                                             : 'text-base-content/70 hover:text-base-content hover:bg-base-300/60'
