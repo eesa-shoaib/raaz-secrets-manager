@@ -12,10 +12,10 @@ export function ProjectCard({ project }: ProjectCardProps) {
 
     const cardContent = (
         <div
-            className={`card bg-base-200 border border-base-300 p-6 rounded-3xl shadow-sm transition-all duration-200 h-full flex flex-col justify-between ${
+            className={`card bg-base-200 border-2 border-solid border-base-300 p-6 rounded-3xl shadow-sm transition-all duration-200 h-full flex flex-col justify-between ${
                 isArchived
-                    ? 'opacity-60 cursor-not-allowed border-dashed'
-                    : 'hover:border-primary/50 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer'
+                    ? 'opacity-60 cursor-not-allowed'
+                    : 'hover:shadow-lg hover:-translate-y-0.5 cursor-pointer'
             }`}
         >
             <div>
