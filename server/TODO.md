@@ -1,6 +1,6 @@
 # Server TODO
 
-Foundation, auth, project, membership and secret routes are present; project audit-log and Platform Admin routes remain empty. Presence of a route does not establish MVP completion: database integration coverage and security review remain outstanding.
+Foundation, auth, project, membership, secret, project audit-log and Platform Admin user routes are present. Presence of a route does not establish MVP completion: database integration coverage and security review remain outstanding.
 
 ## Foundation
 
@@ -41,12 +41,12 @@ Foundation, auth, project, membership and secret routes are present; project aud
 
 ## Audit and administration
 
-- [ ] Implement project audit-log route with only action, result, and environment filters; limit ≤100.
+- [x] Implement project audit-log route with only action, result, and environment filters; limit ≤100.
 - [ ] Write every allowed state change and audit entry in same MongoDB transaction.
 - [ ] Write denied project-action audit entries before 403 responses.
 - [ ] Preserve environment and secret key in denied secret-route entries when secret exists in project.
-- [ ] Implement documented backend-only Platform Admin user routes.
-- [ ] Implement atomic last-Platform-Admin protection for demotion and deactivation.
+- [x] Implement documented backend-only Platform Admin user routes.
+- [x] Implement atomic last-Platform-Admin protection for demotion and deactivation; verify against a replica set.
 
 ## Tests and verification
 

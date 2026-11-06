@@ -4,9 +4,9 @@ This is a handoff checklist for implementing client behavior against the Raaz AP
 
 ## Starting point
 
-- The client currently has a basic routing/UI skeleton. Most files in `client/src/api/` and `client/src/hooks/`, and most MVP pages, are empty.
+- The client has API modules, hooks, and MVP pages; verify their behavior against the frontend definition of done.
 - Server auth, projects, memberships, and secret routes exist. Their security-sensitive behavior still needs database-backed integration tests; coordinate contract mismatches with the backend developer.
-- The project audit-log and Platform Admin endpoints are not implemented. Don't assume every request in [openapi.json](./openapi.json) is available or up to date.
+- The project audit-log and backend-only Platform Admin user endpoints are present but need database integration tests. Don't assume every request in [openapi.json](./openapi.json) is up to date.
 - Keep roles and authorization decisions on the server. The client permissions module only guides the UI.
 
 ## Phase 1: foundation and authentication
@@ -38,8 +38,9 @@ This is a handoff checklist for implementing client behavior against the Raaz AP
 
 - [x] Implement member list and add-member API functions, hooks, and `MembersPage`; add-member accepts email and an explicitly selected role.
 - [x] Map add-member `404` and `409` to the documented field errors.
-- [x] Coordinate the project audit-log page and its three filters with the backend developer; its endpoint is not yet implemented. Do not add pagination.
-- [x] Keep member role-change/removal UI out of the MVP, even though backend routes exist.
+- [x] Coordinate the project audit-log page and its three filters with the backend developer; the endpoint is implemented but needs integration testing. Do not add pagination.
+- [ ] Implement role-change and member-removal controls, confirming each action and handling last-admin `409` errors.
+- [ ] Invalidate members, project detail, projects, and audit queries after changes, including self-demotion or self-removal.
 
 ## Verification and handoff
 
@@ -58,4 +59,4 @@ This is a handoff checklist for implementing client behavior against the Raaz AP
 - `packages/shared-schemas/src/index.ts`: public schemas; import only from the package root in client code.
 - `server/src/routes/`: currently mounted server endpoints; see [server/TODO.md](../server/TODO.md) for outstanding backend work.
 
-Do not add post-MVP admin UI, project archive/rename, member role-change/removal UI, audit pagination, or extra widgets outside the inventory in FRONTEND.md.
+Do not add post-MVP admin UI, project archive/rename, audit pagination, or extra widgets outside the inventory in FRONTEND.md.

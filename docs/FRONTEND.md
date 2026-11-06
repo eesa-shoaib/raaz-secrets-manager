@@ -26,7 +26,7 @@ inline.
 | 4   | `/projects`                                 | `ProjectsPage`                      | `RequireAuth`                          | `GET /api/projects`, `POST /api/projects`                                                                                                                        | 2            |
 | 5   | `/projects/:projectId`                      | `ProjectLayout`                     | `RequireAuth` + member                 | `GET /api/projects/:projectId` (includes the caller's `role`)                                                                                                    | 2            |
 | 6   | `/projects/:projectId/secrets?environment=` | `SecretsPage`                       | as #5                                  | `GET/POST /api/projects/:projectId/secrets`; `PATCH/DELETE /api/projects/:projectId/secrets/:secretId`; `POST /api/projects/:projectId/secrets/:secretId/reveal` | 3            |
-| 7   | `/projects/:projectId/members`              | `MembersPage`                       | as #5                                  | `GET/POST /api/projects/:projectId/members` _(PATCH/DELETE retained on backend for post-MVP UI)_                                                                 | 4            |
+| 7   | `/projects/:projectId/members`              | `MembersPage`                       | as #5                                  | `GET/POST /api/projects/:projectId/members`; `PATCH/DELETE /api/projects/:projectId/members/:userId`                                                             | 4            |
 | 8   | `/projects/:projectId/audit-log`            | `ProjectAuditLogPage`               | as #5                                  | `GET /api/projects/:projectId/audit-log?limit=100` (no pagination)                                                                                               | 4            |
 | 9   | `/unauthorized`                             | `StatusPage variant="unauthorized"` | none                                   | —                                                                                                                                                                | 1            |
 | 10  | `*`                                         | `StatusPage variant="not-found"`    | none                                   | —                                                                                                                                                                | 1            |
@@ -48,7 +48,7 @@ ability to onboard anyone, not defer a convenience. The one product
 decision the team can make here is whether `SIGNUP_ALLOWED_DOMAINS` is
 set in deployment; that's a server-side choice, not a frontend cut.
 
-**Members & Audit scope:** `MembersPage` exposes list + add only (change/remove are backend-only, no UI). `ProjectAuditLogPage` is read-only with three filters (Action, Result, Environment), no pagination.
+**Members & Audit scope:** `MembersPage` exposes list, add, change role, and remove. `ProjectAuditLogPage` is read-only with three filters (Action, Result, Environment), no pagination.
 
 **Guards** are two components plus one in-page check:
 
@@ -97,14 +97,14 @@ One Axios instance (`client/src/api/`) with a response interceptor turns every f
 
 **Query keys and invalidation.**
 
-| Key                                   | Data                        | Invalidated by                                                                               |
-| ------------------------------------- | --------------------------- | -------------------------------------------------------------------------------------------- |
-| `['me']`                              | `GET /auth/me`              | set on login; cleared on logout and 401                                                      |
-| `['projects']`                        | project list                | create project                                                                               |
-| `['project', projectId]`              | project detail incl. `role` | any 403 on a mutation in that project                                                        |
-| `['secrets', projectId, environment]` | secrets list                | create / edit / delete in that environment; a settled reveal (`lastAccessedAt` moves)        |
-| `['members', projectId]`              | members list                | add member                                                                                   |
-| `['audit', projectId, filters]`       | project audit log           | any secret mutation, reveal, or add member (invalidate by the `['audit', projectId]` prefix) |
+| Key                                   | Data                        | Invalidated by                                                                                      |
+| ------------------------------------- | --------------------------- | --------------------------------------------------------------------------------------------------- |
+| `['me']`                              | `GET /auth/me`              | set on login; cleared on logout and 401                                                             |
+| `['projects']`                        | project list                | create project                                                                                      |
+| `['project', projectId]`              | project detail incl. `role` | any 403 on a mutation in that project                                                               |
+| `['secrets', projectId, environment]` | secrets list                | create / edit / delete in that environment; a settled reveal (`lastAccessedAt` moves)               |
+| `['members', projectId]`              | members list                | add, change role, or remove member                                                                  |
+| `['audit', projectId, filters]`       | project audit log           | any secret mutation, reveal, or membership change (invalidate by the `['audit', projectId]` prefix) |
 
 A reveal never writes any query key. The secret row is keyed by secret id, so the list refetch after a reveal doesn't remount the cell or clear its value.
 
@@ -318,7 +318,7 @@ Invariants (correctness properties, not features — see §9):
 
 ### 3.6 `MembersPage` — `/projects/:projectId/members`
 
-**View and manage the team. Story 5 (partial — add only).**
+**View and manage the team. Story 5.**
 
 - **Data:** `useMembers(projectId)` → `{ userId, email, role, createdAt }[]`.
 
@@ -326,13 +326,15 @@ Invariants (correctness properties, not features — see §9):
 
 - **Controls (Project Admin only; others read-only):**
 
-| Control    | Behavior                                                                     |
-| ---------- | ---------------------------------------------------------------------------- |
-| Add member | Email + role select. No default role — explicit assignment matches story 10. |
+| Control       | Behavior                                                                                           |
+| ------------- | -------------------------------------------------------------------------------------------------- |
+| Add member    | Email + role select. No default role — explicit assignment matches story 10.                       |
+| Change role   | Select a role and confirm before sending. Show a last-admin conflict and retain the dialog on 409. |
+| Remove member | Confirm before sending. Show a last-admin conflict and retain the dialog on 409.                   |
 
-- Change role and Remove are backend-only endpoints (no UI in MVP).
+- On successful role change or removal, invalidate members, project detail, projects, and audit queries. Self-removal must no longer expose the project; self-demotion must update the available controls.
 
-- Add-member errors show on the email field: `404` (no account with that email) and `409` (already a member). The last-admin invariant (`Project.activeAdminCount`) is backend-only in the MVP and can't be triggered from add.
+- Add-member errors show on the email field: `404` (no account with that email) and `409` (already a member). Change/remove `409` explains the last-Project-Admin invariant; `404` refreshes membership/project data.
 
 - **States:** loading; error. Empty cannot occur.
 
@@ -394,22 +396,23 @@ promise.
 Derived from permissions matrix. `E` = enabled, `D` =
 disabled with reason, `H` = hidden, `—` = route unreachable.
 
-| Control                | Project Admin | Developer (dev) | Developer (other) | Auditor | Platform Admin |
-| ---------------------- | ------------- | --------------- | ----------------- | ------- | -------------- |
-| View secrets list      | E             | E               | E                 | E       | — (404)¹       |
-| New secret             | E             | E               | D                 | H       | —              |
-| Reveal                 | E             | E               | E (prod: modal)   | H       | —              |
-| Edit value             | E             | E               | D                 | H       | —              |
-| Delete secret          | E             | H               | H                 | H       | —              |
-| View members           | E             | E               | E                 | E       | —              |
-| Add member             | E             | H               | H                 | H       | post-MVP       |
-| View project audit log | E             | E               | E                 | E       | —              |
+| Control                     | Project Admin | Developer (dev) | Developer (other) | Auditor | Platform Admin |
+| --------------------------- | ------------- | --------------- | ----------------- | ------- | -------------- |
+| View secrets list           | E             | E               | E                 | E       | — (404)¹       |
+| New secret                  | E             | E               | D                 | H       | —              |
+| Reveal                      | E             | E               | E (prod: modal)   | H       | —              |
+| Edit value                  | E             | E               | D                 | H       | —              |
+| Delete secret               | E             | H               | H                 | H       | —              |
+| View members                | E             | E               | E                 | E       | —              |
+| Add member                  | E             | H               | H                 | H       | post-MVP       |
+| Change role / remove member | E             | H               | H                 | H       | post-MVP       |
+| View project audit log      | E             | E               | E                 | E       | —              |
 
 Post-MVP controls (archive/restore, admin menu and `/admin/*`) aren't in this grid: they belong to Platform Admin only and don't exist for any project role.
 
 ¹ Platform Admin without membership gets 404 on project-scoped routes (`/projects/:id/*`). A platform-wide project overview is post-MVP.
 
-Team management: add only (change/remove post-MVP). Audit log: read-only (filters kept, pagination post-MVP). Settings post-MVP.
+Team management: add, change role, and remove. Audit log: read-only (filters kept, pagination post-MVP). Settings post-MVP.
 
 The permission helper is one small module (`lib/permissions.ts`), one
 function `can(role, action, environment?) → 'enabled' | 'disabled' | 'hidden'`, consumed through `usePermissions(projectId)`. Not a generic
@@ -456,7 +459,7 @@ dialog, `ProjectLayout` with its 404 / 403 branches.
 `RevealConfirmDialog`, create / edit / delete dialogs.
 
 **Phase 4 — Members + Audit (read-only)**
-`MembersPage` (list + add dialog), `ProjectAuditLogPage` (table + 3 filters, no pagination).
+`MembersPage` (list, add, change role, and remove), `ProjectAuditLogPage` (table + 3 filters, no pagination).
 
 **Phase 5 — MVP hardening and ship**
 P0 tests, small browser smoke suite, error and empty state pass,
@@ -487,7 +490,7 @@ accessibility pass, security review, bug fixing. **This is the release.**
 
 **What the MVP demonstrates:** RBAC (three project roles plus the
 auditor-never-sees-values invariant), audited secret reveal with
-confirmation on production, project-scoped team management (add only), and the
+confirmation on production, project-scoped team management, and the
 transparency mechanism (read-only audit log) — the four things the product
 is built around.
 
@@ -592,7 +595,6 @@ this product.
 
 - Project rename / environment editing — no endpoint, no page
 - Admin pages and archive/restore — see §7
-- Member change/remove UI — backend endpoints exist, no frontend
 - Audit pagination — read-only table with 3 filters only
 
 Order of further cuts, from least to most damaging:

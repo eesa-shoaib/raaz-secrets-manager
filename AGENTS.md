@@ -142,7 +142,6 @@ MVP ships routes 1–10 (FRONTEND.md §1) and Phases 1–5. **Do not build** the
 - Admin UI (`/admin/users`, `/admin/projects`, `/admin/audit-log`) and `RequirePlatformAdmin`. The `PATCH /api/admin/users/:userId` and `GET /api/admin/users` backend endpoints **do** exist.
 - Project archive/restore (`Project.status` and `requireProjectStatus` exist and are tested against a directly seeded archived project; nothing sets `archived`).
 - Project rename / environment editing (no `PATCH /projects/:projectId`). Environments are always `development`, `staging`, `production`.
-- Member change-role/remove **UI**. The backend `PATCH`/`DELETE .../members` endpoints exist (needed for the last-Project-Admin test).
 - Audit log pagination (single request, `limit` ≤ 100, no `page`), three filters only (action, result, environment).
 - Non-goals: key rotation, secret versioning, service accounts/API tokens, break-glass access, email verification, password reset, per-account login limiters.
 

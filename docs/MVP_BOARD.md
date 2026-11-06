@@ -6,7 +6,7 @@ tags: [kanban, mvp, tracking]
 
 Source: [[PRODUCT.md#Cut from MVP]] | [[FRONTEND.md#Build Order]]
 
-Implementation note: server auth, project, membership, and secret routes exist, but require further integration and security testing. The project audit-log and Platform Admin routes are not yet implemented. Client API modules, hooks, and most MVP pages remain to be built. Phase checkboxes remain open until their definitions of done are met.
+Implementation note: server auth, project, membership, secret, project audit-log, and Platform Admin user routes exist, but require further integration and security testing. Client API modules, hooks, and MVP pages are present and require verification. Phase checkboxes remain open until their definitions of done are met.
 
 ## Backlog
 
@@ -14,7 +14,7 @@ Implementation note: server auth, project, membership, and secret routes exist, 
 - [ ] Story 2: Developer reveals a production secret (AC: confirm modal, audit logged)
 - [ ] Story 3: Developer attempts to edit a production secret (AC: 403, denied audit)
 - [ ] Story 4: Auditor reviews without seeing values (AC: list metadata only, reveal 403)
-- [ ] Story 5: Project Admin manages team (AC: add member only in MVP)
+- [ ] Story 5: Project Admin manages team (AC: add, change role, remove; last admin protected)
 - [ ] Story 6: Project Admin reviews project activity (AC: read-only log, 3 filters)
 - [ ] Story 7: Platform Admin deactivates malicious user (AC: backend endpoint only)
 - [ ] Story 8: Platform Admin archives project (AC: post-MVP, full cut)
@@ -48,9 +48,9 @@ Implementation note: server auth, project, membership, and secret routes exist, 
 
 ## Phase 4 — Members + Audit (Read-Only)
 
-- [ ] `MembersPage` (list + add dialog)
+- [ ] `MembersPage` (list, add, change role, and remove)
 - [ ] `ProjectAuditLogPage` (table + 3 filters, no pagination)
-- [ ] **Definition of Done**: Members add works, audit log renders with filters
+- [ ] **Definition of Done**: Membership controls work with last-admin errors; audit log renders with filters
 
 ## Phase 5 — MVP Hardening & Ship
 
@@ -64,12 +64,11 @@ Implementation note: server auth, project, membership, and secret routes exist, 
 
 ## Post-MVP (Deferred)
 
-- [ ] Admin users UI (`/admin/users`) — backend endpoints also remain to be implemented
+- [ ] Admin users UI (`/admin/users`) — backend endpoints exist and need integration testing
 - [ ] Admin projects UI (`/admin/projects`) — needs backend
 - [ ] Admin audit UI (`/admin/audit-log`) — needs backend
 - [ ] Project archive/restore — needs backend
 - [ ] Project rename / environment editing
-- [ ] Member change/remove UI
 - [ ] Audit log pagination
 - [ ] Historical-environment filtering
 - [ ] Reveal countdown UI

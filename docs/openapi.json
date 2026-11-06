@@ -3,7 +3,7 @@
     "info": {
         "title": "Raaz API",
         "version": "1.0.0",
-        "description": "MVP contract from API.md. Secret routes are currently incorrectly mounted; audit-log and admin routes are not implemented. State-changing requests require an Origin matching CLIENT_ORIGIN. Login sets an httpOnly cookie; configure Hoppscotch to send cookies."
+        "description": "MVP contract from API.md. Secret, audit-log and admin routes require further database-backed integration testing. State-changing requests require an Origin matching CLIENT_ORIGIN. Login sets an httpOnly cookie; configure Hoppscotch to send cookies."
     },
     "servers": [{ "url": "http://localhost:5000/api", "description": "Local server" }],
     "security": [{ "cookieAuth": [] }],
@@ -205,7 +205,7 @@
         "/projects/{projectId}/secrets": {
             "parameters": [{ "$ref": "#/components/parameters/projectId" }],
             "get": {
-                "summary": "List secrets (unfinished)",
+                "summary": "List secrets",
                 "parameters": [
                     {
                         "name": "environment",
@@ -217,7 +217,7 @@
                 "responses": { "200": { "description": "Masked secrets" } }
             },
             "post": {
-                "summary": "Create secret (unfinished)",
+                "summary": "Create secret",
                 "parameters": [{ "$ref": "#/components/parameters/origin" }],
                 "requestBody": {
                     "required": true,
@@ -244,7 +244,7 @@
                 { "$ref": "#/components/parameters/secretId" }
             ],
             "patch": {
-                "summary": "Edit secret value (unfinished)",
+                "summary": "Edit secret value",
                 "parameters": [{ "$ref": "#/components/parameters/origin" }],
                 "requestBody": {
                     "required": true,
@@ -261,7 +261,7 @@
                 "responses": { "200": { "description": "Updated" } }
             },
             "delete": {
-                "summary": "Delete secret (unfinished)",
+                "summary": "Delete secret",
                 "parameters": [{ "$ref": "#/components/parameters/origin" }],
                 "responses": { "204": { "description": "Deleted" } }
             }
@@ -272,7 +272,7 @@
                 { "$ref": "#/components/parameters/secretId" }
             ],
             "post": {
-                "summary": "Reveal secret (unfinished)",
+                "summary": "Reveal secret",
                 "parameters": [{ "$ref": "#/components/parameters/origin" }],
                 "requestBody": {
                     "required": true,
@@ -294,7 +294,7 @@
         "/projects/{projectId}/audit-log": {
             "parameters": [{ "$ref": "#/components/parameters/projectId" }],
             "get": {
-                "summary": "Project audit log (not implemented)",
+                "summary": "Project audit log",
                 "parameters": [
                     { "name": "action", "in": "query", "schema": { "type": "string" } },
                     {
@@ -318,7 +318,7 @@
         },
         "/admin/users": {
             "get": {
-                "summary": "List users (not implemented)",
+                "summary": "List users",
                 "parameters": [
                     { "name": "page", "in": "query", "schema": { "type": "integer" } },
                     { "name": "limit", "in": "query", "schema": { "type": "integer" } }
@@ -329,7 +329,7 @@
         "/admin/users/{userId}": {
             "parameters": [{ "$ref": "#/components/parameters/userId" }],
             "patch": {
-                "summary": "Update user status or admin role (not implemented)",
+                "summary": "Update user status or admin role",
                 "parameters": [{ "$ref": "#/components/parameters/origin" }],
                 "requestBody": {
                     "required": true,

@@ -8,9 +8,9 @@
 - Members: list, add, change role, remove. Membership mutations include audit entries and atomic last-Project-Admin protection.
 - Secrets: list by environment, create, edit value, delete, metadata, and reveal. The response uses a fixed-width mask; production reveal requires confirmation. Developer writes are limited to development.
 
-Secret endpoints are implemented but still need replica-set integration coverage. Not implemented: audit-log endpoint, Platform Admin routes, database integration suite.
+The project audit-log and backend-only Platform Admin user routes are implemented. Secrets, audit, and administrative operations still need replica-set integration coverage; the database integration suite is not implemented.
 
-The client is still a routing and UI skeleton: its API modules, hooks, and most MVP pages are not yet implemented. The API specification describes the intended contract; implementation and security behavior still need integration verification.
+The client includes API modules, hooks, and MVP pages. The API specification describes the intended contract; implementation and security behavior still need integration verification.
 
 ## Setup
 
