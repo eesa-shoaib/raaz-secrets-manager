@@ -11,24 +11,27 @@ export async function getSecrets(
     projectId: string,
     environment: Environment,
 ): Promise<SecretResponse[]> {
-    const res = await apiClient.get<{ secrets: SecretResponse[] }>(
+    const res = await apiClient.get<SecretResponse[] | { secrets: SecretResponse[] }>(
         `/projects/${projectId}/secrets`,
         {
             params: { environment },
         },
     );
-    return res.data.secrets;
+    const data = res.data;
+    if (Array.isArray(data)) return data;
+    return (data as { secrets?: SecretResponse[] }).secrets ?? [];
 }
 
 export async function createSecret(
     projectId: string,
     data: CreateSecretInput,
 ): Promise<SecretResponse> {
-    const res = await apiClient.post<{ secret: SecretResponse }>(
+    const res = await apiClient.post<SecretResponse | { secret: SecretResponse }>(
         `/projects/${projectId}/secrets`,
         data,
     );
-    return res.data.secret;
+    const body = res.data as { secret?: SecretResponse } & SecretResponse;
+    return body.secret ?? body;
 }
 
 export async function editSecret(
@@ -36,11 +39,12 @@ export async function editSecret(
     secretId: string,
     data: EditSecretInput,
 ): Promise<SecretResponse> {
-    const res = await apiClient.patch<{ secret: SecretResponse }>(
+    const res = await apiClient.patch<SecretResponse | { secret: SecretResponse }>(
         `/projects/${projectId}/secrets/${secretId}`,
         data,
     );
-    return res.data.secret;
+    const body = res.data as { secret?: SecretResponse } & SecretResponse;
+    return body.secret ?? body;
 }
 
 export async function deleteSecret(projectId: string, secretId: string): Promise<void> {

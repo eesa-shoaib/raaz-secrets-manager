@@ -25,10 +25,12 @@ export async function getProjectAuditLog(
     if (filters.result) params.result = filters.result;
     if (filters.environment) params.environment = filters.environment;
 
-    const res = await apiClient.get<{ entries: AuditLogEntryResponse[] }>(
+    const res = await apiClient.get<AuditLogEntryResponse[] | { entries: AuditLogEntryResponse[] }>(
         `/projects/${projectId}/audit-log`,
         { params },
     );
 
-    return res.data.entries;
+    const data = res.data;
+    if (Array.isArray(data)) return data;
+    return (data as { entries?: AuditLogEntryResponse[] }).entries ?? [];
 }
