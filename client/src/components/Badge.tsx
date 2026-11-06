@@ -16,7 +16,7 @@ export function Badge({ variant, value, className = '' }: BadgeProps) {
             if (value === 'projectAdmin') {
                 return (
                     <span
-                        className={`badge badge-primary text-base-300 font-semibold text-xs px-2.5 py-1 ${className}`}
+                        className={`badge badge-primary min-w-28 justify-center text-base-300 font-semibold text-xs px-2.5 py-1 ${className}`}
                     >
                         Project Admin
                     </span>
@@ -25,7 +25,7 @@ export function Badge({ variant, value, className = '' }: BadgeProps) {
             if (value === 'developer') {
                 return (
                     <span
-                        className={`badge badge-info badge-outline text-xs px-2.5 py-1 ${className}`}
+                        className={`badge badge-info badge-outline min-w-28 justify-center text-xs px-2.5 py-1 ${className}`}
                     >
                         Developer
                     </span>
@@ -34,13 +34,17 @@ export function Badge({ variant, value, className = '' }: BadgeProps) {
             if (value === 'auditor') {
                 return (
                     <span
-                        className={`badge badge-secondary badge-outline text-xs px-2.5 py-1 ${className}`}
+                        className={`badge badge-secondary badge-outline min-w-28 justify-center text-xs px-2.5 py-1 ${className}`}
                     >
                         Auditor
                     </span>
                 );
             }
-            return <span className={`badge badge-ghost text-xs ${className}`}>{value}</span>;
+            return (
+                <span className={`badge badge-ghost min-w-28 justify-center text-xs ${className}`}>
+                    {value}
+                </span>
+            );
         }
 
         case 'environment': {
@@ -78,8 +82,9 @@ export function Badge({ variant, value, className = '' }: BadgeProps) {
             if (value === 'allowed') {
                 return (
                     <span
-                        className={`badge badge-success badge-sm text-xs px-2 text-base-300 font-medium ${className}`}
+                        className={`inline-flex items-center gap-1.5 text-xs font-medium text-success ${className}`}
                     >
+                        <span aria-hidden="true">✓</span>
                         Allowed
                     </span>
                 );
@@ -87,8 +92,9 @@ export function Badge({ variant, value, className = '' }: BadgeProps) {
             if (value === 'denied') {
                 return (
                     <span
-                        className={`badge badge-error badge-sm text-xs px-2 text-base-100 font-medium ${className}`}
+                        className={`inline-flex items-center gap-1.5 text-xs font-medium text-error ${className}`}
                     >
+                        <span aria-hidden="true">✕</span>
                         Denied
                     </span>
                 );

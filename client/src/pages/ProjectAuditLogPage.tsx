@@ -171,7 +171,7 @@ export function ProjectAuditLogPage() {
                             <select
                                 value={actionFilter || ''}
                                 onChange={(e) => updateFilter('action', e.target.value)}
-                                className="select select-bordered select-sm bg-base-300 rounded-xl text-xs font-ui"
+                                className="select select-bordered select-sm w-full min-w-44 bg-base-300 rounded-xl text-xs font-ui"
                                 aria-label="Filter by action"
                             >
                                 <option value="">All Actions</option>
@@ -191,7 +191,7 @@ export function ProjectAuditLogPage() {
                             <select
                                 value={resultFilter || ''}
                                 onChange={(e) => updateFilter('result', e.target.value)}
-                                className="select select-bordered select-sm bg-base-300 rounded-xl text-xs font-ui"
+                                className="select select-bordered select-sm w-full min-w-44 bg-base-300 rounded-xl text-xs font-ui"
                                 aria-label="Filter by result"
                             >
                                 <option value="">All Results</option>
@@ -210,7 +210,7 @@ export function ProjectAuditLogPage() {
                             <select
                                 value={environmentFilter || ''}
                                 onChange={(e) => updateFilter('environment', e.target.value)}
-                                className="select select-bordered select-sm bg-base-300 rounded-xl text-xs font-ui"
+                                className="select select-bordered select-sm w-full min-w-44 bg-base-300 rounded-xl text-xs font-ui"
                                 aria-label="Filter by environment"
                             >
                                 <option value="">All Environments</option>
