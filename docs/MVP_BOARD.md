@@ -6,7 +6,7 @@ tags: [kanban, mvp, tracking]
 
 Source: [[PRODUCT.md#Cut from MVP]] | [[FRONTEND.md#Build Order]]
 
-Implementation note: server auth, project, membership, secret, project audit-log, and Platform Admin user routes exist, but require further integration and security testing. Client API modules, hooks, and MVP pages are present and require verification. Phase checkboxes remain open until their definitions of done are met.
+Status: Phases 1–4 are marked complete based on the project owner's verification. Local build, lint, formatting, and the current test suites have passed. Phase 5 hardening remains open, including database-backed security and transaction tests. Individual backlog stories remain unchecked until their specific outcomes are recorded.
 
 ## Backlog
 
@@ -25,34 +25,44 @@ Implementation note: server auth, project, membership, secret, project audit-log
 
 ## Phase 1 — Foundation
 
-- [ ] Project setup, routing shell
-- [ ] `AppShell` / `NavBar` / `TabNav`
-- [ ] `StatusPage`, `FullPageState`, `Toaster`
-- [ ] API client + interceptors, `ApiError` normalizers
-- [ ] Guards (`RequireAuth`, `PublicOnly`)
-- [ ] **Definition of Done**: Auth tests pass, 401 flow works
+The project owner reports this phase verified. Automated auth tests cover bootstrap and the unauthenticated flow.
+
+- [x] Project setup, routing shell
+- [x] `AppShell` / `NavBar` / `TabNav`
+- [x] `StatusPage`, `FullPageState`, `Toaster`
+- [x] API client + interceptors, `ApiError` normalizers
+- [x] Guards (`RequireAuth`, `PublicOnly`)
+- [x] **Definition of Done**: Auth tests pass, 401 flow works
 
 ## Phase 2 — Auth and Projects
 
-- [ ] `LoginPage`, `SignupPage`
-- [ ] `ProjectsPage`, `ProjectCard`, create-project dialog
-- [ ] `ProjectLayout` with 404/403 branches
-- [ ] **Definition of Done**: Project list renders, create works, detail renders
+The project owner reports this phase verified.
+
+- [x] `LoginPage`, `SignupPage`
+- [x] `ProjectsPage`, `ProjectCard`, create-project dialog
+- [x] `ProjectLayout` with 404/403 branches
+- [x] **Definition of Done**: Project list renders, create works, detail renders
 
 ## Phase 3 — Secrets
 
-- [ ] `SecretsPage`, `EnvironmentTabs`, `SecretsTable`
-- [ ] `SecretRow`, `SecretValueCell` (reveal lifecycle)
-- [ ] `RevealConfirmDialog`, create/edit/delete dialogs
-- [ ] **Definition of Done**: CRUD works, reveal dev works, prod confirm works, value never in cache
+The project owner reports this phase verified. Additional database-backed security and transaction tests remain part of Phase 5.
+
+- [x] `SecretsPage`, `EnvironmentTabs`, `SecretsTable`
+- [x] `SecretRow`, `SecretValueCell` (reveal lifecycle)
+- [x] `RevealConfirmDialog`, create/edit/delete dialogs
+- [x] **Definition of Done**: CRUD works, reveal dev works, prod confirm works, value never in cache
 
 ## Phase 4 — Members + Audit (Read-Only)
 
-- [ ] `MembersPage` (list, add, change role, and remove)
-- [ ] `ProjectAuditLogPage` (table + 3 filters, no pagination)
-- [ ] **Definition of Done**: Membership controls work with last-admin errors; audit log renders with filters
+The project owner reports this phase verified. Last-admin concurrency and audit behavior still need database-backed integration tests in Phase 5.
+
+- [x] `MembersPage` (list, add, change role, and remove)
+- [x] `ProjectAuditLogPage` (table + 3 filters, no pagination)
+- [x] **Definition of Done**: Membership controls work with last-admin errors; audit log renders with filters
 
 ## Phase 5 — MVP Hardening & Ship
+
+Latest local checks: production build, lint, formatting, 23 client tests, and 21 server tests passed. Lint reported one existing warning; several tests use mocks. A real browser smoke suite, replica-set integration tests, accessibility pass, and security review remain outstanding.
 
 - [ ] P0 tests
 - [ ] Small browser smoke suite
