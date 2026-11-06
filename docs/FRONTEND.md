@@ -114,6 +114,8 @@ A reveal never writes any query key. The secret row is keyed by secret id, so th
 
 ### 2.1 Chrome and layout
 
+**Shared visual treatment:** use the responsive `page-gutter` class for equal horizontal padding on both sides of page content. The navbar is centered at 88% width with a visible solid border, compact internal padding, a text-only Raaz brand, and a 6rem height. Project navigation uses underlined links; environment selection uses a separately labeled segmented control. Filled buttons have a dark noise texture, while page backgrounds, cards, panels, and modals use a lighter texture. Ghost, link, outline, and transparent buttons stay clear. Keep text and focus indicators readable; visually check contrast when changing theme colors or texture strength. These styles reuse existing components and do not add widgets.
+
 | Widget                  | Purpose                                                                                                        |
 | ----------------------- | -------------------------------------------------------------------------------------------------------------- |
 | `AppShell`              | Skip link, `NavBar`, `<main id="main">`, `Toaster`                                                             |
@@ -204,6 +206,8 @@ noted, not omitted.
 
 - **Data:** `useProjects()` → `GET /projects`. Each entry carries `status` and the caller's `role`; archived entries (post-MVP) render as locked cards.
 
+- Active project cards show the project name, status, and role without displaying database IDs or environment labels. IDs remain in links and API requests.
+
 - **Widgets:** `PageHeader`, grid of `ProjectCard`, `EmptyState`,
   `ErrorState`, `Skeleton`, `Toaster`.
 
@@ -237,6 +241,8 @@ noted, not omitted.
   `ProjectArchivedNotice`, `StatusPage`, `ErrorState`, `Skeleton`.
 
 - **Tabs:** Secrets, Members, Audit log (all members).
+
+- **Back:** an inline back control returns to the previous in-app history entry; when opened directly, it returns to `/projects`. The project header does not display the database ID.
 
 - **States:**
 
