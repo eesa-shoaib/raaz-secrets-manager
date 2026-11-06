@@ -1,6 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import { UserModel } from '../models/User.js';
-import { verifyToken } from '../services/auth.service.js';
+import { findAuthenticatedUser, verifyToken } from '../services/auth.service.js';
 import { asyncHandler } from '../utils/async-handler.js';
 
 export const authenticate = asyncHandler(
@@ -21,22 +20,15 @@ export const authenticate = asyncHandler(
             return;
         }
 
-        const user = await UserModel.findById(payload.sub).lean();
-        if (!user || user.tokenVersion !== payload.tv || !user.isActive) {
+        const user = await findAuthenticatedUser(payload.sub, payload.tv);
+        if (!user) {
             res.status(401).json({
                 error: { code: 'UNAUTHENTICATED', message: 'Missing or invalid auth cookie' },
             });
             return;
         }
 
-        req.user = {
-            id: user._id.toString(),
-            email: user.email,
-            isPlatformAdmin: user.isPlatformAdmin,
-            isActive: user.isActive,
-            createdAt: user.createdAt,
-            updatedAt: user.updatedAt,
-        };
+        req.user = user;
         next();
     },
 );

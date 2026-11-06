@@ -38,6 +38,8 @@ export function requireProjectRole(...allowedRoles: ('projectAdmin' | 'developer
                 await writeDeniedAuditEntry({
                     userId,
                     projectId,
+                    secretKey: req.body?.key,
+                    environment: req.body?.environment,
                     action: 'create',
                 });
             }

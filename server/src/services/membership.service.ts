@@ -62,56 +62,57 @@ export async function changeProjectMemberRole(
     userId: string,
     role: 'projectAdmin' | 'developer' | 'auditor',
 ) {
-    const membership = await findMembership(userId, projectId);
-    if (!membership) throw new AppError(404, 'NOT_FOUND', 'Member not found');
     const session = await mongoose.startSession();
-    session.startTransaction();
     try {
-        if (membership.role === 'projectAdmin' && role !== 'projectAdmin')
-            await removeProjectAdminCount(projectId, session);
-        if (membership.role !== 'projectAdmin' && role === 'projectAdmin')
-            await incrementAdminCount(projectId, session);
-        await updateMembershipRole(userId, projectId, role, session);
-        await writeAuditEntry({
-            session,
-            userId: actorId,
-            projectId,
-            targetUserId: userId,
-            previousRole: membership.role,
-            newRole: role,
-            action: 'member_role_changed',
-            result: 'allowed',
+        await session.withTransaction(async () => {
+            const membership = await ProjectMembershipModel.findOne({ userId, projectId }).session(
+                session,
+            );
+            if (!membership) throw new AppError(404, 'NOT_FOUND', 'Member not found');
+            if (membership.role === role) return;
+            if (membership.role === 'projectAdmin' && role !== 'projectAdmin')
+                await removeProjectAdminCount(projectId, session);
+            if (membership.role !== 'projectAdmin' && role === 'projectAdmin')
+                await incrementAdminCount(projectId, session);
+            const previousRole = membership.role;
+            membership.role = role;
+            await membership.save({ session });
+            await writeAuditEntry({
+                session,
+                userId: actorId,
+                projectId,
+                targetUserId: userId,
+                previousRole,
+                newRole: role,
+                action: 'member_role_changed',
+                result: 'allowed',
+            });
         });
-        await session.commitTransaction();
-    } catch (error) {
-        await session.abortTransaction();
-        throw error;
     } finally {
         await session.endSession();
     }
 }
 
 export async function removeProjectMember(actorId: string, projectId: string, userId: string) {
-    const membership = await findMembership(userId, projectId);
-    if (!membership) throw new AppError(404, 'NOT_FOUND', 'Member not found');
     const session = await mongoose.startSession();
-    session.startTransaction();
     try {
-        if (membership.role === 'projectAdmin') await removeProjectAdminCount(projectId, session);
-        await deleteMembership(userId, projectId, session);
-        await writeAuditEntry({
-            session,
-            userId: actorId,
-            projectId,
-            targetUserId: userId,
-            previousRole: membership.role,
-            action: 'member_removed',
-            result: 'allowed',
+        await session.withTransaction(async () => {
+            const membership = await ProjectMembershipModel.findOne({ userId, projectId }).session(
+                session,
+            );
+            if (!membership) throw new AppError(404, 'NOT_FOUND', 'Member not found');
+            if (membership.role === 'projectAdmin')
+                await removeProjectAdminCount(projectId, session);
+            await membership.deleteOne({ session });
+            await writeAuditEntry({
+                session,
+                userId: actorId,
+                projectId,
+                targetUserId: userId,
+                action: 'member_removed',
+                result: 'allowed',
+            });
         });
-        await session.commitTransaction();
-    } catch (error) {
-        await session.abortTransaction();
-        throw error;
     } finally {
         await session.endSession();
     }

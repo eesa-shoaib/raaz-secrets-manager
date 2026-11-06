@@ -64,3 +64,7 @@ export async function getProject(projectId: string): Promise<ProjectView> {
     if (!project) throw new AppError(404, 'NOT_FOUND', 'Project not found');
     return project;
 }
+
+export async function getProjectStatus(projectId: string) {
+    return ProjectModel.findById(projectId).select('status').lean();
+}

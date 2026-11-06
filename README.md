@@ -36,14 +36,14 @@ Client (React + Vite)  →  Server (Express)  →  MongoDB Atlas
 
 ## MVP Status
 
-The server has authentication, project, membership, and secret routes. Secret and membership security behavior still needs replica-set integration tests. The project audit-log and Platform Admin endpoints are not implemented yet. The client currently has a routing/UI skeleton; API integration and most MVP pages remain to be built.
+The server has authentication, project, membership, secret, project audit-log, and backend-only Platform Admin user routes. Security-sensitive behavior still needs replica-set integration tests. The client includes API modules, hooks, and MVP pages; see the frontend checklist for outstanding verification.
 
 The intended MVP includes:
 
 - Project-scoped secrets with environment isolation (dev/staging/prod)
 - Role-based access: Project Admin, Developer, Auditor
 - Audited secret reveals with production confirmation modal
-- Per-project team management (add member in the MVP)
+- Per-project team management (add members, change roles, and remove members)
 - Read-only audit log with filtering
 
 For current server setup, manual testing, and mock data generation, see [server/IMPLEMENTED.md](./server/IMPLEMENTED.md). See [server/TODO.md](./server/TODO.md) for remaining server work.

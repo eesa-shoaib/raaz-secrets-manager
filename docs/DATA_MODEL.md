@@ -77,7 +77,7 @@ one project via one document per (user, project) pair.
 **Constraint:** compound unique index on `(userId, projectId)` — a user
 has exactly one role per project.
 
-**MVP scope:** `ProjectMembership` is fully MVP-visible (created on project creation, listed on MembersPage, added via POST /members). Role change and removal endpoints exist on backend for last-Project-Admin invariant test but have no UI in MVP.
+**MVP scope:** `ProjectMembership` is created on project creation and managed in MembersPage through list, add, change-role, and remove operations. The last-Project-Admin invariant is enforced by the backend.
 
 ## Secret
 

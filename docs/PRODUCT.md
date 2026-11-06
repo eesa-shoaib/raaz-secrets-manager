@@ -37,7 +37,7 @@ being able to retrieve its decrypted value.
 - Masked-by-default secret display with explicit, confirmed reveal for
   production values
 - **Audit log of every create, reveal, edit, deletion, and denied attempt (read-only table with 3 filters, no pagination)**
-- **Project team management: add member only (change/remove post-MVP)**
+- **Project team management: add members, change roles, and remove members**
 - **Platform Admin: first-admin bootstrap, plus `PATCH /api/admin/users/:userId` (deactivate, promote/demote) as a backend endpoint with no UI**
 - Atomic audit records for security-sensitive actions
 
@@ -62,7 +62,6 @@ being able to retrieve its decrypted value.
   no "forgot password" flow in this build
 - **Platform Admin UI, project archive/restore, and platform-wide project and audit views (post-MVP).** The `/api/admin/users` backend endpoint is retained (story 7)
 - **Project settings (rename, edit environments) (post-MVP)** — no `PATCH /projects/:projectId` exists in this build; every project is created with the three canonical environments
-- **Member role change and removal UI (post-MVP); backend endpoints exist for last-Project-Admin invariant test**
 - **Audit log pagination (post-MVP)** — the MVP log keeps its 3 filters but is capped at the 100 most recent entries
 
 These are documented as intentional scope cuts, not oversights — each
@@ -76,7 +75,7 @@ This table is the single source of truth for scope; other docs link here.
 
 | Story                                               | Cut     | Reason                                                                                                      | Target      |
 | --------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------- | ----------- |
-| 5 — Project Admin manages their team                | Partial | Add member kept (UI + API); change-role and remove are backend-only, no UI                                  | UI post-MVP |
+| 5 — Project Admin manages their team                | None    | Add, change role, and remove are included in the MVP                                                        | MVP         |
 | 6 — Project Admin reviews project activity          | Partial | Read-only log with 3 filters kept; pagination deferred (capped at 100 most recent)                          | Post-MVP    |
 | 7 — Platform Admin deactivates a malicious user     | UI only | `PATCH /api/admin/users/:userId` retained as a backend endpoint; no admin UI                                | UI post-MVP |
 | 8 — Platform Admin archives a project               | Full    | No archive/restore endpoint or UI. `Project.status` and the status check exist, but nothing sets `archived` | Post-MVP    |
@@ -143,9 +142,9 @@ on my project **so that** I control who has what level of access.
   role, then that user gains exactly that role's permissions on this
   project only, with no effect on their role in other projects.
 - Platform Admin may also manage membership; see API.md's Permissions Matrix.
-- The last Project Admin cannot be removed or demoted (enforced by the backend; in the MVP exercised by a backend test only, since change/remove have no UI).
+- A Project Admin can change a member's role or remove a member, including other Project Admins and themselves. The backend rejects removing or demoting the last Project Admin with `409 CONFLICT`.
 
-**MVP scope:** add member only. Change/remove member is deferred (backend endpoints exist for last-Project-Admin invariant test; no UI in MVP).
+**MVP scope:** add members, change roles, and remove members. Platform Admin substitution on membership endpoints follows API.md; a Platform Admin without project membership cannot open project data.
 
 ### 6. Project Admin reviews project activity
 

@@ -1,9 +1,11 @@
 import bcrypt from 'bcryptjs';
 import type { Response } from 'express';
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 import { PlatformConfigModel } from '../models/PlatformConfig.js';
 import { UserModel, type UserDoc } from '../models/User.js';
 import { AppError } from '../utils/app-error.js';
+import { writeAuditEntry } from './audit.service.js';
 import { getJwtSecret, getCookieOptions } from './boot-validation.service.js';
 
 const DUMMY_HASH = '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy';
@@ -73,35 +75,42 @@ export async function bootstrapPlatformAdmin(): Promise<void> {
         throw new Error('PLATFORM_ADMIN_PASSWORD must be 8-72 characters');
     }
 
-    const existingAdmin = await UserModel.findOne({ isPlatformAdmin: true }).lean();
-    if (existingAdmin) return;
-
-    let user = (await UserModel.findOne({ email }).lean()) as UserDoc | null;
     const passwordHash = await bcrypt.hash(password, 10);
-
-    if (user) {
-        await UserModel.findByIdAndUpdate(user.id, {
-            passwordHash,
-            isPlatformAdmin: true,
-            isActive: true,
-            $inc: { tokenVersion: 1 },
-        }).exec();
-    } else {
-        const created = await UserModel.create({
-            email,
-            passwordHash,
-            isPlatformAdmin: true,
-            isActive: true,
-            tokenVersion: 0,
+    const session = await mongoose.startSession();
+    try {
+        await session.withTransaction(async () => {
+            if (await UserModel.findOne({ isPlatformAdmin: true }).session(session).lean()) return;
+            let user = await UserModel.findOne({ email }).session(session);
+            if (user) {
+                user.passwordHash = passwordHash;
+                user.isPlatformAdmin = true;
+                user.isActive = true;
+                user.tokenVersion += 1;
+            } else {
+                user = new UserModel({
+                    email,
+                    passwordHash,
+                    isPlatformAdmin: true,
+                    isActive: true,
+                    tokenVersion: 0,
+                });
+            }
+            await user.save({ session });
+            await PlatformConfigModel.findOneAndUpdate(
+                { _id: 'singleton' },
+                { $set: { activePlatformAdminCount: 1 } },
+                { upsert: true, new: true, session },
+            );
+            await writeAuditEntry({
+                session,
+                userId: user._id.toString(),
+                action: 'bootstrap_admin',
+                result: 'allowed',
+            });
         });
-        user = created.toObject() as UserDoc;
+    } finally {
+        await session.endSession();
     }
-
-    await PlatformConfigModel.findOneAndUpdate(
-        { _id: 'singleton' },
-        { $setOnInsert: { activePlatformAdminCount: 1 } },
-        { upsert: true, new: true },
-    ).exec();
 }
 
 export function issueToken(userId: string, tokenVersion: number, isPlatformAdmin: boolean): string {
@@ -122,6 +131,19 @@ export function verifyToken(token: string): { sub: string; tv: number; pa: boole
     } catch {
         return null;
     }
+}
+
+export async function findAuthenticatedUser(userId: string, tokenVersion: number) {
+    const user = await UserModel.findById(userId).lean();
+    if (!user || user.tokenVersion !== tokenVersion || !user.isActive) return null;
+    return {
+        id: user._id.toString(),
+        email: user.email,
+        isPlatformAdmin: user.isPlatformAdmin,
+        isActive: user.isActive,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+    };
 }
 
 export function setAuthCookie(res: Response, token: string): void {

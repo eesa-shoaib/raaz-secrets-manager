@@ -1,15 +1,21 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { addMemberSchema, type AddMemberInput } from '@raaz/shared-schemas';
+import { addMemberSchema, type AddMemberInput, type MemberResponse } from '@raaz/shared-schemas';
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
 import { Badge } from '../components/Badge';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { FormField } from '../components/FormField';
 import { ErrorState } from '../components/FullPageState';
 import { Skeleton } from '../components/LoadingSkeleton';
 import { Modal } from '../components/Modal';
 import { useToast } from '../components/Toaster';
-import { useMembers, useAddMember } from '../hooks/useMembers';
+import {
+    useMembers,
+    useAddMember,
+    useChangeMemberRole,
+    useRemoveMember,
+} from '../hooks/useMembers';
 import { usePermissions } from '../hooks/usePermissions';
 import { isApiError } from '../lib/errorHandling';
 
@@ -29,9 +35,51 @@ export function MembersPage() {
     const { data: members, isLoading, isError, error, refetch } = useMembers(projectId!);
     const { can } = usePermissions(projectId);
     const { mutateAsync: addMemberMutation, isPending: isAdding } = useAddMember(projectId!);
+    const changeRole = useChangeMemberRole(projectId!);
+    const removeMember = useRemoveMember(projectId!);
     const { toast } = useToast();
 
     const canAddMember = can('members.add') === 'enabled';
+    const canChangeRole = can('members.change-role') === 'enabled';
+    const canRemove = can('members.remove') === 'enabled';
+    const [action, setAction] = useState<{
+        kind: 'role' | 'remove';
+        member: MemberResponse;
+    } | null>(null);
+    const [nextRole, setNextRole] = useState<MemberResponse['role']>('developer');
+    const [actionError, setActionError] = useState<string | null>(null);
+    const isChanging = changeRole.isPending || removeMember.isPending;
+
+    const openAction = (kind: 'role' | 'remove', member: MemberResponse) => {
+        setNextRole(member.role);
+        setActionError(null);
+        setAction({ kind, member });
+    };
+    const closeAction = () => {
+        if (!isChanging) {
+            setAction(null);
+            setActionError(null);
+        }
+    };
+    const confirmAction = async () => {
+        if (!action || isChanging) return;
+        setActionError(null);
+        try {
+            if (action.kind === 'role')
+                await changeRole.mutateAsync({ userId: action.member.userId, role: nextRole });
+            else await removeMember.mutateAsync(action.member.userId);
+            toast.success(action.kind === 'role' ? 'Member role updated' : 'Member removed');
+            setAction(null);
+        } catch (err: unknown) {
+            if (isApiError(err) && err.status === 409)
+                setActionError('The last Project Admin cannot be removed or demoted.');
+            else if (isApiError(err) && err.status === 404)
+                setActionError('This member or project is no longer available.');
+            else if (isApiError(err) && err.status === 403)
+                setActionError('You no longer have permission to manage members.');
+            else setActionError('Something went wrong — the action was not applied.');
+        }
+    };
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalError, setModalError] = useState<string | null>(null);
@@ -144,6 +192,9 @@ export function MembersPage() {
                                 <th className="py-4 pl-6">Member</th>
                                 <th className="py-4">Role</th>
                                 <th className="py-4 pr-6 text-right">Joined</th>
+                                {(canChangeRole || canRemove) && (
+                                    <th className="py-4 pr-6 text-right">Actions</th>
+                                )}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-base-300/60 font-ui">
@@ -173,6 +224,30 @@ export function MembersPage() {
                                     <td className="py-4 pr-6 text-right text-xs text-base-content/70">
                                         {formatDate(member.createdAt)}
                                     </td>
+                                    {(canChangeRole || canRemove) && (
+                                        <td className="py-4 pr-6 text-right whitespace-nowrap">
+                                            {canChangeRole && (
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-ghost btn-sm"
+                                                    aria-label={`Change role for ${member.email}`}
+                                                    onClick={() => openAction('role', member)}
+                                                >
+                                                    Change role
+                                                </button>
+                                            )}
+                                            {canRemove && (
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-ghost btn-sm text-error"
+                                                    aria-label={`Remove ${member.email}`}
+                                                    onClick={() => openAction('remove', member)}
+                                                >
+                                                    Remove
+                                                </button>
+                                            )}
+                                        </td>
+                                    )}
                                 </tr>
                             ))}
                         </tbody>
@@ -262,6 +337,38 @@ export function MembersPage() {
                     </div>
                 </form>
             </Modal>
+            <ConfirmDialog
+                isOpen={action !== null}
+                onClose={closeAction}
+                onConfirm={() => void confirmAction()}
+                title={action?.kind === 'role' ? 'Change member role' : 'Remove member'}
+                confirmLabel={action?.kind === 'role' ? 'Change role' : 'Remove member'}
+                tone={action?.kind === 'remove' ? 'danger' : 'neutral'}
+                isLoading={isChanging}
+                error={actionError}
+                body={
+                    action?.kind === 'role' ? (
+                        <label className="flex flex-col gap-2">
+                            <span>New role for {action.member.email}</span>
+                            <select
+                                aria-label="New role"
+                                className="select select-bordered w-full"
+                                value={nextRole}
+                                onChange={(event) =>
+                                    setNextRole(event.target.value as MemberResponse['role'])
+                                }
+                                disabled={isChanging}
+                            >
+                                <option value="projectAdmin">Project Admin</option>
+                                <option value="developer">Developer</option>
+                                <option value="auditor">Auditor</option>
+                            </select>
+                        </label>
+                    ) : (
+                        <p>Remove {action?.member.email} from this project?</p>
+                    )
+                }
+            />
         </div>
     );
 }
