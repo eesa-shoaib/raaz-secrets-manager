@@ -129,7 +129,10 @@ export function ProjectAuditLogPage() {
                             {entry.environment}
                         </span>
                     )}
-                    <span className="max-w-48 truncate rounded border border-base-300 bg-base-300/70 px-2 py-1 font-mono text-xs font-semibold text-base-content" title={entry.secretKey}>
+                    <span
+                        className="max-w-48 truncate rounded border border-base-300 bg-base-300/70 px-2 py-1 font-mono text-xs font-semibold text-base-content"
+                        title={entry.secretKey}
+                    >
                         {entry.secretKey}
                     </span>
                 </div>
@@ -151,7 +154,9 @@ export function ProjectAuditLogPage() {
                     {entry.previousRole && entry.newRole ? (
                         <span className="font-semibold">
                             <span className="text-secondary">
-                                {entry.previousRole === 'projectAdmin' ? 'Project Admin' : entry.previousRole}
+                                {entry.previousRole === 'projectAdmin'
+                                    ? 'Project Admin'
+                                    : entry.previousRole}
                             </span>
                             {' → '}
                             <span className="text-info">
@@ -288,15 +293,40 @@ export function ProjectAuditLogPage() {
                                     >
                                         {/* Time in local timezone with ISO datetime attribute */}
                                         <td className="py-4 pl-6 text-xs text-base-content/70 whitespace-nowrap">
-                                            <time dateTime={ts.iso} title={ts.iso} className="flex flex-col">
-                                                <span>{new Date(ts.iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span>
-                                                <span className="text-base-content/55">{new Date(ts.iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+                                            <time
+                                                dateTime={ts.iso}
+                                                title={ts.iso}
+                                                className="flex flex-col"
+                                            >
+                                                <span>
+                                                    {new Date(ts.iso).toLocaleDateString(
+                                                        undefined,
+                                                        {
+                                                            year: 'numeric',
+                                                            month: 'short',
+                                                            day: 'numeric',
+                                                        },
+                                                    )}
+                                                </span>
+                                                <span className="text-base-content/55">
+                                                    {new Date(ts.iso).toLocaleTimeString(
+                                                        undefined,
+                                                        {
+                                                            hour: '2-digit',
+                                                            minute: '2-digit',
+                                                            second: '2-digit',
+                                                        },
+                                                    )}
+                                                </span>
                                             </time>
                                         </td>
 
                                         {/* User */}
                                         <td className="py-4">
-                                            <span className="block max-w-32 truncate font-medium text-base-content text-xs" title={entry.user?.email || 'Unknown user'}>
+                                            <span
+                                                className="block max-w-32 truncate font-medium text-base-content text-xs"
+                                                title={entry.user?.email || 'Unknown user'}
+                                            >
                                                 {entry.user ? entry.user.email : 'Unknown user'}
                                             </span>
                                         </td>

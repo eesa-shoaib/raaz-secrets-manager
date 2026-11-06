@@ -216,7 +216,9 @@ export function MembersPage() {
                                     </td>
                                     <td className="py-4">
                                         <span className="font-semibold text-base-content capitalize">
-                                            {member.role === 'projectAdmin' ? 'Project Admin' : member.role}
+                                            {member.role === 'projectAdmin'
+                                                ? 'Project Admin'
+                                                : member.role}
                                         </span>
                                     </td>
                                     <td className="py-4 pr-6 text-right text-xs text-base-content/70">
