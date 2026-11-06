@@ -51,7 +51,7 @@ export function SignupPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-base-100 p-4 font-ui">
+        <div className="page-gutter min-h-screen flex items-center justify-center bg-base-100 py-8 font-ui">
             <div className="card w-full max-w-md bg-base-200 border border-base-300 shadow-2xl p-8 rounded-3xl">
                 {/* Header */}
                 <div className="text-center mb-6">

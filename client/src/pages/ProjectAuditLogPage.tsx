@@ -115,11 +115,26 @@ export function ProjectAuditLogPage() {
         // Secret-scoped action
         if (entry.secretKey) {
             return (
-                <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-mono font-semibold text-base-content text-xs bg-base-300 px-1.5 py-0.5 rounded">
+                <div className="flex flex-col items-start gap-1">
+                    {entry.environment && (
+                        <span
+                            className={`text-[11px] font-bold uppercase tracking-wider ${
+                                entry.environment === 'production'
+                                    ? 'text-error'
+                                    : entry.environment === 'staging'
+                                      ? 'text-warning'
+                                      : 'text-info'
+                            }`}
+                        >
+                            {entry.environment}
+                        </span>
+                    )}
+                    <span
+                        className="max-w-48 truncate rounded border border-base-300 bg-base-300/70 px-2 py-1 font-mono text-xs font-semibold text-base-content"
+                        title={entry.secretKey}
+                    >
                         {entry.secretKey}
                     </span>
-                    {entry.environment && <Badge variant="environment" value={entry.environment} />}
                 </div>
             );
         }
@@ -127,20 +142,32 @@ export function ProjectAuditLogPage() {
         // Member-scoped action
         if (entry.targetUser || entry.newRole) {
             return (
-                <div className="flex items-center gap-1.5 flex-wrap text-xs font-ui">
+                <div className="flex max-w-40 flex-col items-center gap-1 text-center text-xs font-ui">
                     {entry.targetUser && (
-                        <span className="text-base-content font-medium">
+                        <span
+                            className="block max-w-40 truncate text-base-content font-medium"
+                            title={entry.targetUser.email}
+                        >
                             {entry.targetUser.email}
                         </span>
                     )}
-                    {entry.previousRole && entry.newRole && (
-                        <span className="text-base-content/60">
-                            ({entry.previousRole} → {entry.newRole})
+                    {entry.previousRole && entry.newRole ? (
+                        <span className="font-semibold">
+                            <span className="text-secondary">
+                                {entry.previousRole === 'projectAdmin'
+                                    ? 'Project Admin'
+                                    : entry.previousRole}
+                            </span>
+                            {' → '}
+                            <span className="text-info">
+                                {entry.newRole === 'projectAdmin' ? 'Project Admin' : entry.newRole}
+                            </span>
                         </span>
-                    )}
-                    {!entry.previousRole && entry.newRole && (
-                        <Badge variant="role" value={entry.newRole} />
-                    )}
+                    ) : entry.newRole ? (
+                        <span className="font-semibold text-secondary capitalize">
+                            {entry.newRole === 'projectAdmin' ? 'Project Admin' : entry.newRole}
+                        </span>
+                    ) : null}
                 </div>
             );
         }
@@ -171,7 +198,7 @@ export function ProjectAuditLogPage() {
                             <select
                                 value={actionFilter || ''}
                                 onChange={(e) => updateFilter('action', e.target.value)}
-                                className="select select-bordered select-sm bg-base-300 rounded-xl text-xs font-ui"
+                                className="select select-bordered select-sm w-full min-w-44 bg-base-300 rounded-xl text-xs font-ui"
                                 aria-label="Filter by action"
                             >
                                 <option value="">All Actions</option>
@@ -191,7 +218,7 @@ export function ProjectAuditLogPage() {
                             <select
                                 value={resultFilter || ''}
                                 onChange={(e) => updateFilter('result', e.target.value)}
-                                className="select select-bordered select-sm bg-base-300 rounded-xl text-xs font-ui"
+                                className="select select-bordered select-sm w-full min-w-44 bg-base-300 rounded-xl text-xs font-ui"
                                 aria-label="Filter by result"
                             >
                                 <option value="">All Results</option>
@@ -210,7 +237,7 @@ export function ProjectAuditLogPage() {
                             <select
                                 value={environmentFilter || ''}
                                 onChange={(e) => updateFilter('environment', e.target.value)}
-                                className="select select-bordered select-sm bg-base-300 rounded-xl text-xs font-ui"
+                                className="select select-bordered select-sm w-full min-w-44 bg-base-300 rounded-xl text-xs font-ui"
                                 aria-label="Filter by environment"
                             >
                                 <option value="">All Environments</option>
@@ -249,11 +276,11 @@ export function ProjectAuditLogPage() {
                     <table className="table w-full text-sm">
                         <thead>
                             <tr className="border-b border-base-300 font-heading text-xs text-base-content/60 uppercase tracking-wider">
-                                <th className="py-4 pl-6">Time</th>
-                                <th className="py-4">User</th>
-                                <th className="py-4">Action</th>
-                                <th className="py-4">Details</th>
-                                <th className="py-4 pr-6 text-right">Result</th>
+                                <th className="py-4 pl-6 text-center">Time</th>
+                                <th className="py-4 text-center">User</th>
+                                <th className="py-4 text-center">Action</th>
+                                <th className="py-4 text-center">Details</th>
+                                <th className="py-4 pr-6 text-center">Result</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-base-300/60 font-ui">
@@ -266,14 +293,40 @@ export function ProjectAuditLogPage() {
                                     >
                                         {/* Time in local timezone with ISO datetime attribute */}
                                         <td className="py-4 pl-6 text-xs text-base-content/70 whitespace-nowrap">
-                                            <time dateTime={ts.iso} title={ts.iso}>
-                                                {ts.local}
+                                            <time
+                                                dateTime={ts.iso}
+                                                title={ts.iso}
+                                                className="flex flex-col"
+                                            >
+                                                <span>
+                                                    {new Date(ts.iso).toLocaleDateString(
+                                                        undefined,
+                                                        {
+                                                            year: 'numeric',
+                                                            month: 'short',
+                                                            day: 'numeric',
+                                                        },
+                                                    )}
+                                                </span>
+                                                <span className="text-base-content/55">
+                                                    {new Date(ts.iso).toLocaleTimeString(
+                                                        undefined,
+                                                        {
+                                                            hour: '2-digit',
+                                                            minute: '2-digit',
+                                                            second: '2-digit',
+                                                        },
+                                                    )}
+                                                </span>
                                             </time>
                                         </td>
 
                                         {/* User */}
                                         <td className="py-4">
-                                            <span className="font-medium text-base-content text-xs">
+                                            <span
+                                                className="block max-w-32 truncate font-medium text-base-content text-xs"
+                                                title={entry.user?.email || 'Unknown user'}
+                                            >
                                                 {entry.user ? entry.user.email : 'Unknown user'}
                                             </span>
                                         </td>
@@ -284,7 +337,11 @@ export function ProjectAuditLogPage() {
                                         </td>
 
                                         {/* Details */}
-                                        <td className="py-4 text-xs">{renderDetails(entry)}</td>
+                                        <td className="py-4 text-center text-xs">
+                                            <div className="flex justify-center">
+                                                {renderDetails(entry)}
+                                            </div>
+                                        </td>
 
                                         {/* Result */}
                                         <td className="py-4 pr-6 text-right">

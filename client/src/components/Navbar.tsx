@@ -27,17 +27,14 @@ export function Navbar() {
     };
 
     return (
-        <header className="w-full bg-base-200 border-b border-base-300/80 sticky top-0 z-40">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <header className="sticky top-2 z-40 mx-auto mt-4 w-[84%] max-w-9xl rounded-sm border-2 border-solid border-base-300 bg-base-200">
+            <div className="mx-auto flex h-24 items-center justify-between gap-2 px-4 sm:px-6">
                 {/* Left: Brand + Navigation */}
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-6 pl-4 sm:pl-6">
                     <Link
                         to="/projects"
-                        className="flex items-center gap-2.5 font-heading font-bold text-xl text-primary tracking-tight hover:opacity-90 transition-opacity"
+                        className="flex items-center gap-2.5 font-heading font-bold text-2xl text-primary tracking-tight hover:opacity-90 transition-opacity"
                     >
-                        <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-mono font-black text-lg border border-primary/30">
-                            R
-                        </div>
                         <span>Raaz</span>
                     </Link>
 
@@ -46,7 +43,7 @@ export function Navbar() {
                             <NavLink
                                 to="/projects"
                                 className={({ isActive }) =>
-                                    `px-3 py-1.5 rounded-lg text-sm font-heading font-medium transition-colors ${
+                                    `px-3 py-1.5 rounded-lg text-base font-heading font-medium transition-colors ${
                                         isActive
                                             ? 'bg-base-300 text-base-content font-bold'
                                             : 'text-base-content/70 hover:text-base-content hover:bg-base-300/60'
@@ -66,14 +63,15 @@ export function Navbar() {
                             <button
                                 type="button"
                                 onClick={() => setDropdownOpen((prev) => !prev)}
-                                className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-base-300/80 hover:bg-base-300 text-sm font-ui border border-base-300 transition-colors"
+                                className="button-textured flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-base-300/80 hover:bg-base-300 text-sm font-ui border border-base-300 transition-colors"
+                                aria-label={`Account menu for ${user.email}`}
                                 aria-expanded={dropdownOpen}
                                 aria-haspopup="true"
                             >
                                 <div className="w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-xs uppercase">
                                     {user.email.charAt(0)}
                                 </div>
-                                <span className="font-medium text-base-content max-w-[180px] truncate">
+                                <span className="hidden max-w-[70px] truncate font-medium text-base-content sm:inline lg:max-w-[140px]">
                                     {user.email}
                                 </span>
                                 <svg

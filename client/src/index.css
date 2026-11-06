@@ -3,16 +3,35 @@
 @tailwind utilities;
 
 @layer base {
-  body {
-    @apply font-ui;
-  }
+    body {
+        @apply font-ui;
+    }
 
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    @apply font-heading;
-  }
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        @apply font-heading;
+    }
+}
+
+@layer components {
+    .page-gutter {
+        @apply px-8 sm:px-20 lg:px-32;
+    }
+
+    /* A lighter texture stays behind content so text contrast is preserved. */
+    .bg-base-100:not(.btn),
+    .bg-base-200:not(.btn),
+    .card,
+    .modal-box {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='.35'/%3E%3CfeFuncG type='linear' slope='.35'/%3E%3CfeFuncB type='linear' slope='.35'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.2'/%3E%3C/svg%3E");
+    }
+
+    .btn:not(.btn-ghost):not(.btn-link):not(.btn-outline):not(.bg-transparent),
+    .button-textured {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='.35'/%3E%3CfeFuncG type='linear' slope='.35'/%3E%3CfeFuncB type='linear' slope='.35'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.7'/%3E%3C/svg%3E");
+    }
 }

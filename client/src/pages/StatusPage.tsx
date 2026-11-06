@@ -15,7 +15,7 @@ export function StatusPage({ variant }: StatusPageProps) {
         : "You don't have access to this page.";
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-base-100 text-base-content p-6">
+        <div className="page-gutter min-h-screen flex items-center justify-center bg-base-100 text-base-content py-8">
             <div className="card bg-base-200 border border-base-300 p-8 rounded-3xl max-w-md w-full text-center shadow-xl space-y-5">
                 <div className="text-6xl font-heading font-extrabold text-primary tracking-tighter">
                     {title}

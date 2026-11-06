@@ -3,7 +3,6 @@ import { addMemberSchema, type AddMemberInput, type MemberResponse } from '@raaz
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
-import { Badge } from '../components/Badge';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { FormField } from '../components/FormField';
 import { ErrorState } from '../components/FullPageState';
@@ -212,14 +211,15 @@ export function MembersPage() {
                                                 <div className="font-medium text-base-content font-ui">
                                                     {member.email}
                                                 </div>
-                                                <div className="text-xs text-base-content/60 font-mono">
-                                                    {member.userId}
-                                                </div>
                                             </div>
                                         </div>
                                     </td>
                                     <td className="py-4">
-                                        <Badge variant="role" value={member.role} />
+                                        <span className="font-semibold text-base-content capitalize">
+                                            {member.role === 'projectAdmin'
+                                                ? 'Project Admin'
+                                                : member.role}
+                                        </span>
                                     </td>
                                     <td className="py-4 pr-6 text-right text-xs text-base-content/70">
                                         {formatDate(member.createdAt)}

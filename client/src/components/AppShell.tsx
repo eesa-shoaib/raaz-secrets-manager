@@ -16,7 +16,7 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
             <main
                 id="main"
                 tabIndex={-1}
-                className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 focus:outline-none"
+                className="page-gutter flex-1 max-w-7xl w-full mx-auto py-8 focus:outline-none"
             >
                 {children ?? <Outlet />}
             </main>

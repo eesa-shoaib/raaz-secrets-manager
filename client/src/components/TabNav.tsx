@@ -16,28 +16,26 @@ export function TabNav({ items, className = '' }: TabNavProps) {
     const visibleItems = items.filter((item) => item.visible !== false);
 
     return (
-        <div
-            role="tablist"
-            aria-label="Navigation tabs"
-            className={`tabs tabs-boxed bg-base-200 p-1.5 rounded-2xl inline-flex border border-base-300 ${className}`}
+        <nav
+            aria-label="Project sections"
+            className={`tabs tabs-bordered flex-nowrap overflow-x-auto ${className}`}
         >
             {visibleItems.map((item) => (
                 <NavLink
                     key={item.to}
                     to={item.to}
-                    role="tab"
                     className={({ isActive }) =>
-                        `tab font-heading font-medium text-sm rounded-xl px-5 py-2 transition-all duration-200 ${
+                        `tab h-12 whitespace-nowrap !border-b-[3px] px-5 font-heading text-base font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${
                             isActive
-                                ? 'tab-active bg-primary text-base-300 font-bold shadow-sm'
-                                : 'text-base-content/70 hover:text-base-content hover:bg-base-300'
+                                ? 'tab-active !border-primary !text-primary'
+                                : 'border-transparent text-base-content/70 hover:text-base-content'
                         }`
                     }
                 >
                     {item.label}
                 </NavLink>
             ))}
-        </div>
+        </nav>
     );
 }
 
