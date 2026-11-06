@@ -28,9 +28,6 @@ export function ProjectCard({ project }: ProjectCardProps) {
                             <h2 className="font-heading font-bold text-lg text-base-content tracking-tight line-clamp-1">
                                 {project.name}
                             </h2>
-                            <span className="text-xs text-base-content/60 font-mono">
-                                {project.id}
-                            </span>
                         </div>
                     </div>
                     <Badge variant="projectStatus" value={project.status} />
