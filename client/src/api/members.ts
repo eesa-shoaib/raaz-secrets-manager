@@ -1,4 +1,4 @@
-import type { AddMemberInput, MemberResponse } from '@raaz/shared-schemas';
+import type { AddMemberInput, MemberResponse, UpdateMemberRoleInput } from '@raaz/shared-schemas';
 import apiClient from './axios';
 
 export async function getMembers(projectId: string): Promise<MemberResponse[]> {
@@ -8,6 +8,18 @@ export async function getMembers(projectId: string): Promise<MemberResponse[]> {
     const data = res.data;
     if (Array.isArray(data)) return data;
     return (data as { members?: MemberResponse[] }).members ?? [];
+}
+
+export async function changeMemberRole(
+    projectId: string,
+    userId: string,
+    data: UpdateMemberRoleInput,
+): Promise<void> {
+    await apiClient.patch(`/projects/${projectId}/members/${userId}`, data);
+}
+
+export async function removeMember(projectId: string, userId: string): Promise<void> {
+    await apiClient.delete(`/projects/${projectId}/members/${userId}`);
 }
 
 export async function addMember(
