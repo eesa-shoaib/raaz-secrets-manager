@@ -74,7 +74,8 @@ export async function updateUser(
             const roleChanged = user.isPlatformAdmin !== nextAdmin;
             user.isActive = nextActive;
             user.isPlatformAdmin = nextAdmin;
-            if (activeChanged && !nextActive) user.tokenVersion += 1;
+            if ((activeChanged && !nextActive) || (roleChanged && !nextAdmin))
+                user.tokenVersion += 1;
             await user.save({ session });
             if (activeChanged)
                 await writeAuditEntry({

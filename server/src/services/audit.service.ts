@@ -61,6 +61,7 @@ export async function writeAuditEntry(params: WriteAuditEntryParams): Promise<vo
         'member_removed',
         'project_created',
         'project_renamed',
+        'project_updated',
         'project_environments_changed',
         'project_archived',
         'project_restored',
@@ -71,6 +72,10 @@ export async function writeAuditEntry(params: WriteAuditEntryParams): Promise<vo
         'platform_admin_granted',
         'platform_admin_revoked',
         'bootstrap_admin',
+        'password_changed',
+        'profile_updated',
+        'avatar_updated',
+        'avatar_removed',
     ];
     if (
         (!projectActions.includes(params.action) && !platformActions.includes(params.action)) ||
