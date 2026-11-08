@@ -10,14 +10,13 @@ tags: [product, mvp, scope, stories, non-goals]
 [MVP_BOARD.md](./MVP_BOARD.md) records the delivered scope and verification carried forward.
 Closure is product acceptance, not a claim that outstanding security checks passed.
 
-**MVP 2: planned, not implemented.** The follow-up targets a small team's
-hosted pilot: hardening, Platform Admin user management UI, authenticated password
-changes, project descriptions/editable names, account settings with usernames
-and profile pictures, metadata search/copy-key actions, and pagination across project, secret, member, audit and admin user lists. See [MVP_2_BOARD.md](./MVP_2_BOARD.md) for
-acceptance criteria, dependencies, and release gates. The original MVP
-cuts below remain historical; only items explicitly assigned to MVP 2 are promoted.
-API.md and FRONTEND.md still describe implemented contracts. Update them before
-implementing each new feature; this plan alone does not create an endpoint.
+**MVP 2: implemented for the hosted team pilot.** The follow-up delivers security and transaction
+hardening, Platform Admin user management UI, authenticated password changes, project descriptions
+and editable names with server-derived member counts, account settings with optional unique usernames
+and binary profile pictures, metadata search and copy-key actions, and cursor pagination across
+project, secret, member, audit and admin user lists. See [MVP_2_BOARD.md](./MVP_2_BOARD.md) for
+acceptance criteria, dependencies, and release evidence. The original MVP 1 cuts below remain
+historical; items assigned to MVP 2 are now promoted and documented in API.md, DATA_MODEL.md, and FRONTEND.md.
 
 ## Problem
 
