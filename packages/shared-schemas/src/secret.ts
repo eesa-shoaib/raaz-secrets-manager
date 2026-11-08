@@ -28,3 +28,13 @@ export const secretCreateSchema = z.object({ body: createSecretSchema });
 export type SecretCreateInput = z.infer<typeof secretCreateSchema>;
 export const revealSecretResponseSchema = z.object({ value: z.string() });
 export type RevealSecretResponse = z.infer<typeof revealSecretResponseSchema>;
+
+export const secretsListQuerySchema = z.object({
+    environment: projectEnvironmentEnum,
+    cursor: z.string().trim().min(1).max(512).optional(),
+    limit: z.coerce.number().int().min(1).max(100).default(25),
+    search: z.string().trim().max(100).optional(),
+    mode: z.enum(['cursor']).optional(),
+    page: z.never({ message: 'Offset page parameter is not supported' }).optional(),
+});
+export type SecretsListQuery = z.infer<typeof secretsListQuerySchema>;
