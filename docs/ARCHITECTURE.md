@@ -4,38 +4,41 @@ tags: [architecture, mvp, decision, rbac, encryption, auth]
 
 # Architecture
 
-## MVP 2 design additions — planned
+## MVP 2 design additions — active architecture
 
-MVP 1 is closed; the following design direction comes from
-[MVP_2_BOARD.md](./MVP_2_BOARD.md). Existing flows below remain the baseline until
-each extension is implemented and verified.
+MVP 1 is closed; the following design extensions from
+[MVP_2_BOARD.md](./MVP_2_BOARD.md) are active across the stack:
 
 - Profile/avatar operations keep routes → controllers → services → models.
   Services own `userAvatars` binary document access and transactional audit;
-  private image reads enforce owner/shared-project/admin-user-management access.
-  No direct browser-to-MongoDB access, third-party avatar fetch, or public bucket.
-- Image decoding/normalization is bounded; dependencies require approval. Serve
-  thumbnails through authenticated binary responses, separate from JSON entity
-  serializers. Back up avatar records with the application data.
-- Password change uses the existing Origin/auth pipeline, current-password
-  verification and atomic hash/tokenVersion/audit changes. Document its narrow
-  hash-selection exception before code. No boot, cookie, AAD or middleware-order
-  change is approved by the plan.
-- Project details editing adds a member-scoped Project Admin permission, not a
-  Platform Admin bypass. Metadata is plain text; environments stay canonical.
-- Project detail derives total membership count server-side after membership/
-  status gates; no stored counter and no dependency on member-list pagination.
-  The planned right-side panel shows it with the description and refreshes on
-  membership changes. Deactivated users remain counted until membership removal.
-- All lists become bounded server queries. Apply authorization and metadata
-  search/filters before cursor pagination; cache keys include page scope.
-  Paging away from a revealed row clears its local value and mutation state.
-- Account settings groups Profile and Security; project context stays in the
-  existing right-side panel. Neither surface changes server authorization.
-
-Production readiness also requires replica-set integration tests, actual browser
-runs, SPA security headers and a backup/restore rehearsal. Milestone closure is
-not evidence that those checks passed. No deployment is performed by this plan.
+  private image reads (`GET /api/users/:userId/avatar`) enforce owner, shared-project-member,
+  or Platform Admin access and return `404` otherwise. No direct browser-to-MongoDB
+  access, third-party avatar fetch, or public bucket.
+- Image decoding and normalization (`server/src/utils/avatar-image.ts`) uses pure
+  Node.js (`Buffer` + `node:zlib`) with zero native dependencies, verifying magic
+  bytes and binary dimensions, stripping metadata chunks, normalizing to ≤ 256 × 256
+  and ≤ 128 KiB (`131,072` bytes), and serving thumbnails through authenticated
+  binary responses separate from JSON entity serializers.
+- Password change (`POST /api/auth/change-password`) uses the existing Origin/auth
+  pipeline, per-user rate limiter (`10` req / `15` min), current-password verification
+  via `.select('+passwordHash')` (the second narrow exception alongside `login`),
+  and atomic hash + `tokenVersion` + `password_changed` audit writes in a single
+  MongoDB transaction before clearing the auth cookie.
+- Project details editing (`PATCH /api/projects/:projectId`) enforces member-scoped
+  Project Admin authorization (`requireProjectRole('projectAdmin')`), not a Platform
+  Admin bypass. Metadata is plain text (`description` ≤ 500 chars); environments stay canonical.
+- Project detail derives total membership count (`memberCount`) server-side after
+  membership/status gates via `ProjectMembership.countDocuments({ projectId })`; no
+  stored counter and no dependency on member-list pagination. Deactivated users remain
+  counted until membership removal.
+- All five resource lists (`projects`, `secrets`, `members`, `audit-log`, `admin/users`)
+  are bounded server queries (`default 25`, `max 100`) ordered by `{ createdAt: -1, _id: -1 }`
+  with scope-bound base64url cursors. Authorization and metadata search/filters apply
+  before pagination; client cache keys include cursor/search/filter scope; paging away
+  from a revealed row unmounts it and clears its local value and mutation state.
+- Pino redaction explicitly redacts `password`, `currentPassword`, `newPassword`,
+  `value`, `description`, and `data` (plus nested `body.*` and `req.body.*` paths) so
+  secrets, credentials, project descriptions, and base64 avatar uploads never enter logs.
 
 ## System Overview
 
