@@ -10,13 +10,13 @@ export interface Toast {
 
 interface ToastContextType {
     toasts: Toast[];
-    addToast: (message: string, type?: ToastType) => void;
+    addToast: (message: string, type?: ToastType, duration?: number) => void;
     removeToast: (id: string) => void;
     toast: {
-        success: (message: string) => void;
-        error: (message: string) => void;
-        info: (message: string) => void;
-        warning: (message: string) => void;
+        success: (message: string, duration?: number) => void;
+        error: (message: string, duration?: number) => void;
+        info: (message: string, duration?: number) => void;
+        warning: (message: string, duration?: number) => void;
     };
 }
 
@@ -30,15 +30,15 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const addToast = useCallback(
-        (message: string, type: ToastType = 'info') => {
+        (message: string, type: ToastType = 'info', duration?: number) => {
             const id = Math.random().toString(36).substring(2, 9);
             setToasts((prev) => [...prev, { id, type, message }]);
 
             // Success auto-dismisses after 4s; error persists per FRONTEND.md §2.2
-            if (type === 'success' || type === 'info') {
+            if (duration !== undefined || type === 'success' || type === 'info') {
                 setTimeout(() => {
                     removeToast(id);
-                }, 4000);
+                }, duration ?? 4000);
             }
         },
         [removeToast],
@@ -46,7 +46,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
     const toastMethods = {
         success: (msg: string) => addToast(msg, 'success'),
-        error: (msg: string) => addToast(msg, 'error'),
+        error: (msg: string, duration?: number) => addToast(msg, 'error', duration),
         info: (msg: string) => addToast(msg, 'info'),
         warning: (msg: string) => addToast(msg, 'warning'),
     };
@@ -79,7 +79,7 @@ export function Toaster() {
     if (!context || context.toasts.length === 0) return null;
 
     return (
-        <div className="toast toast-end toast-bottom z-50 p-4 space-y-2">
+        <div className="toast toast-end toast-top z-50 p-4 space-y-2">
             {context.toasts.map((t) => {
                 const alertClass =
                     t.type === 'success'
