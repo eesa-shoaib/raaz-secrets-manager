@@ -3,6 +3,7 @@ import { signupInputSchema, type SignupInput } from '@raaz/shared-schemas';
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
+import logo from '../assets/short-logo.svg';
 import { FormField } from '../components/FormField';
 import { useAuth } from '../hooks/useAuth';
 import { isApiError } from '../lib/errorHandling';
@@ -51,19 +52,22 @@ export function SignupPage() {
     };
 
     return (
-        <div className="page-gutter min-h-screen flex items-center justify-center bg-base-100 py-8 font-ui">
-            <div className="card w-full max-w-md bg-base-200 border border-base-300 shadow-2xl p-8 rounded-3xl">
+        <div className="min-h-screen flex items-start justify-center bg-base-100 px-5 py-6 sm:py-8 font-ui">
+            <div className="w-full max-w-xs">
                 {/* Header */}
-                <div className="text-center mb-6">
-                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/20 text-primary font-mono font-black text-2xl border border-primary/30 mb-3">
-                        R
+                <div className="text-center mb-5">
+                    <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full border border-primary/30 bg-base-300">
+                        <img
+                            src={logo}
+                            alt="Raaz"
+                            width={405}
+                            height={810}
+                            className="h-9 w-auto object-contain"
+                        />
                     </div>
                     <h1 className="text-2xl font-heading font-bold text-base-content tracking-tight">
                         Create an account
                     </h1>
-                    <p className="text-sm text-base-content/70 mt-1">
-                        Sign up to get started with Raaz
-                    </p>
                 </div>
 
                 {/* Error banner */}
@@ -90,7 +94,7 @@ export function SignupPage() {
                 )}
 
                 {/* Form */}
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-3" noValidate>
                     <FormField label="Email address" error={errors.email?.message} required>
                         {({ id, ...props }) => (
                             <input
@@ -98,7 +102,7 @@ export function SignupPage() {
                                 type="email"
                                 autoComplete="username"
                                 placeholder="developer@example.com"
-                                className={`input input-bordered w-full bg-base-300 rounded-xl focus:border-primary text-sm font-ui ${
+                                className={`input input-sm h-10 input-bordered w-full bg-base-300 rounded-md focus:border-primary focus:outline-primary text-sm font-ui ${
                                     errors.email ? 'input-error' : ''
                                 }`}
                                 {...register('email')}
@@ -120,7 +124,7 @@ export function SignupPage() {
                                     type={showPassword ? 'text' : 'password'}
                                     autoComplete="new-password"
                                     placeholder="••••••••••••"
-                                    className={`input input-bordered w-full bg-base-300 rounded-xl focus:border-primary text-sm pr-10 font-ui ${
+                                    className={`input input-sm h-10 input-bordered w-full bg-base-300 rounded-md focus:border-primary focus:outline-primary text-sm pr-10 font-ui ${
                                         errors.password ? 'input-error' : ''
                                     }`}
                                     {...register('password')}
@@ -142,7 +146,7 @@ export function SignupPage() {
                     <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="btn btn-primary w-full text-base-300 font-semibold rounded-xl mt-2 hover:opacity-90 transition-opacity"
+                        className="btn btn-sm h-10 btn-primary w-full text-base-300 font-medium rounded-md mt-2 hover:opacity-90 transition-opacity"
                     >
                         {isSubmitting ? (
                             <span className="loading loading-spinner loading-sm"></span>
@@ -153,7 +157,7 @@ export function SignupPage() {
                 </form>
 
                 {/* Footer */}
-                <div className="text-center mt-6 text-sm text-base-content/70">
+                <div className="text-center mt-5 border-t border-base-content/20 pt-4 text-sm text-base-content/70">
                     Already have an account?{' '}
                     <Link to="/login" className="link link-primary font-medium hover:underline">
                         Sign in
