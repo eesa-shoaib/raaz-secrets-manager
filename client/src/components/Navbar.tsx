@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, NavLink } from 'react-router-dom';
+import logo from '../assets/logo-v2.svg';
 import { useAuth } from '../hooks/useAuth';
 
 export function Navbar() {
@@ -33,9 +34,15 @@ export function Navbar() {
                 <div className="flex items-center gap-6 pl-4 sm:pl-6">
                     <Link
                         to="/projects"
-                        className="flex items-center gap-2.5 font-heading font-bold text-2xl text-primary tracking-tight hover:opacity-90 transition-opacity"
+                        className="flex shrink-0 items-center hover:opacity-90 transition-opacity"
                     >
-                        <span>Raaz</span>
+                        <img
+                            src={logo}
+                            alt="Raaz"
+                            width={2103}
+                            height={830}
+                            className="h-10 w-auto sm:h-12"
+                        />
                     </Link>
 
                     {user && (
