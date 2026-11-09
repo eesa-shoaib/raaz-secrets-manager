@@ -6,9 +6,11 @@ import { Link } from 'react-router-dom';
 import logo from '../assets/short-logo.svg';
 import { FormField } from '../components/FormField';
 import { useAuth } from '../hooks/useAuth';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { isApiError } from '../lib/errorHandling';
 
 export function SignupPage() {
+    useDocumentTitle('sign up');
     const { signup } = useAuth();
     const [showPassword, setShowPassword] = useState(false);
     const [formError, setFormError] = useState<string | null>(null);
