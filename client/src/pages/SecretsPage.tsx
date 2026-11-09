@@ -267,7 +267,7 @@ export function SecretsPage() {
             </div>
 
             {/* Secrets Table panel keyed by currentEnv to guarantee remount & unmount */}
-            <div key={currentEnv}>
+            <div key={currentEnv} className="min-h-[32rem]">
                 {isLoading ? (
                     <Skeleton shape="table" count={5} />
                 ) : isError ? (
