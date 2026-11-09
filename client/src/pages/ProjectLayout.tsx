@@ -4,6 +4,7 @@ import { Badge } from '../components/Badge';
 import { ErrorState } from '../components/FullPageState';
 import { Skeleton } from '../components/LoadingSkeleton';
 import { TabNav } from '../components/TabNav';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { useProject } from '../hooks/useProjects';
 import { isApiError } from '../lib/errorHandling';
 import { StatusPage } from './StatusPage';
@@ -15,12 +16,14 @@ export function ProjectLayout() {
     const location = useLocation();
     const navigate = useNavigate();
 
+    const validProjectId = projectId && OBJECT_ID_REGEX.test(projectId) ? projectId : undefined;
+    const { data: project, isLoading, isError, error, refetch } = useProject(validProjectId);
+    useDocumentTitle(!isError && project ? project.name : 'Raaz');
+
     // Validate ObjectId format
     if (!projectId || !OBJECT_ID_REGEX.test(projectId)) {
         return <StatusPage variant="not-found" />;
     }
-
-    const { data: project, isLoading, isError, error, refetch } = useProject(projectId);
 
     if (isLoading) {
         return (

@@ -11,10 +11,12 @@ import { PageHeader } from '../components/PageHeader';
 import { ProjectCard } from '../components/ProjectCard';
 import { useToast } from '../components/Toaster';
 import { useAuth } from '../hooks/useAuth';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { useProjects, useCreateProject } from '../hooks/useProjects';
 import { isApiError } from '../lib/errorHandling';
 
 export function ProjectsPage() {
+    useDocumentTitle('Raaz');
     const { data: projects, isLoading, isError, error, refetch } = useProjects();
     const { mutateAsync: createProject, isPending: isCreating } = useCreateProject();
     const { user } = useAuth();

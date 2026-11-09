@@ -7,9 +7,11 @@ import logo from '../assets/short-logo.svg';
 import { FormField } from '../components/FormField';
 import { useToast } from '../components/Toaster';
 import { useAuth } from '../hooks/useAuth';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { isApiError } from '../lib/errorHandling';
 
 export function LoginPage() {
+    useDocumentTitle('sign in');
     const { login } = useAuth();
     const { toast } = useToast();
     const location = useLocation();

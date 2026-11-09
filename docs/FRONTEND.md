@@ -66,6 +66,8 @@ set in deployment; that's a server-side choice, not a frontend cut.
 The project-member check lives inside `ProjectLayout` because it needs
 the project's data to render the 404 and archived states.
 
+Browser tab titles: `Raaz` on the projects home, the project name within a selected project, `sign in` on login, and `sign up` on signup. The favicon stays visible across routes.
+
 ### 1.5 Auth propagation and error mapping
 
 One Axios instance (`client/src/api/`) with a response interceptor turns every failure into an `ApiError { status, code, message }` (envelope in API.md). Queries retry once on network errors and 5xx, never on 4xx. Mutations never retry.
