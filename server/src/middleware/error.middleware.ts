@@ -23,6 +23,13 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
         return;
     }
 
+    if (isPayloadTooLargeError(err)) {
+        res.status(422).json({
+            error: { code: 'VALIDATION_ERROR', message: 'Request payload exceeds maximum allowed size' },
+        });
+        return;
+    }
+
     if (isDuplicateKeyError(err)) {
         res.status(409).json({
             error: { code: 'CONFLICT', message: 'A record with those values already exists' },
@@ -38,4 +45,13 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
 
 function isDuplicateKeyError(err: unknown): err is { code: number } {
     return typeof err === 'object' && err !== null && 'code' in err && err.code === 11000;
+}
+
+function isPayloadTooLargeError(err: unknown): boolean {
+    return (
+        typeof err === 'object' &&
+        err !== null &&
+        'type' in err &&
+        err.type === 'entity.too.large'
+    );
 }
