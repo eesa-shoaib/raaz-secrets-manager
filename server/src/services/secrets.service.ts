@@ -5,9 +5,27 @@ import { SecretModel } from '../models/Secret.js';
 import type { SecretDoc } from '../models/Secret.js';
 import { encrypt, decrypt } from '../services/encryption.service.js';
 import { AppError } from '../utils/app-error.js';
+import { buildCursorCondition, decodeCursor, encodeCursor, escapeRegex } from '../utils/pagination.js';
 import { writeAuditEntry } from './audit.service.js';
 
-export async function listSecretsForUser(userId: string, projectId: string, environment: string) {
+function toSecretSummary(secret: Pick<SecretDoc, 'key' | 'environment' | 'createdAt' | 'updatedAt' | 'lastAccessedAt'> & { _id: Types.ObjectId }) {
+    return {
+        id: secret._id.toString(),
+        key: secret.key,
+        environment: secret.environment,
+        maskedValue: '••••••••',
+        createdAt: secret.createdAt,
+        updatedAt: secret.updatedAt,
+        lastAccessedAt: secret.lastAccessedAt,
+    };
+}
+
+export async function listSecretsForUser(
+    userId: string,
+    projectId: string,
+    environment: string,
+    search?: string,
+) {
     const membership = (await mongoose
         .model('ProjectMembership')
         .findOne({ userId: new Types.ObjectId(userId), projectId: new Types.ObjectId(projectId) })
@@ -17,31 +35,72 @@ export async function listSecretsForUser(userId: string, projectId: string, envi
     const project = await ProjectModel.findById(projectId).lean();
     if (!project?.environments.includes(environment as SecretDoc['environment']))
         throw new AppError(422, 'VALIDATION_ERROR', 'Invalid environment');
-    const secrets = await SecretModel.find({
+
+    const filter: Record<string, unknown> = {
         projectId: new Types.ObjectId(projectId),
         environment,
-    })
+    };
+    if (search) {
+        filter.key = { $regex: new RegExp(escapeRegex(search), 'i') };
+    }
+
+    const secrets = await SecretModel.find(filter)
+        .sort({ createdAt: -1, _id: -1 })
         .lean()
         .select('key environment createdAt updatedAt lastAccessedAt');
 
-    return secrets.map((secret) => {
-        const role = membership.role;
-        let maskedValue = '••••••••';
-        if (role === 'projectAdmin' || role === 'developer') {
-            if (secret.environment === 'development') {
-                maskedValue = '••••••••';
-            }
-        }
-        return {
-            id: secret._id.toString(),
-            key: secret.key,
-            environment: secret.environment,
-            maskedValue,
-            createdAt: secret.createdAt,
-            updatedAt: secret.updatedAt,
-            lastAccessedAt: secret.lastAccessedAt,
-        };
-    });
+    return secrets.map(toSecretSummary);
+}
+
+export async function listSecretsCursor(
+    userId: string,
+    projectId: string,
+    query: { environment: string; cursor?: string; limit: number; search?: string },
+) {
+    const membership = (await mongoose
+        .model('ProjectMembership')
+        .findOne({ userId: new Types.ObjectId(userId), projectId: new Types.ObjectId(projectId) })
+        .lean()) as ProjectMembershipDoc | null;
+    if (!membership) {
+        return { data: [], nextCursor: null, hasMore: false, limit: query.limit };
+    }
+
+    const project = await ProjectModel.findById(projectId).lean();
+    if (!project?.environments.includes(query.environment as SecretDoc['environment']))
+        throw new AppError(422, 'VALIDATION_ERROR', 'Invalid environment');
+
+    const scope = `secrets:${projectId}:${query.environment}:${query.search ?? ''}`;
+    const decoded = query.cursor ? decodeCursor(query.cursor, scope) : null;
+
+    const conditions: Record<string, unknown>[] = [
+        { projectId: new Types.ObjectId(projectId), environment: query.environment },
+    ];
+    if (query.search) {
+        conditions.push({ key: { $regex: new RegExp(escapeRegex(query.search), 'i') } });
+    }
+    if (decoded) {
+        conditions.push(buildCursorCondition(decoded));
+    }
+
+    const filter = conditions.length === 1 ? conditions[0] : { $and: conditions };
+    const rows = await SecretModel.find(filter)
+        .sort({ createdAt: -1, _id: -1 })
+        .limit(query.limit + 1)
+        .lean()
+        .select('key environment createdAt updatedAt lastAccessedAt');
+
+    const hasMore = rows.length > query.limit;
+    const items = hasMore ? rows.slice(0, query.limit) : rows;
+    const last = items[items.length - 1];
+    const nextCursor =
+        hasMore && last ? encodeCursor(scope, last.createdAt, last._id.toString()) : null;
+
+    return {
+        data: items.map(toSecretSummary),
+        nextCursor,
+        hasMore,
+        limit: query.limit,
+    };
 }
 
 export async function createSecret(

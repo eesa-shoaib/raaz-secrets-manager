@@ -1,6 +1,11 @@
-import { secretResponseSchema } from '@raaz/shared-schemas';
+import {
+    createCursorPaginatedResponseSchema,
+    secretResponseSchema,
+    type SecretsListQuery,
+} from '@raaz/shared-schemas';
 import type { Request, Response } from 'express';
 import {
+    listSecretsCursor,
     listSecretsForUser,
     createSecret,
     editSecret,
@@ -9,11 +14,32 @@ import {
     revealSecret,
 } from '../services/secrets.service.js';
 
+const paginatedSecretsSchema = createCursorPaginatedResponseSchema(secretResponseSchema);
+
 export async function listSecretsController(req: Request, res: Response): Promise<void> {
+    const query = req.query as unknown as SecretsListQuery;
+    if (query.cursor !== undefined || query.mode === 'cursor') {
+        const result = await listSecretsCursor(req.user!.id, req.params.projectId, {
+            environment: query.environment,
+            cursor: query.cursor,
+            limit: query.limit,
+            search: query.search,
+        });
+        res.json(
+            paginatedSecretsSchema.parse({
+                data: result.data.map((secret) => secretResponseSchema.parse(secret)),
+                nextCursor: result.nextCursor,
+                hasMore: result.hasMore,
+                limit: result.limit,
+            }),
+        );
+        return;
+    }
     const secrets = await listSecretsForUser(
         req.user!.id,
         req.params.projectId,
-        req.query.environment as string,
+        query.environment,
+        query.search,
     );
     res.json(secrets.map((secret) => secretResponseSchema.parse(secret)));
 }
