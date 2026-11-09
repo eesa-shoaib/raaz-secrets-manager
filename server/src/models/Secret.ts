@@ -38,5 +38,6 @@ const secretSchema = new mongoose.Schema<SecretDoc>(
 );
 
 secretSchema.index({ projectId: 1, environment: 1, key: 1 }, { unique: true });
+secretSchema.index({ projectId: 1, environment: 1, createdAt: -1, _id: -1 });
 
 export const SecretModel = mongoose.model<SecretDoc>('Secret', secretSchema);

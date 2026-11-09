@@ -2,6 +2,7 @@ import mongoose, { type Document } from 'mongoose';
 
 export interface ProjectDoc extends Document {
     name: string;
+    description: string;
     environments: ('development' | 'staging' | 'production')[];
     activeAdminCount: number;
     status: 'active' | 'archived';
@@ -13,6 +14,7 @@ export interface ProjectDoc extends Document {
 const projectSchema = new mongoose.Schema<ProjectDoc>(
     {
         name: { type: String, required: true, maxlength: 100 },
+        description: { type: String, default: '', maxlength: 500 },
         environments: {
             type: [String],
             enum: ['development', 'staging', 'production'],
@@ -24,5 +26,7 @@ const projectSchema = new mongoose.Schema<ProjectDoc>(
     },
     { timestamps: true },
 );
+
+projectSchema.index({ createdAt: -1, _id: -1 });
 
 export const ProjectModel = mongoose.model<ProjectDoc>('Project', projectSchema);
