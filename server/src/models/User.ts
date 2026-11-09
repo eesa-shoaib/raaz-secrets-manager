@@ -16,7 +16,7 @@ export interface UserDoc extends Document {
 const userSchema = new mongoose.Schema<UserDoc>(
     {
         email: { type: String, required: true, unique: true, lowercase: true },
-        username: { type: String, lowercase: true, default: null },
+        username: { type: String, trim: true, lowercase: true, default: null },
         hasAvatar: { type: Boolean, required: true, default: false },
         avatarUpdatedAt: { type: Date, default: null },
         passwordHash: { type: String, required: true, select: false },
