@@ -127,14 +127,14 @@ A reveal never writes any query key. The secret row is keyed by secret id, so th
 
 ### 2.2 Feedback and state
 
-| Widget          | Purpose                                                                     |
-| --------------- | --------------------------------------------------------------------------- |
-| `FullPageState` | Variants `loading`, `error`. The only thing rendered during auth bootstrap. |
-| `Skeleton`      | Shape prop: `table`, `card`, `header`                                       |
-| `ErrorState`    | Inline query failure: message + Retry                                       |
-| `EmptyState`    | Title, one sentence, optional action                                        |
-| `InlineAlert`   | Variants `info`, `warning`, `error`                                         |
-| `Toaster`       | Toast queue. Success auto-dismisses at 4 s; error persists.                 |
+| Widget          | Purpose                                                                                                                   |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `FullPageState` | Variants `loading`, `error`. The only thing rendered during auth bootstrap.                                               |
+| `Skeleton`      | Shape prop: `table`, `card`, `header`                                                                                     |
+| `ErrorState`    | Inline query failure: message + Retry                                                                                     |
+| `EmptyState`    | Title, one sentence, optional action                                                                                      |
+| `InlineAlert`   | Variants `info`, `warning`, `error`                                                                                       |
+| `Toaster`       | Toast queue. Success auto-dismisses at 4 s; errors persist unless a duration is provided. Login errors dismiss after 4 s. |
 
 ### 2.3 Dialogs and forms
 
@@ -172,7 +172,7 @@ noted, not omitted.
 
 - **Data:** `useLogin`, `useMe` via `PublicOnly`.
 
-- **Layout:** centered card, no shell.
+- **Layout:** narrow, horizontally centered form without an outer card, no shell; centered short logo in a circular frame and centered heading, theme surfaces and textures. Signup uses the same layout.
 
 - **Controls:** email (`autocomplete="username"`), password
   (`autocomplete="current-password"`, show/hide), Sign in, link to
@@ -182,7 +182,7 @@ noted, not omitted.
   `logged-out` → "You've been signed out."; `signed-up` → "Account
   created. Sign in to continue."
 
-- **States:** default; submitting; form-level error (generic 401 copy,
+- **States:** default; submitting; top-right toast, dismissed after 4 s (generic 401 copy,
   429 rate-limit toast "Too many attempts, try again in 15 minutes",
   network message). No "Forgot password" — Non-Goal.
 
