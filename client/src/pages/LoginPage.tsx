@@ -11,7 +11,7 @@ import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { isApiError } from '../lib/errorHandling';
 
 export function LoginPage() {
-    useDocumentTitle('sign in');
+    useDocumentTitle('Sign in');
     const { login } = useAuth();
     const { toast } = useToast();
     const location = useLocation();

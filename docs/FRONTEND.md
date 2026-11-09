@@ -66,7 +66,7 @@ set in deployment; that's a server-side choice, not a frontend cut.
 The project-member check lives inside `ProjectLayout` because it needs
 the project's data to render the 404 and archived states.
 
-Browser tab titles: `Raaz` on the projects home, the project name within a selected project, `sign in` on login, and `sign up` on signup. The favicon stays visible across routes. Each history entry stores its page title (project name only, never secret data); the HTML restores it before React loads, and project loading preserves it until the request completes.
+Browser tab titles: `Raaz` on the projects home, the project name within a selected project, `Sign in` on login, and `Sign up` on signup. The favicon stays visible across routes. Each history entry stores its page title (project name only, never secret data); the HTML restores it before React loads, and project loading preserves it until the request completes.
 
 ### 1.5 Auth propagation and error mapping
 

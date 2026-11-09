@@ -64,8 +64,8 @@ it('restores the project title from the matching history entry before React load
 
 it.each([
     ['/projects', 'Raaz'],
-    ['/login', 'sign in'],
-    ['/signup', 'sign up'],
+    ['/login', 'Sign in'],
+    ['/signup', 'Sign up'],
 ])('ignores a title from a different route on %s', (pathname, expected) => {
     const doc = { title: 'Raaz' };
     runInNewContext(bootstrap, {
