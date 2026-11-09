@@ -10,7 +10,7 @@ import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { isApiError } from '../lib/errorHandling';
 
 export function SignupPage() {
-    useDocumentTitle('sign up');
+    useDocumentTitle('Sign up');
     const { signup } = useAuth();
     const [showPassword, setShowPassword] = useState(false);
     const [formError, setFormError] = useState<string | null>(null);
