@@ -18,7 +18,15 @@ export function ProjectLayout() {
 
     const validProjectId = projectId && OBJECT_ID_REGEX.test(projectId) ? projectId : undefined;
     const { data: project, isLoading, isError, error, refetch } = useProject(validProjectId);
-    useDocumentTitle(!isError && project ? project.name : 'Raaz');
+    useDocumentTitle(
+        !validProjectId || isError
+            ? 'Raaz'
+            : project
+              ? project.name
+              : isLoading
+                ? undefined
+                : 'Raaz',
+    );
 
     // Validate ObjectId format
     if (!projectId || !OBJECT_ID_REGEX.test(projectId)) {
