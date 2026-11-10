@@ -59,6 +59,9 @@ describe('AuthContext and 401 chain', () => {
         vi.mocked(authApi.getMe).mockResolvedValueOnce({
             id: '507f1f77bcf86cd799439011',
             email: 'admin@raaz.dev',
+            username: null,
+            hasAvatar: false,
+            avatarUpdatedAt: null,
             isPlatformAdmin: false,
             isActive: true,
             createdAt: new Date().toISOString(),
@@ -84,6 +87,9 @@ describe('AuthContext and 401 chain', () => {
         vi.mocked(authApi.getMe).mockResolvedValueOnce({
             id: '507f1f77bcf86cd799439011',
             email: 'test@raaz.dev',
+            username: null,
+            hasAvatar: false,
+            avatarUpdatedAt: null,
             isPlatformAdmin: false,
             isActive: true,
             createdAt: new Date().toISOString(),

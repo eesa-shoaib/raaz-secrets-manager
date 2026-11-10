@@ -13,6 +13,7 @@ describe('project card', () => {
                     project={{
                         id: 'project-id',
                         name: 'Example',
+                        description: '',
                         environments: ['development', 'staging', 'production'],
                         status: 'active',
                         role: 'developer',
@@ -36,6 +37,7 @@ describe('project card', () => {
                     project={{
                         id: 'project-id',
                         name: 'Example',
+                        description: '',
                         environments: ['development'],
                         status: 'archived',
                         role: 'developer',
