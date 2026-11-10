@@ -93,6 +93,14 @@ export function LoginPage() {
                         <span>Account created. Sign in to continue.</span>
                     </div>
                 )}
+                {reason === 'password-changed' && (
+                    <div
+                        role="status"
+                        className="alert alert-info text-sm rounded-xl py-2.5 px-4 mb-4"
+                    >
+                        <span>Password updated. Sign in with your new password.</span>
+                    </div>
+                )}
 
                 {/* Form */}
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-3" noValidate>
