@@ -109,7 +109,7 @@ jobs:
           '
       - run: npm run build -w packages/shared-schemas
       - run: npm run build -w server
-      - run: npm run test -w server
+      - run: npm run test -w server -- --reporter=default --reporter=github-actions
       - name: Rehearse backup and secret recovery
         run: |
           node server/scripts/rehearse-recovery.mjs --dry-run
