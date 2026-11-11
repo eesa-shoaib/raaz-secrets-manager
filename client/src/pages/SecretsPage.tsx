@@ -15,10 +15,16 @@ import { FormField } from '../components/FormField';
 import { EmptyState, ErrorState } from '../components/FullPageState';
 import { Skeleton } from '../components/LoadingSkeleton';
 import { Modal } from '../components/Modal';
+import { PaginationControls } from '../components/PaginationControls';
 import { SecretValueCell } from '../components/SecretValueCell';
 import { useToast } from '../components/Toaster';
 import { usePermissions } from '../hooks/usePermissions';
-import { useSecrets, useCreateSecret, useEditSecret, useDeleteSecret } from '../hooks/useSecrets';
+import {
+    useSecretsPage,
+    useCreateSecret,
+    useEditSecret,
+    useDeleteSecret,
+} from '../hooks/useSecrets';
 import { isApiError } from '../lib/errorHandling';
 import type { Environment } from '../lib/permissions';
 
@@ -56,13 +62,64 @@ export function SecretsPage() {
         }
     }, [envParam, setSearchParams]);
 
-    const {
-        data: secrets,
-        isLoading,
-        isError,
-        error,
-        refetch,
-    } = useSecrets(projectId!, currentEnv);
+    const [searchInput, setSearchInput] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [cursor, setCursor] = useState<string | null>(null);
+    const [cursorHistory, setCursorHistory] = useState<(string | null)[]>([]);
+    const [copiedKeyId, setCopiedKeyId] = useState<string | null>(null);
+
+    useEffect(() => {
+        setCursor(null);
+        setCursorHistory([]);
+    }, [currentEnv]);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchInput.trim());
+            setCursor(null);
+            setCursorHistory([]);
+        }, 250);
+        return () => clearTimeout(timer);
+    }, [searchInput]);
+
+    const { data, isLoading, isFetching, isError, error, refetch } = useSecretsPage(
+        projectId!,
+        currentEnv,
+        {
+            cursor,
+            limit: 25,
+            search: debouncedSearch || undefined,
+        },
+    );
+    const secrets = data?.data ?? [];
+
+    const handleNext = () => {
+        if (!data?.nextCursor) return;
+        setCursorHistory((prev) => [...prev, cursor]);
+        setCursor(data.nextCursor);
+    };
+
+    const handlePrevious = () => {
+        if (cursorHistory.length === 0) return;
+        const previousCursor = cursorHistory[cursorHistory.length - 1] ?? null;
+        setCursorHistory((prev) => prev.slice(0, -1));
+        setCursor(previousCursor);
+    };
+
+    const handleCopyKey = async (secret: SecretResponse) => {
+        try {
+            if (!navigator.clipboard?.writeText) {
+                throw new Error('Clipboard unavailable');
+            }
+            await navigator.clipboard.writeText(secret.key);
+            setCopiedKeyId(secret.id);
+            setTimeout(() => {
+                setCopiedKeyId((prev) => (prev === secret.id ? null : prev));
+            }, 1500);
+        } catch {
+            toast.error('Unable to copy key to clipboard');
+        }
+    };
 
     const { can, isAdmin, isDeveloper } = usePermissions(projectId);
 
@@ -229,41 +286,51 @@ export function SecretsPage() {
 
     return (
         <div className="space-y-6">
-            {/* Top Bar: Environment Tabs + New Secret Action */}
+            {/* Top Bar: Environment Tabs + Search + New Secret Action */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <EnvironmentTabs
                     currentEnvironment={currentEnv}
                     onSelect={(env) => setSearchParams({ environment: env })}
                 />
 
-                {canCreate !== 'hidden' && (
-                    <div
-                        className={canCreate === 'disabled' ? 'tooltip tooltip-left' : ''}
-                        data-tip={canCreate === 'disabled' ? disabledReason : undefined}
-                    >
-                        <button
-                            type="button"
-                            disabled={canCreate === 'disabled'}
-                            onClick={handleOpenCreate}
-                            className="btn btn-primary text-base-300 font-semibold rounded-xl flex items-center gap-2 hover:opacity-90 disabled:opacity-40"
+                <div className="flex flex-wrap items-center gap-3">
+                    <input
+                        type="search"
+                        value={searchInput}
+                        onChange={(e) => setSearchInput(e.target.value)}
+                        placeholder="Search keys..."
+                        aria-label="Search secret keys"
+                        className="input input-bordered input-sm w-52 rounded-xl bg-base-200 font-ui text-sm"
+                    />
+                    {canCreate !== 'hidden' && (
+                        <div
+                            className={canCreate === 'disabled' ? 'tooltip tooltip-left' : ''}
+                            data-tip={canCreate === 'disabled' ? disabledReason : undefined}
                         >
-                            <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
+                            <button
+                                type="button"
+                                disabled={canCreate === 'disabled'}
+                                onClick={handleOpenCreate}
+                                className="btn btn-primary text-base-300 font-semibold rounded-xl flex items-center gap-2 hover:opacity-90 disabled:opacity-40"
                             >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M12 4v16m8-8H4"
-                                />
-                            </svg>
-                            New Secret
-                        </button>
-                    </div>
-                )}
+                                <svg
+                                    className="w-4 h-4"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M12 4v16m8-8H4"
+                                    />
+                                </svg>
+                                New Secret
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Secrets Table panel keyed by currentEnv to guarantee remount & unmount */}
@@ -275,28 +342,42 @@ export function SecretsPage() {
                         message={isApiError(error) ? error.message : 'Failed to load secrets'}
                         onRetry={() => refetch()}
                     />
-                ) : secrets && secrets.length > 0 ? (
-                    <div className="overflow-x-auto rounded-3xl border border-base-300 bg-base-200 shadow-sm">
-                        <table className="table w-full text-sm">
-                            <thead>
-                                <tr className="border-b border-base-300 font-heading text-xs text-base-content/60 uppercase tracking-wider">
-                                    <th className="py-4 pl-6">Key</th>
-                                    <th className="py-4">Value</th>
-                                    <th className="py-4">Last Accessed</th>
-                                    <th className="py-4">Created</th>
-                                    <th className="py-4 pr-6 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-base-300/60 font-ui">
-                                {secrets.map((secret) => (
-                                    <tr
-                                        key={secret.id}
-                                        className="hover:bg-base-300/30 transition-colors"
-                                    >
-                                        {/* Key */}
-                                        <td className="py-4 pl-6 font-mono font-bold text-base-content tracking-tight">
-                                            {secret.key}
-                                        </td>
+                ) : secrets.length > 0 ? (
+                    <div className="space-y-4">
+                        <div className="overflow-x-auto rounded-3xl border border-base-300 bg-base-200 shadow-sm">
+                            <table className="table w-full text-sm">
+                                <thead>
+                                    <tr className="border-b border-base-300 font-heading text-xs text-base-content/60 uppercase tracking-wider">
+                                        <th className="py-4 pl-6">Key</th>
+                                        <th className="py-4">Value</th>
+                                        <th className="py-4">Last Accessed</th>
+                                        <th className="py-4">Created</th>
+                                        <th className="py-4 pr-6 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-base-300/60 font-ui">
+                                    {secrets.map((secret) => (
+                                        <tr
+                                            key={secret.id}
+                                            className="hover:bg-base-300/30 transition-colors"
+                                        >
+                                            {/* Key + Copy key */}
+                                            <td className="py-4 pl-6 font-mono font-bold text-base-content tracking-tight">
+                                                <div className="flex items-center gap-2">
+                                                    <span>{secret.key}</span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleCopyKey(secret)}
+                                                        aria-label={`Copy key ${secret.key}`}
+                                                        title="Copy secret key"
+                                                        className="btn btn-ghost btn-xs font-ui font-normal text-base-content/60 hover:text-base-content"
+                                                    >
+                                                        {copiedKeyId === secret.id
+                                                            ? 'Copied!'
+                                                            : 'Copy'}
+                                                    </button>
+                                                </div>
+                                            </td>
 
                                         {/* Value */}
                                         <td className="py-4">
@@ -363,7 +444,37 @@ export function SecretsPage() {
                                 ))}
                             </tbody>
                         </table>
+                        </div>
+                        <PaginationControls
+                            hasPrevious={cursorHistory.length > 0}
+                            hasNext={Boolean(data?.hasMore && data?.nextCursor)}
+                            onPrevious={handlePrevious}
+                            onNext={handleNext}
+                            pageNumber={cursorHistory.length + 1}
+                            itemCount={secrets.length}
+                            isFetching={isFetching}
+                            noun="secrets"
+                        />
                     </div>
+                ) : debouncedSearch ? (
+                    <EmptyState
+                        title="No matching secrets"
+                        description={`No keys in ${currentEnv} matched "${debouncedSearch}".`}
+                        action={
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setSearchInput('');
+                                    setDebouncedSearch('');
+                                    setCursor(null);
+                                    setCursorHistory([]);
+                                }}
+                                className="btn btn-outline btn-sm rounded-xl"
+                            >
+                                Clear Search
+                            </button>
+                        }
+                    />
                 ) : (
                     <EmptyState
                         title={`No secrets in ${currentEnv} yet`}
