@@ -2,16 +2,18 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
 import { AppShell } from '../components/AppShell';
-import { RequireAuth, PublicOnly } from '../components/Guards';
+import { RequireAuth, PublicOnly, RequirePlatformAdmin } from '../components/Guards';
 import { ToastProvider } from '../components/Toaster';
 import { AuthProvider } from '../context/AuthContext';
 import { queryClient } from '../lib/queryClient';
+import AdminUsersPage from './AdminUsersPage';
 import LoginPage from './LoginPage';
 import MembersPage from './MembersPage';
 import ProjectAuditLogPage from './ProjectAuditLogPage';
 import ProjectLayout from './ProjectLayout';
 import ProjectsPage from './ProjectsPage';
 import SecretsPage from './SecretsPage';
+import SettingsPage from './SettingsPage';
 import SignupPage from './SignupPage';
 import StatusPage from './StatusPage';
 
@@ -35,6 +37,10 @@ export function App() {
                             <Route element={<RequireAuth />}>
                                 <Route element={<AppShell />}>
                                     <Route path="/projects" element={<ProjectsPage />} />
+                                    <Route path="/settings" element={<SettingsPage />} />
+                                    <Route element={<RequirePlatformAdmin />}>
+                                        <Route path="/admin/users" element={<AdminUsersPage />} />
+                                    </Route>
                                     <Route path="/projects/:projectId" element={<ProjectLayout />}>
                                         <Route index element={<Navigate to="secrets" replace />} />
                                         <Route path="secrets" element={<SecretsPage />} />

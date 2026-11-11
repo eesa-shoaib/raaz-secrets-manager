@@ -44,11 +44,12 @@ apiClient.interceptors.response.use(
         const apiError = normalizeError(error);
         const url = error.config?.url || '';
 
-        // Ignore 401 for login and the initial bootstrap /auth/me request
+        // Ignore 401 for login, initial /auth/me, and password verification on /auth/change-password
         const isLogin = url.includes('/auth/login');
         const isMe = url.includes('/auth/me');
+        const isChangePassword = url.includes('/auth/change-password');
 
-        if (apiError.status === 401 && !isLogin && !isMe) {
+        if (apiError.status === 401 && !isLogin && !isMe && !isChangePassword) {
             notifyUnauthenticated();
         }
 

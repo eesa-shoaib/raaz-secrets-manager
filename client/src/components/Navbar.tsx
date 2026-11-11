@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import logo from '../assets/logo-v2.svg';
 import { useAuth } from '../hooks/useAuth';
+import { UserAvatar } from './UserAvatar';
 
 export function Navbar() {
     const { user, logout } = useAuth();
@@ -59,6 +60,20 @@ export function Navbar() {
                             >
                                 Projects
                             </NavLink>
+                            {user.isPlatformAdmin && (
+                                <NavLink
+                                    to="/admin/users"
+                                    className={({ isActive }) =>
+                                        `px-3 py-1.5 rounded-lg text-base font-heading font-medium transition-colors ${
+                                            isActive
+                                                ? 'bg-base-300 text-base-content font-bold'
+                                                : 'text-base-content/70 hover:text-base-content hover:bg-base-300/60'
+                                        }`
+                                    }
+                                >
+                                    Users
+                                </NavLink>
+                            )}
                         </nav>
                     )}
                 </div>
@@ -75,11 +90,16 @@ export function Navbar() {
                                 aria-expanded={dropdownOpen}
                                 aria-haspopup="true"
                             >
-                                <div className="w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-xs uppercase">
-                                    {user.email.charAt(0)}
-                                </div>
+                                <UserAvatar
+                                    userId={user.id}
+                                    email={user.email}
+                                    username={user.username}
+                                    hasAvatar={user.hasAvatar}
+                                    avatarUpdatedAt={user.avatarUpdatedAt}
+                                    size="sm"
+                                />
                                 <span className="hidden max-w-[70px] truncate font-medium text-base-content sm:inline lg:max-w-[140px]">
-                                    {user.email}
+                                    {user.username || user.email}
                                 </span>
                                 <svg
                                     className={`w-4 h-4 text-base-content/60 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`}
@@ -100,11 +120,32 @@ export function Navbar() {
                                 <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-base-200 border border-base-300 shadow-2xl py-2 z-50 animate-fade-in font-ui">
                                     <div className="px-4 py-2 border-b border-base-300">
                                         <p className="text-xs text-base-content/60">Signed in as</p>
-                                        <p className="text-sm font-semibold text-base-content truncate mt-0.5">
+                                        {user.username && (
+                                            <p className="text-sm font-semibold text-base-content truncate mt-0.5">
+                                                @{user.username}
+                                            </p>
+                                        )}
+                                        <p className="text-xs text-base-content/70 truncate mt-0.5">
                                             {user.email}
                                         </p>
                                     </div>
-                                    <div className="px-1 py-1">
+                                    <div className="px-1 py-1 space-y-0.5">
+                                        <Link
+                                            to="/settings"
+                                            onClick={() => setDropdownOpen(false)}
+                                            className="w-full text-left px-3 py-2 text-sm text-base-content hover:bg-base-300 rounded-xl transition-colors font-medium flex items-center gap-2"
+                                        >
+                                            Account Settings
+                                        </Link>
+                                        {user.isPlatformAdmin && (
+                                            <Link
+                                                to="/admin/users"
+                                                onClick={() => setDropdownOpen(false)}
+                                                className="w-full text-left px-3 py-2 text-sm text-base-content hover:bg-base-300 rounded-xl transition-colors font-medium flex items-center gap-2"
+                                            >
+                                                Manage Users
+                                            </Link>
+                                        )}
                                         <button
                                             type="button"
                                             onClick={handleLogout}

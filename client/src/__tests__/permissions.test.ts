@@ -23,7 +23,8 @@ describe('Permissions matrix conformance', () => {
             }
         });
 
-        it('can perform member management and view audit log', () => {
+        it('can perform member management, project editing, and view audit log', () => {
+            expect(can(role, 'project.edit')).toBe('enabled');
             expect(can(role, 'members.list')).toBe('enabled');
             expect(can(role, 'members.add')).toBe('enabled');
             expect(can(role, 'members.change-role')).toBe('enabled');
@@ -57,7 +58,8 @@ describe('Permissions matrix conformance', () => {
             }
         });
 
-        it('can view members and audit log, but cannot add/modify members (hidden)', () => {
+        it('can view members and audit log, but cannot add/modify members or edit project details (hidden)', () => {
+            expect(can(role, 'project.edit')).toBe('hidden');
             expect(can(role, 'members.list')).toBe('enabled');
             expect(can(role, 'audit.list')).toBe('enabled');
 
@@ -80,7 +82,8 @@ describe('Permissions matrix conformance', () => {
             }
         });
 
-        it('can view members and audit log, but cannot manage members', () => {
+        it('can view members and audit log, but cannot manage members or edit project details', () => {
+            expect(can(role, 'project.edit')).toBe('hidden');
             expect(can(role, 'members.list')).toBe('enabled');
             expect(can(role, 'audit.list')).toBe('enabled');
 
@@ -93,6 +96,7 @@ describe('Permissions matrix conformance', () => {
     describe('Anonymous or unassigned', () => {
         it('returns hidden for all actions when role is null', () => {
             const actions: Action[] = [
+                'project.edit',
                 'secrets.list',
                 'secrets.create',
                 'secrets.reveal',
