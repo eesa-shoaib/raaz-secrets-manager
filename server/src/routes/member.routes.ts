@@ -1,3 +1,4 @@
+import { projectMembersQuerySchema } from '@raaz/shared-schemas';
 import { Router } from 'express';
 import { z } from 'zod';
 import {
@@ -22,7 +23,7 @@ const role = z.enum(['projectAdmin', 'developer', 'auditor']);
 router.get(
     '/',
     authenticate,
-    validate(projectParams),
+    validate(projectParams.extend({ query: projectMembersQuerySchema })),
     requireProjectRole('projectAdmin', 'developer', 'auditor'),
     requireProjectStatus,
     asyncHandler(listMembersController),

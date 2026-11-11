@@ -18,6 +18,7 @@ const membershipSchema = new mongoose.Schema<ProjectMembershipDoc>(
 );
 
 membershipSchema.index({ userId: 1, projectId: 1 }, { unique: true });
+membershipSchema.index({ projectId: 1, createdAt: -1, _id: -1 });
 
 export const ProjectMembershipModel = mongoose.model<ProjectMembershipDoc>(
     'ProjectMembership',
