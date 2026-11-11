@@ -21,33 +21,26 @@ The approved follow-up scope is in PRODUCT.md and [MVP_2_BOARD.md](./MVP_2_BOARD
 Update this document’s routes, widgets, query keys, and permissions before
 implementing each MVP 2 feature; unlisted follow-up work remains deferred.
 
-## MVP 2 surfaces — planned, not implemented
+## MVP 2 surfaces — active contract
 
-| Surface                         | Planned behavior                                                                                                                                               |
+| Surface                         | Specification                                                                                                                                                  |
 | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/settings`                     | RequireAuth; Profile (optional username, upload/replace/remove picture) and Security (password change); open from account menu                                 |
-| `/admin/users`                  | RequirePlatformAdmin; paginated users and existing activation/admin-role actions; no project/secret data                                                       |
-| Project page right-side column  | Name, full description, total member count, role and status across all project tabs; Project Admin Edit details opens a dialog; stack the same panel on mobile |
-| Existing lists                  | Projects, secrets, members, audit and admin users get bounded Previous/Next navigation with boundary/loading/error states                                      |
-| Existing project/secret headers | Server-side metadata search over all authorized results, resetting page state; secret search scoped to the selected environment                                |
-| Existing secret row             | Explicit Copy key only, with success/failure feedback; reveal rules unchanged                                                                                  |
+| `/settings`                     | `RequireAuth`; `SettingsPage` with Profile (optional username, upload/replace/remove picture) and Security (password change); accessible from account menu     |
+| `/admin/users`                  | `RequireAuth` + `RequirePlatformAdmin`; `AdminUsersPage` with cursor-paginated users and activation/Platform-Admin role actions; no project/secret data        |
+| Project page right-side column  | Name, full description, total `memberCount`, role, and status across all project tabs; Project Admin "Edit details" opens a dialog; stacks on mobile           |
+| Resource lists                  | Projects, secrets, members, audit log, and admin users render `PaginationControls` with Previous/Next navigation and boundary/loading/error states             |
+| Project & secret list headers   | Server-side metadata search over all authorized results, resetting cursor state; secret search is scoped to the selected environment                           |
+| Secret row                      | Explicit "Copy key" button on every row (all roles including Auditor) with toast/button feedback; reveal rules unchanged                                       |
 
-Show the planned read-only Members count beside the description in the existing
-right-side project panel, including when no description is set. Use the project
-detail's server `memberCount`; never derive totals from the paginated member list.
-Refresh detail after member add/remove and when returning to the project view.
-Use a loading/unavailable state instead of a false zero. The same details panel
-remains across all project tabs and stacks on mobile.
+Show the read-only Members count beside the description in the right-side project
+panel, including when no description is set. Use the project detail's server
+`memberCount`; never derive totals from the paginated member list. Refresh detail
+after member add/remove and when returning to the project view. Use a
+loading/unavailable state instead of a false zero. The same details panel remains
+across all project tabs and stacks on mobile.
 
-Reuse one avatar treatment with initials/broken-image fallback; display usernames
-with email available for identity disambiguation. Do not add public profiles,
-extra settings dashboards, custom themes or gamification. The widget inventory
-below is the MVP 1 ceiling; revise it explicitly before adding planned components.
-
-Extend query keys with cursor/size/search/filter scope before implementing list
-navigation. Reset page state after scope changes, invalidate after mutations, and
-clear revealed row values when paging unmounts them. Profile/image bytes never
-belong in list data. API.md still owns final request/response contracts.
+Reuse one `UserAvatar` component with deterministic initials and broken-image
+fallback; display usernames with email available for identity disambiguation.
 
 ## 1. Route Map
 
@@ -57,20 +50,21 @@ belong in list data. API.md still owns final request/response contracts.
 | 2   | `/login`                                    | `LoginPage`                         | `PublicOnly`                           | `POST /api/auth/login`, `GET /api/auth/me`                                                                                                                       | 2            |
 | 3   | `/signup`                                   | `SignupPage`                        | `PublicOnly`                           | `POST /api/auth/signup`                                                                                                                                          | 2            |
 | 4   | `/projects`                                 | `ProjectsPage`                      | `RequireAuth`                          | `GET /api/projects`, `POST /api/projects`                                                                                                                        | 2            |
-| 5   | `/projects/:projectId`                      | `ProjectLayout`                     | `RequireAuth` + member                 | `GET /api/projects/:projectId` (includes the caller's `role`)                                                                                                    | 2            |
+| 5   | `/projects/:projectId`                      | `ProjectLayout`                     | `RequireAuth` + member                 | `GET/PATCH /api/projects/:projectId` (includes `role` and `memberCount`)                                                                                         | 2            |
 | 6   | `/projects/:projectId/secrets?environment=` | `SecretsPage`                       | as #5                                  | `GET/POST /api/projects/:projectId/secrets`; `PATCH/DELETE /api/projects/:projectId/secrets/:secretId`; `POST /api/projects/:projectId/secrets/:secretId/reveal` | 3            |
 | 7   | `/projects/:projectId/members`              | `MembersPage`                       | as #5                                  | `GET/POST /api/projects/:projectId/members`; `PATCH/DELETE /api/projects/:projectId/members/:userId`                                                             | 4            |
-| 8   | `/projects/:projectId/audit-log`            | `ProjectAuditLogPage`               | as #5                                  | `GET /api/projects/:projectId/audit-log?limit=100` (no pagination)                                                                                               | 4            |
+| 8   | `/projects/:projectId/audit-log`            | `ProjectAuditLogPage`               | as #5                                  | `GET /api/projects/:projectId/audit-log` (cursor-paginated)                                                                                                      | 4            |
 | 9   | `/unauthorized`                             | `StatusPage variant="unauthorized"` | none                                   | —                                                                                                                                                                | 1            |
 | 10  | `*`                                         | `StatusPage variant="not-found"`    | none                                   | —                                                                                                                                                                | 1            |
-| 11  | `/admin`                                    | redirect → `/admin/users`           | `RequireAuth` + `RequirePlatformAdmin` | —                                                                                                                                                                | **post-MVP** |
-| 12  | `/admin/users`                              | `AdminUsersPage`                    | as #11                                 | `GET/PATCH /api/admin/users/:userId`                                                                                                                             | **post-MVP** |
-| 13  | `/admin/projects`                           | `AdminProjectsPage`                 | as #11                                 | endpoints not built (post-MVP)                                                                                                                                   | **post-MVP** |
-| 14  | `/admin/audit-log`                          | `AdminAuditLogPage`                 | as #11                                 | endpoint not built (post-MVP)                                                                                                                                    | **post-MVP** |
+| 11  | `/admin`                                    | redirect → `/admin/users`           | `RequireAuth` + `RequirePlatformAdmin` | —                                                                                                                                                                | MVP 2        |
+| 12  | `/admin/users`                              | `AdminUsersPage`                    | as #11                                 | `GET/PATCH /api/admin/users/:userId`                                                                                                                             | MVP 2        |
+| 13  | `/settings`                                 | `SettingsPage`                      | `RequireAuth`                          | `PATCH /api/account/profile`, `PUT/DELETE /api/account/avatar`, `POST /api/auth/change-password`                                                                 | MVP 2        |
+| 14  | `/admin/projects`                           | `AdminProjectsPage`                 | as #11                                 | endpoints not built (post-MVP)                                                                                                                                   | **post-MVP** |
+| 15  | `/admin/audit-log`                          | `AdminAuditLogPage`                 | as #11                                 | endpoint not built (post-MVP)                                                                                                                                    | **post-MVP** |
 
-**MVP ships routes 1–10.** Routes 11–14 are post-MVP — see §7 for the boundary and what it costs.
+**Active routes: 1–13.** Routes 14–15 remain deferred post-MVP.
 
-Every endpoint the MVP uses has a client function in `client/src/api/`. Response shapes are defined in API.md and there are no open contract issues in this scope; if one is found, record it in API.md, not here.
+Every active endpoint has a client function in `client/src/api/`. Response shapes are defined in API.md and there are no open contract issues in this scope; if one is found, record it in API.md, not here.
 
 `POST /api/auth/logout` (clears auth cookie) is used by the logout
 control in `NavBar` but is not a route — no page associated.
@@ -81,25 +75,20 @@ ability to onboard anyone, not defer a convenience. The one product
 decision the team can make here is whether `SIGNUP_ALLOWED_DOMAINS` is
 set in deployment; that's a server-side choice, not a frontend cut.
 
-**Members & Audit scope:** `MembersPage` exposes list, add, change role, and remove. `ProjectAuditLogPage` is read-only with three filters (Action, Result, Environment), no pagination.
+**Members & Audit scope:** `MembersPage` exposes cursor-paginated list, add, change role, and remove. `ProjectAuditLogPage` is read-only with three filters (Action, Result, Environment) and cursor pagination.
 
-**Guards** are two components plus one in-page check:
+**Guards** are three components plus one in-page check:
 
-| Guard         | Behavior                                                                                                                                                     |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `RequireAuth` | Pending → `FullPageState variant="loading"`. Anonymous → redirect to `/login` with `state.from`. Network error → `FullPageState variant="error"` with Retry. |
-| `PublicOnly`  | Pending → `FullPageState variant="loading"`. Authenticated → redirect to `state.from ?? '/projects'`.                                                        |
-
-**Post-MVP guards:**
-
-| Guard                  | Behavior                                                                           |
-| ---------------------- | ---------------------------------------------------------------------------------- |
-| `RequirePlatformAdmin` | Nested inside `RequireAuth`. Not an admin → redirect to `/unauthorized`. Post-MVP. |
+| Guard                  | Behavior                                                                                                                                                     |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `RequireAuth`          | Pending → `FullPageState variant="loading"`. Anonymous → redirect to `/login` with `state.from`. Network error → `FullPageState variant="error"` with Retry. |
+| `PublicOnly`           | Pending → `FullPageState variant="loading"`. Authenticated → redirect to `state.from ?? '/projects'`.                                                        |
+| `RequirePlatformAdmin` | Nested inside `RequireAuth`. Not an admin (`!me.isPlatformAdmin`) → redirect to `/unauthorized`.                                                             |
 
 The project-member check lives inside `ProjectLayout` because it needs
 the project's data to render the 404 and archived states.
 
-Browser tab titles: `Raaz` on the projects home, the project name within a selected project, `Sign in` on login, and `Sign up` on signup. The favicon stays visible across routes. Each history entry stores its page title (project name only, never secret data); the HTML restores it before React loads, and project loading preserves it until the request completes.
+Browser tab titles: `Raaz` on the projects home, the project name within a selected project, `Account settings` on `/settings`, `Platform users` on `/admin/users`, `Sign in` on login, and `Sign up` on signup. The favicon stays visible across routes. Each history entry stores its page title (project name only, never secret data); the HTML restores it before React loads, and project loading preserves it until the request completes.
 
 ### 1.5 Auth propagation and error mapping
 
@@ -107,58 +96,60 @@ One Axios instance (`client/src/api/`) with a response interceptor turns every f
 
 **401 chain.**
 
-1. The interceptor sees `401` on any request except `POST /auth/login` and the bootstrap `GET /auth/me`.
+1. The interceptor sees `401` on any request except `POST /auth/login`, the bootstrap `GET /auth/me`, and an incorrect-current-password response on `POST /auth/change-password`.
 2. It calls the auth module's `onUnauthenticated()`, de-duplicated so several simultaneous 401s fire it once: `queryClient.clear()` (drops every cached project, secret and audit result), then navigate to `/login` with `state: { reason: 'expired', from: <current location> }`.
-3. Login success sets the `['me']` query and navigates to `state.from ?? '/projects'`. Logout calls `POST /auth/logout`, then `queryClient.clear()`, then navigates to `/login` with `reason: 'logged-out'`. Login and logout own the cache transition; guards never clear it.
+3. Login success sets the `['me']` query and navigates to `state.from ?? '/projects'`. Logout calls `POST /auth/logout`, then `queryClient.clear()`, then navigates to `/login` with `reason: 'logged-out'`. Password change success calls `queryClient.clear()` and navigates to `/login` with `reason: 'password-changed'`. Login, logout, and password change own the cache transition; guards never clear it.
 4. A 401 on a reveal mutation follows the same chain; leaving the route unmounts the cell, which clears the value (§3.5a).
 5. An anonymous `GET /auth/me` 401 at bootstrap is not an error: it resolves `me` to `null` and `RequireAuth` redirects to `/login` without a `reason`.
 
 **Status → UI.**
 
-| Status / code                  | Where                               | UI                                                                                                                                     |
-| ------------------------------ | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| No response (network, timeout) | query / mutation / login            | `ErrorState` + Retry / error toast "Network error — try again" / form banner                                                           |
-| `401 UNAUTHENTICATED`          | login form                          | Generic form error (same copy for unknown email and wrong password)                                                                    |
-| `401 UNAUTHENTICATED`          | anything else                       | 401 chain above                                                                                                                        |
-| `403 FORBIDDEN`                | mutation                            | Persistent error toast; invalidate `['project', id]`, `['projects']` and the resource's own key (the role may have changed)            |
-| `403 FORBIDDEN`                | project detail                      | Archived — `ProjectArchivedNotice` (post-MVP); in the MVP treat as "other error"                                                       |
-| `404 NOT_FOUND`                | project detail                      | `StatusPage not-found`                                                                                                                 |
-| `404 NOT_FOUND`                | add member                          | Email-field error "No account with that email"                                                                                         |
-| `404 NOT_FOUND`                | secret edit/delete/reveal           | Toast "Secret no longer exists"; invalidate the secrets list                                                                           |
-| `409 CONFLICT`                 | signup / create secret / add member | Field error on email ("already registered") / key ("already exists in this environment") / email ("already a member")                  |
-| `422 VALIDATION_ERROR`         | any form                            | Field errors (the shared Zod schemas catch most of these client-side); signup domain rejection shows on the email field                |
-| `429 RATE_LIMITED`             | login / reveal                      | Toast "Too many attempts, try again in 15 minutes" / "Too many reveals, try again in 15 minutes"; a reveal cell returns to `idle`      |
-| `500 INTERNAL_ERROR`           | query / mutation                    | `ErrorState` + Retry / error toast "Something went wrong — the action was not applied" (an audit-write failure fails the whole action) |
+| Status / code                  | Where                                       | UI                                                                                                                                     |
+| ------------------------------ | ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| No response (network, timeout) | query / mutation / login                    | `ErrorState` + Retry / error toast "Network error — try again" / form banner                                                           |
+| `401 UNAUTHENTICATED`          | login form / change-password wrong password | Generic form error on login; field error on `currentPassword` ("Current password is incorrect") without clearing session               |
+| `401 UNAUTHENTICATED`          | anything else                               | 401 chain above                                                                                                                        |
+| `403 FORBIDDEN`                | mutation                                    | Persistent error toast; invalidate `['project', id]`, `['projects']` and the resource's own key (the role may have changed)            |
+| `403 FORBIDDEN`                | project detail                              | Archived — `ProjectArchivedNotice`                                                                                                     |
+| `404 NOT_FOUND`                | project detail                              | `StatusPage not-found`                                                                                                                 |
+| `404 NOT_FOUND`                | add member                                  | Email-field error "No account with that email"                                                                                         |
+| `404 NOT_FOUND`                | secret edit/delete/reveal                   | Toast "Secret no longer exists"; invalidate the secrets list                                                                           |
+| `409 CONFLICT`                 | signup / create secret / add member / prof  | Field error on email / key / username ("Username is already taken") or last-admin conflict banner                                      |
+| `422 VALIDATION_ERROR`         | any form or avatar upload                   | Field errors (shared Zod schemas catch most client-side); avatar validation error banner                                               |
+| `429 RATE_LIMITED`             | login / reveal / change-password            | Toast "Too many attempts, try again in 15 minutes" / "Too many reveals, try again in 15 minutes"; a reveal cell returns to `idle`      |
+| `500 INTERNAL_ERROR`           | query / mutation                            | `ErrorState` + Retry / error toast "Something went wrong — the action was not applied" (an audit-write failure fails the whole action) |
 
 **Query keys and invalidation.**
 
-| Key                                   | Data                        | Invalidated by                                                                                      |
-| ------------------------------------- | --------------------------- | --------------------------------------------------------------------------------------------------- |
-| `['me']`                              | `GET /auth/me`              | set on login; cleared on logout and 401                                                             |
-| `['projects']`                        | project list                | create project                                                                                      |
-| `['project', projectId]`              | project detail incl. `role` | any 403 on a mutation in that project                                                               |
-| `['secrets', projectId, environment]` | secrets list                | create / edit / delete in that environment; a settled reveal (`lastAccessedAt` moves)               |
-| `['members', projectId]`              | members list                | add, change role, or remove member                                                                  |
-| `['audit', projectId, filters]`       | project audit log           | any secret mutation, reveal, or membership change (invalidate by the `['audit', projectId]` prefix) |
+| Key                                                        | Data                                | Invalidated by                                                                                      |
+| ---------------------------------------------------------- | ----------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `['me']`                                                   | `GET /auth/me`                      | set on login / profile / avatar update; cleared on logout, password change, and 401                 |
+| `['projects', { cursor, limit, search }]`                  | project list                        | create project, edit project details (`invalidateQueries({ queryKey: ['projects'] })`)              |
+| `['project', projectId]`                                   | project detail incl. `role` & count | edit project details, member add/remove, any 403 on a mutation in that project                      |
+| `['secrets', projectId, environment, { cursor, limit, search }]` | secrets list                  | create / edit / delete in that environment; a settled reveal (`lastAccessedAt` moves)               |
+| `['members', projectId, { cursor, limit }]`                | members list                        | add, change role, or remove member; profile/avatar update                                           |
+| `['audit', projectId, { action, result, environment, cursor, limit }]` | project audit log       | any secret mutation, reveal, project edit, or membership change (invalidate `['audit', projectId]`) |
+| `['admin-users', { cursor, limit }]`                       | platform users list                 | activate/deactivate user, grant/revoke Platform Admin                                               |
 
-A reveal never writes any query key. The secret row is keyed by secret id, so the list refetch after a reveal doesn't remount the cell or clear its value.
+A reveal never writes any query key. The secret row is keyed by secret id, so the list refetch after a reveal doesn't remount the cell or clear its value; paging away unmounts the row and clears its local state.
 
 ## 2. Shared Widgets
 
-25 for the MVP; 2 post-MVP (`ProjectArchivedNotice`, `AdminUsersTable`). File per row, in `client/src/components/`.
+27 active widgets (`ProjectArchivedNotice`, `AdminUsersTable`, `UserAvatar`, `PaginationControls` included). File per row, in `client/src/components/`.
 
 ### 2.1 Chrome and layout
 
 **Shared visual treatment:** use the responsive `page-gutter` class for equal horizontal padding on both sides of page content. The navbar is centered at 88% width with a visible solid border, compact internal padding, a text-only Raaz brand, and a 6rem height. Project navigation uses underlined links; environment selection uses a separately labeled segmented control. Filled buttons have a dark noise texture, while page backgrounds, cards, panels, and modals use a lighter texture. Ghost, link, outline, and transparent buttons stay clear. Keep text and focus indicators readable; visually check contrast when changing theme colors or texture strength. These styles reuse existing components and do not add widgets.
 
-| Widget                  | Purpose                                                                                                        |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `AppShell`              | Skip link, `NavBar`, `<main id="main">`, `Toaster`                                                             |
-| `NavBar`                | Brand, Projects link, user dropdown. Admin dropdown added post-MVP.                                            |
-| `PageHeader`            | `<h1>` + optional actions slot                                                                                 |
-| `TabNav`                | Project tabs and (post-MVP) admin tabs. `items: { to, label, visible? }[]`                                     |
-| `StatusPage`            | Variants `not-found`, `unauthorized`                                                                           |
-| `ProjectArchivedNotice` | **Post-MVP** (nothing can archive a project yet). Replaces project chrome when `GET /projects/:id` returns 403 |
+| Widget                  | Purpose                                                                                                |
+| ----------------------- | ------------------------------------------------------------------------------------------------------ |
+| `AppShell`              | Skip link, `NavBar`, `<main id="main">`, `Toaster`                                                     |
+| `NavBar`                | Brand, Projects link, Admin link (Platform Admin only), user dropdown with avatar, Settings, Sign out. |
+| `PageHeader`            | `<h1>` + optional actions slot                                                                         |
+| `TabNav`                | Project tabs and admin tabs. `items: { to, label, visible? }[]`                                        |
+| `StatusPage`            | Variants `not-found`, `unauthorized`                                                                   |
+| `ProjectArchivedNotice` | Replaces project chrome when `GET /projects/:id` returns 403                                           |
+| `PaginationControls`    | Reusable Previous / Next cursor navigation bar with page indicator, loading, and boundary states       |
 
 ### 2.2 Feedback and state
 
@@ -187,14 +178,15 @@ A reveal never writes any query key. The secret row is keyed by secret id, so th
 | Widget            | Purpose                                                                                                           |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------- |
 | `Badge`           | One component, variants `role`, `environment`, `projectStatus`, `auditResult`, `userStatus`. Text always present. |
-| `ProjectCard`     | One project on the list. Link when active; locked with badge when archived.                                       |
+| `UserAvatar`      | Private avatar image with cache-busting `?v=` query and deterministic initials fallback when unset or on error.   |
+| `ProjectCard`     | One project on the list with optional 2-line description preview. Link when active; locked when archived.         |
 | `EnvironmentTabs` | Tab strip above the secrets table. State is `?environment=`.                                                      |
 | `SecretsTable`    | Frame + column headers                                                                                            |
-| `SecretRow`       | One secret: key, value cell, last-accessed, actions                                                               |
+| `SecretRow`       | One secret: key, Copy key button, value cell, last-accessed, actions                                              |
 | `SecretValueCell` | The reveal state machine, per row. Owns the value in local state.                                                 |
-| `MembersTable`    | Members list with optional actions column                                                                         |
-| `AuditLogTable`   | Project audit entries                                                                                             |
-| `AdminUsersTable` | Post-MVP                                                                                                          |
+| `MembersTable`    | Members list with `UserAvatar`, username + email, and optional actions column                                     |
+| `AuditLogTable`   | Project audit entries with actor username/email and `project_updated` / `project_renamed` labels                  |
+| `AdminUsersTable` | Platform users table with `UserAvatar`, status/admin badges, and confirm-gated Activate/Deactivate & Admin actions|
 
 ## 3. Page Specifications
 
@@ -405,9 +397,10 @@ Invariants (correctness properties, not features — see §9):
 | `action`                                                                                                         | Label                                                             |
 | ---------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
 | `reveal` / `create` / `edit` / `delete`                                                                          | Reveal / Create / Edit / Delete secret                            |
-| `member_added` / `member_role_changed` / `member_removed`                                                        | Add / Change role / Remove member                                 |
-| `project_created` / `project_renamed` / `project_environments_changed` / `project_archived` / `project_restored` | Create / Rename / Change environments / Archive / Restore project |
-| `user_activated` / `user_deactivated` / `platform_admin_granted` / `platform_admin_revoked` / `bootstrap_admin`  | Platform-wide only — post-MVP                                     |
+| `member_added` / `member_role_changed` / `member_removed`                                                                            | Add / Change role / Remove member                                            |
+| `project_created` / `project_renamed` / `project_updated` / `project_environments_changed` / `project_archived` / `project_restored` | Create / Rename / Update details / Change environments / Archive / Restore project |
+| `user_activated` / `user_deactivated` / `platform_admin_granted` / `platform_admin_revoked` / `bootstrap_admin`                      | Platform-wide only — post-MVP                                                |
+| `password_changed` / `profile_updated` / `avatar_updated` / `avatar_removed`                                                         | Platform-wide account events (no project audit reader)                       |
 
 Unknown values render raw.
 
@@ -417,9 +410,15 @@ Unknown values render raw.
 
 - **Deferred:** historical-environment filtering.
 
-### 3.8 Admin pages — post-MVP
+### 3.8 `AdminUsersPage` — `/admin/users` (and `/admin` redirect)
 
-`AdminUsersPage` (backed by the existing `/api/admin/users` endpoints) is the first post-MVP page. `AdminProjectsPage` and `AdminAuditLogPage` also need backend endpoints that don't exist yet. Designs are deferred to Phase 6 (§6); §7 explains what shipping without them costs.
+**Platform user administration. Story 7.**
+
+- **Guard:** `RequireAuth` + `RequirePlatformAdmin` (non-admin redirects to `/unauthorized`).
+- **Data:** `useAdminUsers({ cursor, limit })` → `GET /api/admin/users?cursor=&limit=&mode=cursor`.
+- **Widgets:** `PageHeader`, `AdminUsersTable`, `UserAvatar`, `Badge`, `ConfirmDialog`, `PaginationControls`, `Skeleton`, `ErrorState`, `Toaster`.
+- **Columns:** User (`UserAvatar`, username if set, email) · Status (`Active` / `Deactivated`) · Platform Role (`Platform Admin` / `Standard`) · Created · Actions.
+- **Controls:** Activate / Deactivate and Grant / Revoke Platform Admin, each gated by `ConfirmDialog`. `409 CONFLICT` displays the last-active-Platform-Admin invariant message inside the dialog without closing it. Self-demotion or self-deactivation refreshes `['me']` and redirects appropriately. Never displays project or secret data.
 
 ### 3.9 `StatusPage` — `/unauthorized` and `*`
 
@@ -434,6 +433,15 @@ Both link to `/projects`. The not-found copy is deliberately identical
 for a missing project and an inaccessible one — the API makes the same
 promise.
 
+### 3.10 `SettingsPage` — `/settings`
+
+**Self-service Account Profile & Security.**
+
+- **Guard:** `RequireAuth`.
+- **Sections:**
+  1. **Profile:** read-only email (`me.email`), optional `username` input (`3–30` lowercase `[a-z0-9_-]`, or clear to unset) saving via `PATCH /api/account/profile`, and profile picture controls (`UserAvatar` preview, Upload/Replace PNG/JPEG/WebP ≤ 2 MiB via `PUT /api/account/avatar`, Remove via `DELETE /api/account/avatar`).
+  2. **Security:** change password form (`currentPassword`, `newPassword`, `confirmNewPassword` with `8–72` chars and mismatch/same-password checks) submitting to `POST /api/auth/change-password`. Wrong current password (`401`) maps to `currentPassword` field error without logging out; success clears `queryClient` and redirects to `/login` with `state.reason = 'password-changed'`.
+
 ## 4. Per-Role UI Map
 
 Derived from permissions matrix. `E` = enabled, `D` =
@@ -441,21 +449,22 @@ disabled with reason, `H` = hidden, `—` = route unreachable.
 
 | Control                     | Project Admin | Developer (dev) | Developer (other) | Auditor | Platform Admin |
 | --------------------------- | ------------- | --------------- | ----------------- | ------- | -------------- |
-| View secrets list           | E             | E               | E                 | E       | — (404)¹       |
+| View project & `memberCount`| E             | E               | E                 | E       | — (404)¹       |
+| Edit project details        | E             | H               | H                 | H       | — (404)¹       |
+| View secrets list & search  | E             | E               | E                 | E       | — (404)¹       |
+| Copy secret key             | E             | E               | E                 | E       | —              |
 | New secret                  | E             | E               | D                 | H       | —              |
 | Reveal                      | E             | E               | E (prod: modal)   | H       | —              |
 | Edit value                  | E             | E               | D                 | H       | —              |
 | Delete secret               | E             | H               | H                 | H       | —              |
 | View members                | E             | E               | E                 | E       | —              |
-| Add member                  | E             | H               | H                 | H       | post-MVP       |
-| Change role / remove member | E             | H               | H                 | H       | post-MVP       |
+| Add member                  | E             | H               | H                 | H       | API-only       |
+| Change role / remove member | E             | H               | H                 | H       | API-only       |
 | View project audit log      | E             | E               | E                 | E       | —              |
-
-Post-MVP controls (archive/restore, admin menu and `/admin/*`) aren't in this grid: they belong to Platform Admin only and don't exist for any project role.
+| `/admin/users`              | H             | H               | H                 | H       | E              |
+| `/settings` (own account)   | E             | E               | E                 | E       | E              |
 
 ¹ Platform Admin without membership gets 404 on project-scoped routes (`/projects/:id/*`). A platform-wide project overview is post-MVP.
-
-Team management: add, change role, and remove. Audit log: read-only (filters kept, pagination post-MVP). Settings post-MVP.
 
 The permission helper is one small module (`lib/permissions.ts`), one
 function `can(role, action, environment?) → 'enabled' | 'disabled' | 'hidden'`, consumed through `usePermissions(projectId)`. Not a generic

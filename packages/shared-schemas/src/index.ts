@@ -19,3 +19,18 @@ export const apiErrorResponseSchema = z.object({
     error: z.object({ code: apiErrorCodeEnum, message: z.string() }),
 });
 export type ApiErrorResponse = z.infer<typeof apiErrorResponseSchema>;
+
+export const createCursorPaginatedResponseSchema = <T extends z.ZodTypeAny>(itemSchema: T) =>
+    z.object({
+        data: z.array(itemSchema),
+        nextCursor: z.string().nullable(),
+        hasMore: z.boolean(),
+        limit: z.number().int().min(1).max(100),
+    });
+
+export interface CursorPaginatedResponse<T> {
+    data: T[];
+    nextCursor: string | null;
+    hasMore: boolean;
+    limit: number;
+}
