@@ -1,17 +1,21 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
     changePasswordInputSchema,
+    deactivateAccountInputSchema,
     profileUpdateInputSchema,
     type ChangePasswordInput,
+    type DeactivateAccountInput,
     type ProfileUpdateInput,
 } from '@raaz/shared-schemas';
 import React, { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { Modal } from '../components/Modal';
 import { PageHeader } from '../components/PageHeader';
 import { useToast } from '../components/Toaster';
 import { UserAvatar } from '../components/UserAvatar';
 import {
     useChangePassword,
+    useDeactivateAccount,
     useDeleteAvatar,
     useUpdateProfile,
     useUploadAvatar,
@@ -32,11 +36,14 @@ export function SettingsPage() {
     const uploadAvatarMutation = useUploadAvatar();
     const deleteAvatarMutation = useDeleteAvatar();
     const changePasswordMutation = useChangePassword();
+    const deactivateAccountMutation = useDeactivateAccount();
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [avatarError, setAvatarError] = useState<string | null>(null);
     const [profileError, setProfileError] = useState<string | null>(null);
     const [passwordError, setPasswordError] = useState<string | null>(null);
+    const [isDeactivateOpen, setIsDeactivateOpen] = useState(false);
+    const [deactivateError, setDeactivateError] = useState<string | null>(null);
 
     const {
         register: registerProfile,
@@ -65,6 +72,18 @@ export function SettingsPage() {
         defaultValues: {
             currentPassword: '',
             newPassword: '',
+        },
+    });
+
+    const {
+        register: registerDeactivate,
+        handleSubmit: handleSubmitDeactivate,
+        reset: resetDeactivate,
+        formState: { errors: deactivateErrors, isSubmitting: isDeactivating },
+    } = useForm<DeactivateAccountInput>({
+        resolver: zodResolver(deactivateAccountInputSchema),
+        defaultValues: {
+            currentPassword: '',
         },
     });
 
@@ -151,22 +170,61 @@ export function SettingsPage() {
         }
     };
 
+    const handleOpenDeactivate = () => {
+        setDeactivateError(null);
+        resetDeactivate({ currentPassword: '' });
+        setIsDeactivateOpen(true);
+    };
+
+    const handleCloseDeactivate = () => {
+        if (deactivateAccountMutation.isPending || isDeactivating) return;
+        setIsDeactivateOpen(false);
+        setDeactivateError(null);
+        resetDeactivate({ currentPassword: '' });
+    };
+
+    const onDeactivateSubmit = async (data: DeactivateAccountInput) => {
+        setDeactivateError(null);
+        try {
+            await deactivateAccountMutation.mutateAsync(data);
+            setIsDeactivateOpen(false);
+            resetDeactivate({ currentPassword: '' });
+        } catch (err: unknown) {
+            if (isApiError(err)) {
+                if (err.status === 401) {
+                    setDeactivateError('Current password is incorrect.');
+                } else if (err.status === 409) {
+                    setDeactivateError(
+                        err.message || 'Cannot deactivate the last active Platform Admin.',
+                    );
+                } else {
+                    setDeactivateError(err.message || 'Failed to deactivate account.');
+                }
+            } else {
+                setDeactivateError('Something went wrong — your account was not deactivated.');
+            }
+        }
+    };
+
     if (!user) return null;
 
     const isAvatarBusy = uploadAvatarMutation.isPending || deleteAvatarMutation.isPending;
 
     return (
-        <div className="space-y-6 max-w-3xl">
+        <div className="mx-auto max-w-2xl space-y-6">
             <PageHeader
                 title="Account Settings"
-                description="Manage your public username, profile photo, and account password"
+                description="Manage your public username, profile photo, password, and account status"
+                className="text-center md:justify-center"
             />
 
             {/* Profile & Avatar */}
-            <section className="card bg-base-200 border border-base-300 rounded-2xl p-6 shadow-sm space-y-6">
-                <h2 className="font-heading text-lg font-bold text-base-content">Profile</h2>
+            <section className="card bg-base-200 border border-base-300 rounded-3xl p-6 shadow-sm space-y-6">
+                <h2 className="font-heading text-lg font-bold text-base-content text-center">
+                    Profile
+                </h2>
 
-                <div className="flex flex-wrap items-center gap-5">
+                <div className="flex flex-col items-center text-center gap-4">
                     <UserAvatar
                         userId={user.id}
                         email={user.email}
@@ -175,15 +233,15 @@ export function SettingsPage() {
                         avatarUpdatedAt={user.avatarUpdatedAt}
                         size="lg"
                     />
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                         <div className="text-sm font-ui">
                             <p className="font-semibold text-base-content">
                                 {user.username ? `@${user.username}` : user.email}
                             </p>
                             <p className="text-xs text-base-content/60">{user.email}</p>
                         </div>
-                        <div className="flex flex-wrap items-center gap-2">
-                            <label className="btn btn-sm btn-primary text-base-300 font-semibold rounded-xl cursor-pointer">
+                        <div className="flex flex-wrap items-center justify-center gap-2">
+                            <label className="btn btn-primary btn-sm h-9 px-4 text-primary-content font-semibold rounded-xl cursor-pointer">
                                 {uploadAvatarMutation.isPending ? 'Uploading...' : 'Upload Photo'}
                                 <input
                                     ref={fileInputRef}
@@ -200,7 +258,7 @@ export function SettingsPage() {
                                     type="button"
                                     onClick={handleRemoveAvatar}
                                     disabled={isAvatarBusy}
-                                    className="btn btn-sm btn-ghost border border-base-300 rounded-xl"
+                                    className="btn btn-ghost btn-sm h-9 px-4 border border-base-300 rounded-xl"
                                 >
                                     {deleteAvatarMutation.isPending
                                         ? 'Removing...'
@@ -218,7 +276,7 @@ export function SettingsPage() {
                 {avatarError && (
                     <div
                         role="alert"
-                        className="alert alert-error text-sm rounded-xl py-2 px-3 text-base-100"
+                        className="alert alert-error text-sm rounded-xl py-2 px-3 text-error-content font-medium"
                     >
                         <span>{avatarError}</span>
                     </div>
@@ -226,18 +284,18 @@ export function SettingsPage() {
 
                 <form
                     onSubmit={handleSubmitProfile(onProfileSubmit)}
-                    className="space-y-4 pt-4 border-t border-base-300"
+                    className="mx-auto w-full max-w-sm space-y-4 pt-4 border-t border-base-300"
                 >
                     {profileError && (
                         <div
                             role="alert"
-                            className="alert alert-error text-sm rounded-xl py-2 px-3 text-base-100"
+                            className="alert alert-error text-sm rounded-xl py-2 px-3 text-error-content font-medium"
                         >
                             <span>{profileError}</span>
                         </div>
                     )}
 
-                    <div className="form-control max-w-sm">
+                    <div className="form-control">
                         <label htmlFor="settings-username" className="label">
                             <span className="label-text font-medium">Username</span>
                         </label>
@@ -261,11 +319,11 @@ export function SettingsPage() {
                         )}
                     </div>
 
-                    <div>
+                    <div className="flex justify-center">
                         <button
                             type="submit"
                             disabled={isSavingProfile}
-                            className="btn btn-primary btn-sm text-base-300 font-semibold rounded-xl px-5"
+                            className="btn btn-primary btn-sm h-9 text-primary-content font-semibold rounded-xl px-5"
                         >
                             {isSavingProfile ? 'Saving...' : 'Save Profile'}
                         </button>
@@ -274,8 +332,8 @@ export function SettingsPage() {
             </section>
 
             {/* Change Password */}
-            <section className="card bg-base-200 border border-base-300 rounded-2xl p-6 shadow-sm space-y-5">
-                <div>
+            <section className="card bg-base-200 border border-base-300 rounded-3xl p-6 shadow-sm space-y-5">
+                <div className="text-center">
                     <h2 className="font-heading text-lg font-bold text-base-content">
                         Change Password
                     </h2>
@@ -288,7 +346,7 @@ export function SettingsPage() {
                 {passwordError && (
                     <div
                         role="alert"
-                        className="alert alert-error text-sm rounded-xl py-2 px-3 text-base-100"
+                        className="alert alert-error text-sm rounded-xl py-2 px-3 text-error-content font-medium"
                     >
                         <span>{passwordError}</span>
                     </div>
@@ -296,7 +354,7 @@ export function SettingsPage() {
 
                 <form
                     onSubmit={handleSubmitPassword(onPasswordSubmit)}
-                    className="space-y-4 max-w-sm"
+                    className="mx-auto w-full max-w-sm space-y-4"
                 >
                     <div className="form-control">
                         <label htmlFor="settings-current-password" className="label">
@@ -338,15 +396,109 @@ export function SettingsPage() {
                         )}
                     </div>
 
-                    <button
-                        type="submit"
-                        disabled={isChangingPassword}
-                        className="btn btn-primary btn-sm text-base-300 font-semibold rounded-xl px-5"
-                    >
-                        {isChangingPassword ? 'Updating...' : 'Update Password'}
-                    </button>
+                    <div className="flex justify-center">
+                        <button
+                            type="submit"
+                            disabled={isChangingPassword}
+                            className="btn btn-primary btn-sm h-9 text-primary-content font-semibold rounded-xl px-5"
+                        >
+                            {isChangingPassword ? 'Updating...' : 'Update Password'}
+                        </button>
+                    </div>
                 </form>
             </section>
+
+            {/* Danger Zone: Deactivate Account */}
+            <section className="card bg-base-200 border border-error/40 rounded-3xl p-6 shadow-sm space-y-4 text-center">
+                <div>
+                    <h2 className="font-heading text-lg font-bold text-error">Danger Zone</h2>
+                    <p className="text-xs font-ui text-base-content/70 mt-1 max-w-md mx-auto">
+                        Deactivating your account immediately revokes all active sessions and blocks
+                        sign-in until a Platform Admin reactivates it. Your historical audit records
+                        remain preserved.
+                    </p>
+                </div>
+
+                <div className="flex justify-center">
+                    <button
+                        type="button"
+                        onClick={handleOpenDeactivate}
+                        className="btn btn-error btn-outline btn-sm h-9 rounded-xl px-4 font-semibold"
+                    >
+                        Deactivate Account
+                    </button>
+                </div>
+            </section>
+
+            {isDeactivateOpen && (
+                <Modal
+                    isOpen={isDeactivateOpen}
+                    onClose={handleCloseDeactivate}
+                    title="Deactivate Account"
+                    maxWidth="md"
+                >
+                    <form
+                        onSubmit={handleSubmitDeactivate(onDeactivateSubmit)}
+                        className="space-y-4"
+                        noValidate
+                    >
+                        <p className="text-sm font-ui text-base-content/80 leading-relaxed">
+                            You will be signed out immediately and will not be able to sign back in
+                            unless a Platform Admin reactivates your account. Enter your current
+                            password to confirm.
+                        </p>
+
+                        {deactivateError && (
+                            <div
+                                role="alert"
+                                className="alert alert-error text-sm rounded-xl py-2 px-3 text-error-content font-medium"
+                            >
+                                <span>{deactivateError}</span>
+                            </div>
+                        )}
+
+                        <div className="form-control">
+                            <label htmlFor="deactivate-current-password" className="label">
+                                <span className="label-text font-medium">
+                                    Confirm Current Password
+                                </span>
+                            </label>
+                            <input
+                                id="deactivate-current-password"
+                                type="password"
+                                autoComplete="current-password"
+                                {...registerDeactivate('currentPassword')}
+                                className="input input-bordered w-full rounded-xl bg-base-100"
+                            />
+                            {deactivateErrors.currentPassword && (
+                                <span className="mt-1 text-xs text-error" role="alert">
+                                    {deactivateErrors.currentPassword.message}
+                                </span>
+                            )}
+                        </div>
+
+                        <div className="flex items-center justify-end gap-3 pt-4 border-t border-base-300">
+                            <button
+                                type="button"
+                                onClick={handleCloseDeactivate}
+                                disabled={deactivateAccountMutation.isPending || isDeactivating}
+                                className="btn btn-ghost btn-sm h-9 rounded-xl text-sm"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={deactivateAccountMutation.isPending || isDeactivating}
+                                className="btn btn-error btn-sm h-9 px-4 text-error-content font-semibold rounded-xl text-sm"
+                            >
+                                {deactivateAccountMutation.isPending || isDeactivating
+                                    ? 'Deactivating...'
+                                    : 'Confirm Deactivation'}
+                            </button>
+                        </div>
+                    </form>
+                </Modal>
+            )}
         </div>
     );
 }

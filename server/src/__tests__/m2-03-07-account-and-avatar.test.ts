@@ -305,12 +305,13 @@ describe('M2-02, M2-03 & M2-07 Account Profile, Avatar, Password Change & Admin 
         expect(await UserAvatarModel.findOne({ userId: u1Id }).lean()).toBeNull();
         await request(app).get(`/api/users/${u1Id}/avatar`).set('Cookie', u1Cookie).expect(404);
 
-        // Verify cursor pagination on /api/admin/users across 4 users (limit=2)
+        // Verify cursor pagination on /api/admin/users across 4 users (limit=2) with admins sorted first
         const p1 = await request(app)
             .get('/api/admin/users?mode=cursor&limit=2')
             .set('Cookie', platCookie)
             .expect(200);
         expect(p1.body.data).toHaveLength(2);
+        expect(p1.body.data[0].isPlatformAdmin).toBe(true);
         expect(p1.body.hasMore).toBe(true);
         expect(p1.body.nextCursor).toBeTruthy();
 
@@ -333,5 +334,60 @@ describe('M2-02, M2-03 & M2-07 Account Profile, Avatar, Password Change & Admin 
             .get(`/api/admin/users?page=1&cursor=${encodeURIComponent(p1.body.nextCursor)}`)
             .set('Cookie', platCookie)
             .expect(422);
+
+        // Grant platform admin to second user -> appears first alongside original admin and is recorded in /api/admin/audit-log
+        const grantedRes = await request(app)
+            .patch(`/api/admin/users/${u1Id}`)
+            .set('Origin', ORIGIN)
+            .set('Cookie', platCookie)
+            .send({ isPlatformAdmin: true })
+            .expect(200);
+        expect(grantedRes.body.isPlatformAdmin).toBe(true);
+
+        // Admin cannot revoke own admin role or deactivate self via /api/admin/users when another admin exists
+        await request(app)
+            .patch(`/api/admin/users/${platSignup.body.id}`)
+            .set('Origin', ORIGIN)
+            .set('Cookie', platCookie)
+            .send({ isPlatformAdmin: false })
+            .expect(403);
+        await request(app)
+            .patch(`/api/admin/users/${platSignup.body.id}`)
+            .set('Origin', ORIGIN)
+            .set('Cookie', platCookie)
+            .send({ isActive: false })
+            .expect(403);
+
+        // Self-deactivation via POST /api/account/deactivate validates password and logs user_deactivated
+        await request(app)
+            .post('/api/account/deactivate')
+            .set('Origin', ORIGIN)
+            .set('Cookie', coCookie)
+            .send({ currentPassword: 'WrongPassword!' })
+            .expect(401);
+
+        await request(app)
+            .post('/api/account/deactivate')
+            .set('Origin', ORIGIN)
+            .set('Cookie', coCookie)
+            .send({ currentPassword: 'Password123!' })
+            .expect(204);
+
+        // Deactivated user's session is revoked and login fails
+        await request(app).get('/api/auth/me').set('Cookie', coCookie).expect(401);
+        await request(app)
+            .post('/api/auth/login')
+            .set('Origin', ORIGIN)
+            .send({ email: 'comember@example.com', password: 'Password123!' })
+            .expect(401);
+
+        // Platform audit log exposes role changes and self-deactivations without project/secret data
+        const adminAuditRes = await request(app)
+            .get('/api/admin/audit-log?mode=cursor&limit=25')
+            .set('Cookie', platCookie)
+            .expect(200);
+        const actions = adminAuditRes.body.data.map((e: { action: string }) => e.action);
+        expect(actions).toContain('platform_admin_granted');
+        expect(actions).toContain('user_deactivated');
     }, 30000);
 });

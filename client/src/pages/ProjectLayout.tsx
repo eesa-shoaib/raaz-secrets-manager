@@ -137,10 +137,10 @@ export function ProjectLayout() {
     };
 
     return (
-        <div className="mx-2 space-y-6 sm:mx-4">
+        <div className="space-y-6">
             <button
                 type="button"
-                className="btn btn-ghost btn-sm gap-2 px-2 text-base-content/70 hover:text-base-content"
+                className="btn btn-ghost btn-sm h-9 gap-2 px-2 text-base-content/70 hover:text-base-content"
                 onClick={() => {
                     if (
                         typeof window.history.state?.idx === 'number' &&
@@ -167,17 +167,19 @@ export function ProjectLayout() {
                 </svg>
                 Back
             </button>
-            <div className="grid min-w-0 grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_17rem] lg:gap-12">
-                <div className="min-w-0 space-y-6">
-                    <div className="border-b border-base-300">
-                        <TabNav items={tabItems} />
-                    </div>
+
+            <div className="border-b border-base-300">
+                <TabNav items={tabItems} />
+            </div>
+
+            <div className="grid min-w-0 grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-8">
+                <div className="min-w-0">
                     <Outlet />
                 </div>
 
                 <aside
                     aria-label="Project information"
-                    className="min-w-0 self-start rounded-sm border-2 border-solid border-base-300 bg-base-200 p-5 shadow-sm lg:mt-16 lg:p-6"
+                    className="min-w-0 w-full self-start rounded-3xl border border-base-300 bg-base-200 p-6 shadow-sm lg:mt-[3.75rem]"
                 >
                     <div className="flex items-center justify-between gap-2">
                         <p className="font-ui text-xs font-semibold uppercase tracking-wider text-base-content/60">
@@ -187,21 +189,39 @@ export function ProjectLayout() {
                             <button
                                 type="button"
                                 onClick={handleOpenEdit}
-                                className="btn btn-ghost btn-xs rounded-lg text-primary"
+                                aria-label="Edit project details"
+                                title="Edit project details"
+                                className="btn btn-ghost btn-xs btn-square rounded-lg text-base-content/70 hover:text-primary"
                             >
-                                Edit details
+                                <svg
+                                    aria-hidden="true"
+                                    className="h-4 w-4"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                >
+                                    <path d="M12 20h9" />
+                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                                </svg>
                             </button>
                         )}
                     </div>
                     <h1 className="mt-2 break-words font-heading text-xl font-bold text-base-content">
                         {project.name}
                     </h1>
-                    {project.description && (
+                    {project.description ? (
                         <p className="mt-2 break-words whitespace-pre-wrap font-ui text-sm text-base-content/75">
                             {project.description}
                         </p>
+                    ) : (
+                        <p className="mt-2 font-ui text-sm italic text-base-content/45">
+                            No description provided.
+                        </p>
                     )}
-                    <dl className="mt-5 space-y-4 border-t border-base-300 pt-4 text-sm">
+                    <dl className="mt-5 space-y-3 border-t border-base-300 pt-4 text-sm">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                             <dt className="text-base-content/70">Role</dt>
                             <dd className="font-semibold text-base-content capitalize">
@@ -283,14 +303,14 @@ export function ProjectLayout() {
                                 type="button"
                                 onClick={() => setIsEditOpen(false)}
                                 disabled={updateProjectMutation.isPending}
-                                className="btn btn-ghost rounded-xl text-sm"
+                                className="btn btn-ghost btn-sm h-9 rounded-xl text-sm"
                             >
                                 Cancel
                             </button>
                             <button
                                 type="submit"
                                 disabled={updateProjectMutation.isPending}
-                                className="btn btn-primary text-base-300 font-semibold rounded-xl text-sm"
+                                className="btn btn-primary btn-sm h-9 px-4 text-primary-content font-semibold rounded-xl text-sm"
                             >
                                 {updateProjectMutation.isPending ? 'Saving...' : 'Save Changes'}
                             </button>

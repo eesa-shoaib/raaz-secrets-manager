@@ -138,32 +138,74 @@ export function SecretValueCell({
     };
 
     return (
-        <div className="flex items-center gap-2 font-mono text-sm">
+        <div className="flex min-w-0 items-center gap-1.5 font-mono text-sm">
             {state === 'revealed' && revealedValue !== null ? (
                 <>
                     <div aria-live="polite" className="sr-only">
                         Value revealed. It will hide in 30 seconds.
                     </div>
-                    <code className="bg-base-300 px-2 py-1 rounded text-primary font-mono text-xs max-w-xs truncate border border-base-300 select-all">
+                    <code className="bg-base-300 px-2 py-1 rounded text-primary font-mono text-xs max-w-[10rem] sm:max-w-[14rem] truncate border border-base-300 select-all">
                         {revealedValue}
                     </code>
                     <button
                         type="button"
                         onClick={handleCopy}
-                        className="btn btn-ghost btn-xs text-xs font-ui text-base-content/70 hover:text-base-content px-2"
-                        title="Copy secret value"
+                        className="btn btn-ghost btn-xs btn-square shrink-0 rounded-lg text-base-content/70 hover:text-primary"
+                        title={isCopied ? 'Copied!' : 'Copy secret value'}
                         aria-label="Copy secret value"
                     >
-                        {isCopied ? 'Copied!' : 'Copy'}
+                        {isCopied ? (
+                            <svg
+                                aria-hidden="true"
+                                className="h-3.5 w-3.5 text-success"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            >
+                                <path d="M20 6 9 17l-5-5" />
+                            </svg>
+                        ) : (
+                            <svg
+                                aria-hidden="true"
+                                className="h-3.5 w-3.5"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            >
+                                <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                            </svg>
+                        )}
+                        <span className="sr-only">{isCopied ? 'Copied!' : 'Copy'}</span>
                     </button>
                     <button
                         type="button"
                         onClick={handleHide}
-                        className="btn btn-ghost btn-xs text-xs font-ui text-base-content/70 hover:text-base-content px-2"
+                        className="btn btn-ghost btn-xs btn-square shrink-0 rounded-lg text-base-content/70 hover:text-base-content"
                         title="Hide secret value"
                         aria-label="Hide secret value"
                     >
-                        Hide
+                        <svg
+                            aria-hidden="true"
+                            className="h-3.5 w-3.5"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        >
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                            <line x1="1" y1="1" x2="23" y2="23" />
+                        </svg>
+                        <span className="sr-only">Hide</span>
                     </button>
                 </>
             ) : (
@@ -176,13 +218,28 @@ export function SecretValueCell({
                             type="button"
                             disabled={state === 'pending'}
                             onClick={handleRevealClick}
-                            className="btn btn-ghost btn-xs text-xs font-ui text-primary hover:bg-primary/10 px-2.5 font-medium rounded-lg"
+                            className="btn btn-ghost btn-xs text-xs font-ui text-primary hover:bg-primary/10 px-2 font-medium rounded-lg gap-1"
                             aria-label={`Reveal secret ${secretKey}`}
                         >
                             {state === 'pending' ? (
                                 <span className="loading loading-spinner loading-xs text-primary"></span>
                             ) : (
-                                'Reveal'
+                                <>
+                                    <svg
+                                        aria-hidden="true"
+                                        className="h-3.5 w-3.5"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    >
+                                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                                        <circle cx="12" cy="12" r="3" />
+                                    </svg>
+                                    <span>Reveal</span>
+                                </>
                             )}
                         </button>
                     )}

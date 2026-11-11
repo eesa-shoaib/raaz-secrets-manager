@@ -170,10 +170,10 @@ export function ProjectAuditLogPage() {
         // Member-scoped action
         if (entry.targetUser || entry.newRole) {
             return (
-                <div className="flex max-w-40 flex-col items-center gap-1 text-center text-xs font-ui">
+                <div className="flex min-w-0 flex-col items-start gap-1 text-left text-xs font-ui">
                     {entry.targetUser && (
                         <span
-                            className="block max-w-40 truncate text-base-content font-medium"
+                            className="block max-w-full truncate text-base-content font-medium"
                             title={entry.targetUser.email}
                         >
                             {entry.targetUser.email}
@@ -226,7 +226,7 @@ export function ProjectAuditLogPage() {
                             <select
                                 value={actionFilter || ''}
                                 onChange={(e) => updateFilter('action', e.target.value)}
-                                className="select select-bordered select-sm w-full min-w-44 bg-base-300 rounded-xl text-xs font-ui"
+                                className="select select-bordered select-sm h-9 w-full bg-base-300 rounded-xl text-xs font-ui"
                                 aria-label="Filter by action"
                             >
                                 <option value="">All Actions</option>
@@ -246,7 +246,7 @@ export function ProjectAuditLogPage() {
                             <select
                                 value={resultFilter || ''}
                                 onChange={(e) => updateFilter('result', e.target.value)}
-                                className="select select-bordered select-sm w-full min-w-44 bg-base-300 rounded-xl text-xs font-ui"
+                                className="select select-bordered select-sm h-9 w-full bg-base-300 rounded-xl text-xs font-ui"
                                 aria-label="Filter by result"
                             >
                                 <option value="">All Results</option>
@@ -265,7 +265,7 @@ export function ProjectAuditLogPage() {
                             <select
                                 value={environmentFilter || ''}
                                 onChange={(e) => updateFilter('environment', e.target.value)}
-                                className="select select-bordered select-sm w-full min-w-44 bg-base-300 rounded-xl text-xs font-ui"
+                                className="select select-bordered select-sm h-9 w-full bg-base-300 rounded-xl text-xs font-ui"
                                 aria-label="Filter by environment"
                             >
                                 <option value="">All Environments</option>
@@ -301,15 +301,15 @@ export function ProjectAuditLogPage() {
                 />
             ) : entries.length > 0 ? (
                 <div className="space-y-4">
-                    <div className="overflow-x-auto rounded-3xl border border-base-300 bg-base-200 shadow-sm">
-                        <table className="table w-full text-sm">
+                    <div className="overflow-hidden rounded-3xl border border-base-300 bg-base-200 shadow-sm">
+                        <table className="table w-full table-fixed text-sm">
                             <thead>
                                 <tr className="border-b border-base-300 font-heading text-xs text-base-content/60 uppercase tracking-wider">
-                                    <th className="py-4 pl-6 text-center">Time</th>
-                                    <th className="py-4 text-center">User</th>
-                                    <th className="py-4 text-center">Action</th>
-                                    <th className="py-4 text-center">Details</th>
-                                    <th className="py-4 pr-6 text-center">Result</th>
+                                    <th className="w-28 py-4 pl-6">Time</th>
+                                    <th className="w-[24%] py-4">User</th>
+                                    <th className="w-[22%] py-4">Action</th>
+                                    <th className="py-4">Details</th>
+                                    <th className="w-24 py-4 pr-6 text-right">Result</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-base-300/60 font-ui">
@@ -353,7 +353,7 @@ export function ProjectAuditLogPage() {
                                             {/* User */}
                                             <td className="py-4">
                                                 {entry.user ? (
-                                                    <div className="flex items-center gap-2 max-w-44">
+                                                    <div className="flex min-w-0 items-center gap-2">
                                                         <UserAvatar
                                                             userId={entry.user.id}
                                                             email={entry.user.email}
@@ -381,13 +381,13 @@ export function ProjectAuditLogPage() {
                                             </td>
 
                                             {/* Action */}
-                                            <td className="py-4 font-heading font-medium text-xs text-base-content">
+                                            <td className="py-4 font-heading font-medium text-xs text-base-content truncate">
                                                 {formatActionLabel(entry.action)}
                                             </td>
 
                                             {/* Details */}
-                                            <td className="py-4 text-center text-xs">
-                                                <div className="flex justify-center">
+                                            <td className="py-4 text-xs">
+                                                <div className="min-w-0">
                                                     {renderDetails(entry)}
                                                 </div>
                                             </td>

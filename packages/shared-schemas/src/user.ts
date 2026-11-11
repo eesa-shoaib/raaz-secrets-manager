@@ -36,6 +36,13 @@ export const changePasswordInputSchema = z
 export const changePasswordSchema = changePasswordInputSchema;
 export type ChangePasswordInput = z.infer<typeof changePasswordInputSchema>;
 
+export const deactivateAccountInputSchema = z
+    .object({
+        currentPassword: z.string().min(1, 'Current password is required').max(72),
+    })
+    .strict();
+export type DeactivateAccountInput = z.infer<typeof deactivateAccountInputSchema>;
+
 export const profileUpdateInputSchema = z
     .object({
         username: z

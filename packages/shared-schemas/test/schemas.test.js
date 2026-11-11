@@ -5,9 +5,11 @@ import {
     loginSchema,
     publicUserSchema,
     changePasswordInputSchema,
+    deactivateAccountInputSchema,
     profileUpdateInputSchema,
     avatarUploadInputSchema,
     adminUsersQuerySchema,
+    adminAuditLogQuerySchema,
     createProjectSchema,
     updateProjectSchema,
     projectResponseSchema,
@@ -60,6 +62,10 @@ assert.throws(() =>
         newPassword: 'samePassword123',
     })
 );
+
+const deactivateInput = deactivateAccountInputSchema.parse({ currentPassword: 'oldPassword123' });
+assert.strictEqual(deactivateInput.currentPassword, 'oldPassword123');
+assert.throws(() => deactivateAccountInputSchema.parse({ currentPassword: '' }));
 
 const profileUpdated = profileUpdateInputSchema.parse({ username: '  Ali_Dev-01 ' });
 assert.strictEqual(profileUpdated.username, 'ali_dev-01');
@@ -189,6 +195,13 @@ assert.strictEqual(reveal.confirm, true);
 const auditQuery = auditLogQuerySchema.parse({ limit: '50', result: 'allowed' });
 assert.strictEqual(auditQuery.limit, 50);
 assert.strictEqual(auditQuery.result, 'allowed');
+
+const adminAuditQuery = adminAuditLogQuerySchema.parse({
+    action: 'platform_admin_granted',
+    limit: '25',
+});
+assert.strictEqual(adminAuditQuery.action, 'platform_admin_granted');
+assert.throws(() => adminAuditLogQuerySchema.parse({ action: 'reveal' }));
 
 for (const action of [
     'project_updated',

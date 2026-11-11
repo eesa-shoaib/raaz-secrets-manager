@@ -1,7 +1,12 @@
-import type { ChangePasswordInput, ProfileUpdateInput, PublicUser } from '@raaz/shared-schemas';
+import type {
+    ChangePasswordInput,
+    DeactivateAccountInput,
+    ProfileUpdateInput,
+    PublicUser,
+} from '@raaz/shared-schemas';
 import { useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { deleteAvatar, updateProfile, uploadAvatarFile } from '../api/account';
+import { deactivateAccount, deleteAvatar, updateProfile, uploadAvatarFile } from '../api/account';
 import { changePassword } from '../api/auth';
 import { queryKeys } from '../lib/queryClient';
 
@@ -45,6 +50,23 @@ export function useChangePassword() {
             qc.setQueryData(queryKeys.me, null);
             navigate('/login', {
                 state: { reason: 'password-changed' },
+                replace: true,
+            });
+        },
+    });
+}
+
+export function useDeactivateAccount() {
+    const qc = useQueryClient();
+    const navigate = useNavigate();
+
+    return useMutation({
+        mutationFn: (data: DeactivateAccountInput) => deactivateAccount(data),
+        onSuccess: () => {
+            qc.clear();
+            qc.setQueryData(queryKeys.me, null);
+            navigate('/login', {
+                state: { reason: 'account-deactivated' },
                 replace: true,
             });
         },

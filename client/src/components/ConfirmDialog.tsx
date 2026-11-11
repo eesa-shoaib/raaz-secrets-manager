@@ -28,8 +28,8 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
     const confirmBtnClass =
         tone === 'danger'
-            ? 'btn-error text-base-100 font-semibold'
-            : 'btn-primary text-base-300 font-semibold';
+            ? 'btn-error text-error-content font-semibold'
+            : 'btn-primary text-primary-content font-semibold';
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title={title} maxWidth="md">
@@ -37,7 +37,7 @@ export function ConfirmDialog({
                 {error && (
                     <div
                         role="alert"
-                        className="alert alert-error text-sm rounded-xl py-2 px-3 text-base-100 font-medium"
+                        className="alert alert-error text-sm rounded-xl py-2 px-3 text-error-content font-medium"
                     >
                         <span>{error}</span>
                     </div>
@@ -50,7 +50,7 @@ export function ConfirmDialog({
                         type="button"
                         onClick={onClose}
                         disabled={isLoading}
-                        className="btn btn-ghost rounded-xl text-sm"
+                        className="btn btn-ghost btn-sm h-9 rounded-xl text-sm"
                     >
                         {cancelLabel}
                     </button>
@@ -58,7 +58,7 @@ export function ConfirmDialog({
                         type="button"
                         onClick={onConfirm}
                         disabled={isLoading}
-                        className={`btn rounded-xl text-sm ${confirmBtnClass}`}
+                        className={`btn btn-sm h-9 px-4 rounded-xl text-sm ${confirmBtnClass}`}
                     >
                         {isLoading ? (
                             <span className="loading loading-spinner loading-sm"></span>

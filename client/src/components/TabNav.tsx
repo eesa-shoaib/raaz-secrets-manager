@@ -18,7 +18,7 @@ export function TabNav({ items, className = '' }: TabNavProps) {
     return (
         <nav
             aria-label="Project sections"
-            className={`tabs tabs-bordered flex-nowrap overflow-x-auto ${className}`}
+            className={`tabs tabs-bordered !inline-flex w-fit max-w-full flex-nowrap overflow-x-auto ${className}`}
         >
             {visibleItems.map((item) => (
                 <NavLink

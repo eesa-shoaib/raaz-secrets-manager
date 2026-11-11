@@ -1,6 +1,8 @@
 import { avatarContentTypeEnum, avatarUploadInputSchema } from '@raaz/shared-schemas';
 import type { Request, Response } from 'express';
+import { clearAuthCookie } from '../services/auth.service.js';
 import {
+    deactivateOwnAccount,
     getAuthorizedAvatar,
     removeAvatar,
     uploadAvatar,
@@ -46,6 +48,12 @@ export async function uploadAvatarController(req: Request, res: Response): Promi
 export async function removeAvatarController(req: Request, res: Response): Promise<void> {
     const user = await removeAvatar(req.user!.id);
     res.json(user);
+}
+
+export async function deactivateAccountController(req: Request, res: Response): Promise<void> {
+    await deactivateOwnAccount(req.user!.id, req.body.currentPassword);
+    clearAuthCookie(res);
+    res.status(204).send();
 }
 
 export async function getUserAvatarController(req: Request, res: Response): Promise<void> {

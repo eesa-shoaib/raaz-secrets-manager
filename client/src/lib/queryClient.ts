@@ -52,4 +52,6 @@ export const queryKeys = {
     adminUsers: (filters?: { cursor?: string | null; limit?: number }) =>
         ['admin', 'users', filters ?? {}] as const,
     adminUsersPrefix: ['admin', 'users'] as const,
+    adminAudit: (filters?: Record<string, unknown>) => ['admin', 'audit', filters ?? {}] as const,
+    adminAuditPrefix: ['admin', 'audit'] as const,
 };

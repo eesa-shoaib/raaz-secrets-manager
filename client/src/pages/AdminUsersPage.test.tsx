@@ -22,6 +22,7 @@ vi.mock('../api/auth', () => ({
 vi.mock('../api/admin', () => ({
     getAdminUsers: vi.fn(),
     updateAdminUser: vi.fn(),
+    getAdminAuditLog: vi.fn(),
 }));
 
 function makeClient() {
@@ -45,6 +46,12 @@ const ADMIN_ME = {
 describe('AdminUsersPage and RequirePlatformAdmin', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        vi.mocked(adminApi.getAdminAuditLog).mockResolvedValue({
+            data: [],
+            nextCursor: null,
+            hasMore: false,
+            limit: 25,
+        });
         HTMLDialogElement.prototype.showModal = function () {
             this.setAttribute('open', '');
         };
@@ -85,7 +92,7 @@ describe('AdminUsersPage and RequirePlatformAdmin', () => {
         expect(adminApi.getAdminUsers).not.toHaveBeenCalled();
     });
 
-    it('paginates users, toggles activation/admin status, and surfaces 409 last-admin error', async () => {
+    it('sorts admins first, truncates emails, blocks self-revoke/deactivate, opens Manage modal, and shows platform audit log', async () => {
         vi.mocked(authApi.getMe).mockResolvedValue(ADMIN_ME);
         vi.mocked(adminApi.getAdminUsers).mockImplementation(async (params) => {
             if (params?.cursor === 'cursor-page-2') {
@@ -94,7 +101,7 @@ describe('AdminUsersPage and RequirePlatformAdmin', () => {
                         {
                             ...ADMIN_ME,
                             id: 'cccccccccccccccccccccccc',
-                            email: 'bob@raaz.dev',
+                            email: 'very.long.engineer.email.address@organization.example.com',
                             username: null,
                             isPlatformAdmin: false,
                             isActive: false,
@@ -107,7 +114,6 @@ describe('AdminUsersPage and RequirePlatformAdmin', () => {
             }
             return {
                 data: [
-                    ADMIN_ME,
                     {
                         ...ADMIN_ME,
                         id: 'bbbbbbbbbbbbbbbbbbbbbbbb',
@@ -116,6 +122,7 @@ describe('AdminUsersPage and RequirePlatformAdmin', () => {
                         isPlatformAdmin: false,
                         isActive: true,
                     },
+                    ADMIN_ME,
                 ],
                 nextCursor: 'cursor-page-2',
                 hasMore: true,
@@ -123,7 +130,7 @@ describe('AdminUsersPage and RequirePlatformAdmin', () => {
             };
         });
 
-        render(
+        const { container } = render(
             <QueryClientProvider client={makeClient()}>
                 <MemoryRouter initialEntries={['/admin/users']}>
                     <AuthProvider>
@@ -143,25 +150,61 @@ describe('AdminUsersPage and RequirePlatformAdmin', () => {
             expect(screen.getByText('@alice')).toBeTruthy();
         });
 
-        // Page forward via Next button
+        // No Status column, no DaisyUI badges, admins sorted first above regular users
+        expect(screen.queryByRole('columnheader', { name: 'Status' })).toBeNull();
+        expect(container.querySelector('.badge')).toBeNull();
+        const rows = screen.getAllByRole('row').slice(1);
+        expect(rows[0].textContent).toContain('@root');
+        expect(rows[1].textContent).toContain('@alice');
+
+        // Self row opens Manage modal with Revoke Admin & Deactivate Account disabled
+        fireEvent.click(screen.getByRole('button', { name: 'Manage root@raaz.dev' }));
+        expect(screen.getByText('Manage User')).toBeTruthy();
+        expect(
+            (screen.getByRole('button', { name: 'Revoke Admin' }) as HTMLButtonElement).disabled,
+        ).toBe(true);
+        expect(
+            (screen.getByRole('button', { name: 'Deactivate Account' }) as HTMLButtonElement)
+                .disabled,
+        ).toBe(true);
+        fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+
+        // Page forward via Next button to bob's row with long email & inactive status icon
         fireEvent.click(screen.getByRole('button', { name: 'Next' }));
         await waitFor(() => {
-            expect(screen.getByText('bob@raaz.dev')).toBeTruthy();
+            expect(
+                screen.getByText('very.long.engineer.email.address@organization.example.com'),
+            ).toBeTruthy();
         });
+        const longEmailEl = screen.getByText(
+            'very.long.engineer.email.address@organization.example.com',
+        );
+        expect(longEmailEl.className).toContain('truncate');
+        expect(
+            screen.getByRole('img', {
+                name: 'Inactive status for very.long.engineer.email.address@organization.example.com',
+            }),
+        ).toBeTruthy();
 
-        // Attempt to activate bob
+        // Attempt to activate user via Manage modal + inline confirm
         vi.mocked(adminApi.updateAdminUser).mockResolvedValueOnce({
             ...ADMIN_ME,
             id: 'cccccccccccccccccccccccc',
-            email: 'bob@raaz.dev',
+            email: 'very.long.engineer.email.address@organization.example.com',
             username: null,
             isPlatformAdmin: false,
             isActive: true,
         });
-        fireEvent.click(screen.getByRole('button', { name: 'Activate' }));
-        expect(screen.getByText('Activate User Account')).toBeTruthy();
-        const activateButtons = screen.getAllByRole('button', { name: 'Activate' });
-        fireEvent.click(activateButtons[activateButtons.length - 1]);
+        fireEvent.click(
+            screen.getByRole('button', {
+                name: 'Manage very.long.engineer.email.address@organization.example.com',
+            }),
+        );
+        fireEvent.click(screen.getByRole('button', { name: 'Activate Account' }));
+        const confirmActivateButtons = screen.getAllByRole('button', {
+            name: 'Activate Account',
+        });
+        fireEvent.click(confirmActivateButtons[confirmActivateButtons.length - 1]);
 
         await waitFor(() => {
             expect(adminApi.updateAdminUser).toHaveBeenCalledWith('cccccccccccccccccccccccc', {
@@ -169,10 +212,10 @@ describe('AdminUsersPage and RequirePlatformAdmin', () => {
             });
         });
 
-        // Page back and test 409 conflict on self revoke
+        // Navigate back and verify 409 conflict error inside Manage modal when revoking another admin
         fireEvent.click(screen.getByRole('button', { name: 'Previous' }));
         await waitFor(() => {
-            expect(screen.getByText('@root')).toBeTruthy();
+            expect(screen.getByText('@alice')).toBeTruthy();
         });
 
         vi.mocked(adminApi.updateAdminUser).mockRejectedValueOnce({
@@ -182,12 +225,52 @@ describe('AdminUsersPage and RequirePlatformAdmin', () => {
             name: 'ApiError',
         } satisfies ApiError);
 
-        fireEvent.click(screen.getByRole('button', { name: 'Revoke Admin' }));
-        const revokeButtons = screen.getAllByRole('button', { name: 'Revoke Admin' });
-        fireEvent.click(revokeButtons[revokeButtons.length - 1]);
+        fireEvent.click(screen.getByRole('button', { name: 'Manage alice@raaz.dev' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Make Admin' }));
+        const confirmMakeButtons = screen.getAllByRole('button', { name: 'Make Admin' });
+        fireEvent.click(confirmMakeButtons[confirmMakeButtons.length - 1]);
 
         await waitFor(() => {
             expect(screen.getByText('Cannot remove last Platform Admin')).toBeTruthy();
         });
+        fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+
+        // Switch to Audit Log tab and verify role change entry renders
+        vi.mocked(adminApi.getAdminAuditLog).mockResolvedValueOnce({
+            data: [
+                {
+                    id: 'audit-platform-1',
+                    user: {
+                        id: ADMIN_ME.id,
+                        email: ADMIN_ME.email,
+                        username: ADMIN_ME.username,
+                        hasAvatar: false,
+                        avatarUpdatedAt: null,
+                    },
+                    targetUser: {
+                        id: 'bbbbbbbbbbbbbbbbbbbbbbbb',
+                        email: 'alice@raaz.dev',
+                        username: 'alice',
+                        hasAvatar: false,
+                        avatarUpdatedAt: null,
+                    },
+                    action: 'platform_admin_granted',
+                    result: 'allowed',
+                    createdAt: '2026-11-11T10:00:00.000Z',
+                },
+            ],
+            nextCursor: null,
+            hasMore: false,
+            limit: 25,
+        });
+
+        fireEvent.click(screen.getByRole('tab', { name: 'Audit Log' }));
+        await waitFor(() => {
+            expect(screen.getByRole('cell', { name: 'Grant Platform Admin' })).toBeTruthy();
+        });
+        expect(screen.getByText('alice@raaz.dev')).toBeTruthy();
+        expect(screen.getByText('User')).toBeTruthy();
+        expect(screen.getByText('Platform Admin')).toBeTruthy();
     });
 });

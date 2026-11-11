@@ -72,6 +72,16 @@ export const auditLogQuerySchema = z.object({
 });
 export type AuditLogQuery = z.infer<typeof auditLogQuerySchema>;
 
+export const adminAuditLogQuerySchema = z.object({
+    action: platformAuditActionEnum.optional(),
+    result: auditResultEnum.optional(),
+    cursor: z.string().trim().min(1).max(512).optional(),
+    limit: z.coerce.number().int().min(1).max(100).default(25).optional(),
+    mode: z.enum(['cursor']).optional(),
+    page: z.never({ message: 'Audit log does not support page pagination' }).optional(),
+});
+export type AdminAuditLogQuery = z.infer<typeof adminAuditLogQuerySchema>;
+
 export const auditLogActorSchema = z
     .object({
         id: z.string(),

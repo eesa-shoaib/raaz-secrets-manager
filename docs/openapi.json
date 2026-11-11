@@ -464,10 +464,68 @@
                 "responses": { "200": { "description": "Audit entries" } }
             }
         },
+        "/account/deactivate": {
+            "post": {
+                "summary": "Deactivate own user account",
+                "parameters": [{ "$ref": "#/components/parameters/origin" }],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["currentPassword"],
+                                "properties": {
+                                    "currentPassword": { "type": "string", "minLength": 1 }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": { "description": "Account deactivated and session cleared" },
+                    "401": { "description": "Invalid current password" },
+                    "409": { "description": "Last active platform admin" }
+                }
+            }
+        },
+        "/admin/audit-log": {
+            "get": {
+                "summary": "Platform user administration audit log (platform-wide events only)",
+                "parameters": [
+                    {
+                        "name": "action",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "platform_admin_granted",
+                                "platform_admin_revoked",
+                                "user_activated",
+                                "user_deactivated"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "result",
+                        "in": "query",
+                        "schema": { "type": "string", "enum": ["allowed", "denied"] }
+                    },
+                    { "name": "cursor", "in": "query", "schema": { "type": "string" } },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": { "type": "integer", "maximum": 100 }
+                    }
+                ],
+                "responses": { "200": { "description": "Platform audit entries" } }
+            }
+        },
         "/admin/users": {
             "get": {
-                "summary": "List users",
+                "summary": "List users (Platform Admins sorted first)",
                 "parameters": [
+                    { "name": "cursor", "in": "query", "schema": { "type": "string" } },
                     { "name": "page", "in": "query", "schema": { "type": "integer" } },
                     { "name": "limit", "in": "query", "schema": { "type": "integer" } }
                 ],
@@ -495,6 +553,7 @@
                 },
                 "responses": {
                     "200": { "description": "Updated" },
+                    "403": { "description": "Self-demotion or self-deactivation forbidden" },
                     "409": { "description": "Last active platform admin" }
                 }
             }

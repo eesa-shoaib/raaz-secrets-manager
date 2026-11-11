@@ -13,7 +13,8 @@ describe('project card', () => {
                     project={{
                         id: 'project-id',
                         name: 'Example',
-                        description: '',
+                        description: 'Hidden card description',
+                        memberCount: 7,
                         environments: ['development', 'staging', 'production'],
                         status: 'active',
                         role: 'developer',
@@ -25,6 +26,8 @@ describe('project card', () => {
             </MemoryRouter>,
         );
         expect(screen.getByRole('link').getAttribute('href')).toBe('/projects/project-id/secrets');
+        expect(screen.queryByText('Hidden card description')).toBeNull();
+        expect(screen.queryByText(/7 members/i)).toBeNull();
         expect(screen.queryByText('development')).toBeNull();
         expect(screen.queryByText('staging')).toBeNull();
         expect(screen.queryByText('production')).toBeNull();

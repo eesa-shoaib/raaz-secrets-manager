@@ -41,9 +41,13 @@ describe('project back navigation', () => {
     });
     it('shows project details separately from the routed content', () => {
         render(<ProjectLayout />);
-        expect(
-            screen.getByRole('complementary', { name: 'Project information' }).textContent,
-        ).toContain('Test project');
+        const asideText = screen.getByRole('complementary', {
+            name: 'Project information',
+        }).textContent;
+        expect(asideText).toContain('Test project');
+        expect(asideText).toContain('Project summary text');
+        expect(asideText).toContain('Members');
+        expect(asideText).toContain('3');
         expect(screen.getByText('Project')).toBeTruthy();
         expect(screen.getByText('Role')).toBeTruthy();
         expect(screen.queryByText('Active')).toBeNull();

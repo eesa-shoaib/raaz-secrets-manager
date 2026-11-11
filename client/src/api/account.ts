@@ -1,4 +1,9 @@
-import type { AvatarUploadInput, ProfileUpdateInput, PublicUser } from '@raaz/shared-schemas';
+import type {
+    AvatarUploadInput,
+    DeactivateAccountInput,
+    ProfileUpdateInput,
+    PublicUser,
+} from '@raaz/shared-schemas';
 import apiClient from './axios';
 
 export async function updateProfile(data: ProfileUpdateInput): Promise<PublicUser> {
@@ -29,6 +34,10 @@ export async function deleteAvatar(): Promise<PublicUser> {
     const res = await apiClient.delete<PublicUser | { user: PublicUser }>('/account/avatar');
     const body = res.data as { user?: PublicUser } & PublicUser;
     return body.user ?? body;
+}
+
+export async function deactivateAccount(data: DeactivateAccountInput): Promise<void> {
+    await apiClient.post('/account/deactivate', data);
 }
 
 export function getUserAvatarUrl(userId: string, avatarUpdatedAt?: string | Date | null): string {

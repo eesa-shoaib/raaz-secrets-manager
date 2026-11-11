@@ -159,4 +159,14 @@ describe('SecretsPage', () => {
             search: undefined,
         });
     });
+
+    it('omits Last Accessed and Created columns and uses accessible icon buttons', () => {
+        renderSecretsPage();
+
+        expect(screen.queryByRole('columnheader', { name: 'Last Accessed' })).toBeNull();
+        expect(screen.queryByRole('columnheader', { name: 'Created' })).toBeNull();
+        expect(screen.getByRole('button', { name: 'Copy key DATABASE_URL' })).toBeTruthy();
+        expect(screen.getByRole('button', { name: 'Edit DATABASE_URL' })).toBeTruthy();
+        expect(screen.getByRole('button', { name: 'Delete DATABASE_URL' })).toBeTruthy();
+    });
 });

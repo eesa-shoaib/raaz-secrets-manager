@@ -3,7 +3,11 @@ import mongoose from 'mongoose';
 import { PlatformConfigModel } from '../models/PlatformConfig.js';
 import { UserModel } from '../models/User.js';
 import { AppError } from '../utils/app-error.js';
-import { buildCursorCondition, decodeCursor, encodeCursor } from '../utils/pagination.js';
+import {
+    buildAdminUsersCursorCondition,
+    decodeAdminUsersCursor,
+    encodeAdminUsersCursor,
+} from '../utils/pagination.js';
 import { writeAuditEntry } from './audit.service.js';
 
 function publicUser(user: {
@@ -33,7 +37,7 @@ function publicUser(user: {
 export async function listUsers(page: number, limit: number) {
     const [users, total] = await Promise.all([
         UserModel.find()
-            .sort({ createdAt: -1, _id: -1 })
+            .sort({ isPlatformAdmin: -1, createdAt: -1, _id: -1 })
             .skip((page - 1) * limit)
             .limit(limit)
             .lean(),
@@ -43,10 +47,9 @@ export async function listUsers(page: number, limit: number) {
 }
 
 export async function listUsersCursor(cursor?: string, limit = 25) {
-    const scope = 'admin:users';
-    const filter = cursor ? buildCursorCondition(decodeCursor(cursor, scope)) : {};
+    const filter = cursor ? buildAdminUsersCursorCondition(decodeAdminUsersCursor(cursor)) : {};
     const rows = await UserModel.find(filter)
-        .sort({ createdAt: -1, _id: -1 })
+        .sort({ isPlatformAdmin: -1, createdAt: -1, _id: -1 })
         .limit(limit + 1)
         .lean();
 
@@ -54,7 +57,9 @@ export async function listUsersCursor(cursor?: string, limit = 25) {
     const pageRows = hasMore ? rows.slice(0, limit) : rows;
     const last = pageRows.at(-1);
     const nextCursor =
-        hasMore && last ? encodeCursor(scope, last.createdAt, last._id.toString()) : null;
+        hasMore && last
+            ? encodeAdminUsersCursor(last.isPlatformAdmin, last.createdAt, last._id.toString())
+            : null;
 
     return {
         data: pageRows.map(publicUser),
@@ -98,6 +103,13 @@ export async function updateUser(
                     { session },
                 );
                 if (!updated) throw new Error('Platform admin counter is missing');
+            }
+            if (actorId === userId && (!nextActive || !nextAdmin)) {
+                throw new AppError(
+                    403,
+                    'FORBIDDEN',
+                    'Platform Admins cannot revoke their own admin role or deactivate their own account from user management',
+                );
             }
             const activeChanged = user.isActive !== nextActive;
             const roleChanged = user.isPlatformAdmin !== nextAdmin;

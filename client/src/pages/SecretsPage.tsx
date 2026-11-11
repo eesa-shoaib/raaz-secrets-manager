@@ -16,6 +16,7 @@ import { EmptyState, ErrorState } from '../components/FullPageState';
 import { Skeleton } from '../components/LoadingSkeleton';
 import { Modal } from '../components/Modal';
 import { PaginationControls } from '../components/PaginationControls';
+import { SearchInput } from '../components/SearchInput';
 import { SecretValueCell } from '../components/SecretValueCell';
 import { useToast } from '../components/Toaster';
 import { usePermissions } from '../hooks/usePermissions';
@@ -32,19 +33,6 @@ const VALID_ENVIRONMENTS: Environment[] = ['development', 'staging', 'production
 
 function isValidEnvironment(env: string | null): env is Environment {
     return VALID_ENVIRONMENTS.includes(env as Environment);
-}
-
-function formatDate(date: string | Date | null | undefined): string {
-    if (!date) return 'Never';
-    const d = new Date(date);
-    if (isNaN(d.getTime())) return 'Never';
-    return d.toLocaleString(undefined, {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-    });
 }
 
 export function SecretsPage() {
@@ -294,13 +282,12 @@ export function SecretsPage() {
                 />
 
                 <div className="flex flex-wrap items-center gap-3">
-                    <input
-                        type="search"
+                    <SearchInput
                         value={searchInput}
-                        onChange={(e) => setSearchInput(e.target.value)}
+                        onChange={setSearchInput}
                         placeholder="Search keys..."
-                        aria-label="Search secret keys"
-                        className="input input-bordered input-sm w-52 rounded-xl bg-base-200 font-ui text-sm"
+                        ariaLabel="Search secret keys"
+                        className="w-full sm:w-52"
                     />
                     {canCreate !== 'hidden' && (
                         <div
@@ -311,9 +298,10 @@ export function SecretsPage() {
                                 type="button"
                                 disabled={canCreate === 'disabled'}
                                 onClick={handleOpenCreate}
-                                className="btn btn-primary text-base-300 font-semibold rounded-xl flex items-center gap-2 hover:opacity-90 disabled:opacity-40"
+                                className="btn btn-primary btn-sm h-9 px-4 text-primary-content font-semibold rounded-xl flex items-center gap-2 hover:opacity-90 disabled:opacity-40"
                             >
                                 <svg
+                                    aria-hidden="true"
                                     className="w-4 h-4"
                                     fill="none"
                                     viewBox="0 0 24 24"
@@ -344,15 +332,13 @@ export function SecretsPage() {
                     />
                 ) : secrets.length > 0 ? (
                     <div className="space-y-4">
-                        <div className="overflow-x-auto rounded-3xl border border-base-300 bg-base-200 shadow-sm">
-                            <table className="table w-full text-sm">
+                        <div className="overflow-hidden rounded-3xl border border-base-300 bg-base-200 shadow-sm">
+                            <table className="table w-full table-fixed text-sm">
                                 <thead>
                                     <tr className="border-b border-base-300 font-heading text-xs text-base-content/60 uppercase tracking-wider">
-                                        <th className="py-4 pl-6">Key</th>
+                                        <th className="w-[42%] py-4 pl-6">Key</th>
                                         <th className="py-4">Value</th>
-                                        <th className="py-4">Last Accessed</th>
-                                        <th className="py-4">Created</th>
-                                        <th className="py-4 pr-6 text-right">Actions</th>
+                                        <th className="w-24 py-4 pr-6 text-right">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-base-300/60 font-ui">
@@ -361,20 +347,63 @@ export function SecretsPage() {
                                             key={secret.id}
                                             className="hover:bg-base-300/30 transition-colors"
                                         >
-                                            {/* Key + Copy key */}
+                                            {/* Key + Copy key icon */}
                                             <td className="py-4 pl-6 font-mono font-bold text-base-content tracking-tight">
-                                                <div className="flex items-center gap-2">
-                                                    <span>{secret.key}</span>
+                                                <div className="flex min-w-0 items-center gap-2">
+                                                    <span className="truncate" title={secret.key}>
+                                                        {secret.key}
+                                                    </span>
                                                     <button
                                                         type="button"
                                                         onClick={() => handleCopyKey(secret)}
                                                         aria-label={`Copy key ${secret.key}`}
-                                                        title="Copy secret key"
-                                                        className="btn btn-ghost btn-xs font-ui font-normal text-base-content/60 hover:text-base-content"
+                                                        title={
+                                                            copiedKeyId === secret.id
+                                                                ? 'Copied!'
+                                                                : 'Copy secret key'
+                                                        }
+                                                        className="btn btn-ghost btn-xs btn-square shrink-0 rounded-lg text-base-content/60 hover:text-primary"
                                                     >
-                                                        {copiedKeyId === secret.id
-                                                            ? 'Copied!'
-                                                            : 'Copy'}
+                                                        {copiedKeyId === secret.id ? (
+                                                            <svg
+                                                                aria-hidden="true"
+                                                                className="h-3.5 w-3.5 text-success"
+                                                                viewBox="0 0 24 24"
+                                                                fill="none"
+                                                                stroke="currentColor"
+                                                                strokeWidth="2.2"
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                            >
+                                                                <path d="M20 6 9 17l-5-5" />
+                                                            </svg>
+                                                        ) : (
+                                                            <svg
+                                                                aria-hidden="true"
+                                                                className="h-3.5 w-3.5"
+                                                                viewBox="0 0 24 24"
+                                                                fill="none"
+                                                                stroke="currentColor"
+                                                                strokeWidth="2"
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                            >
+                                                                <rect
+                                                                    width="14"
+                                                                    height="14"
+                                                                    x="8"
+                                                                    y="8"
+                                                                    rx="2"
+                                                                    ry="2"
+                                                                />
+                                                                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                                                            </svg>
+                                                        )}
+                                                        <span className="sr-only">
+                                                            {copiedKeyId === secret.id
+                                                                ? 'Copied!'
+                                                                : 'Copy'}
+                                                        </span>
                                                     </button>
                                                 </div>
                                             </td>
@@ -388,16 +417,6 @@ export function SecretsPage() {
                                                     environment={currentEnv}
                                                     canReveal={canReveal}
                                                 />
-                                            </td>
-
-                                            {/* Last Accessed */}
-                                            <td className="py-4 text-xs text-base-content/70">
-                                                {formatDate(secret.lastAccessedAt)}
-                                            </td>
-
-                                            {/* Created */}
-                                            <td className="py-4 text-xs text-base-content/70">
-                                                {formatDate(secret.createdAt)}
                                             </td>
 
                                             {/* Actions */}
@@ -422,10 +441,26 @@ export function SecretsPage() {
                                                                 onClick={() =>
                                                                     handleOpenEdit(secret)
                                                                 }
-                                                                className="btn btn-ghost btn-xs font-ui text-base-content/80 hover:text-base-content disabled:opacity-40"
+                                                                className="btn btn-ghost btn-xs btn-square rounded-lg text-base-content/70 hover:text-primary disabled:opacity-40"
                                                                 aria-label={`Edit ${secret.key}`}
+                                                                title={`Edit ${secret.key}`}
                                                             >
-                                                                Edit
+                                                                <svg
+                                                                    aria-hidden="true"
+                                                                    className="h-4 w-4"
+                                                                    viewBox="0 0 24 24"
+                                                                    fill="none"
+                                                                    stroke="currentColor"
+                                                                    strokeWidth="2"
+                                                                    strokeLinecap="round"
+                                                                    strokeLinejoin="round"
+                                                                >
+                                                                    <path d="M12 20h9" />
+                                                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                                                                </svg>
+                                                                <span className="sr-only">
+                                                                    Edit
+                                                                </span>
                                                             </button>
                                                         </div>
                                                     )}
@@ -434,10 +469,25 @@ export function SecretsPage() {
                                                         <button
                                                             type="button"
                                                             onClick={() => handleOpenDelete(secret)}
-                                                            className="btn btn-ghost btn-xs font-ui text-error/80 hover:text-error hover:bg-error/10"
+                                                            className="btn btn-ghost btn-xs btn-square rounded-lg text-error/80 hover:text-error hover:bg-error/10"
                                                             aria-label={`Delete ${secret.key}`}
+                                                            title={`Delete ${secret.key}`}
                                                         >
-                                                            Delete
+                                                            <svg
+                                                                aria-hidden="true"
+                                                                className="h-4 w-4"
+                                                                viewBox="0 0 24 24"
+                                                                fill="none"
+                                                                stroke="currentColor"
+                                                                strokeWidth="2"
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                            >
+                                                                <path d="M3 6h18" />
+                                                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                                                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                                                            </svg>
+                                                            <span className="sr-only">Delete</span>
                                                         </button>
                                                     )}
                                                 </div>
@@ -490,7 +540,7 @@ export function SecretsPage() {
                                 <button
                                     type="button"
                                     onClick={handleOpenCreate}
-                                    className="btn btn-primary text-base-300 font-semibold rounded-xl"
+                                    className="btn btn-primary btn-sm h-9 px-4 text-primary-content font-semibold rounded-xl"
                                 >
                                     New Secret
                                 </button>
@@ -591,14 +641,14 @@ export function SecretsPage() {
                             type="button"
                             onClick={handleCloseCreate}
                             disabled={createMutation.isPending}
-                            className="btn btn-ghost rounded-xl text-sm"
+                            className="btn btn-ghost btn-sm h-9 rounded-xl text-sm"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={createMutation.isPending}
-                            className="btn btn-primary text-base-300 font-semibold rounded-xl text-sm"
+                            className="btn btn-primary btn-sm h-9 px-4 text-primary-content font-semibold rounded-xl text-sm"
                         >
                             {createMutation.isPending ? (
                                 <span className="loading loading-spinner loading-sm"></span>
@@ -667,14 +717,14 @@ export function SecretsPage() {
                             type="button"
                             onClick={handleCloseEdit}
                             disabled={editMutation.isPending}
-                            className="btn btn-ghost rounded-xl text-sm"
+                            className="btn btn-ghost btn-sm h-9 rounded-xl text-sm"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={editMutation.isPending}
-                            className="btn btn-primary text-base-300 font-semibold rounded-xl text-sm"
+                            className="btn btn-primary btn-sm h-9 px-4 text-primary-content font-semibold rounded-xl text-sm"
                         >
                             {editMutation.isPending ? (
                                 <span className="loading loading-spinner loading-sm"></span>

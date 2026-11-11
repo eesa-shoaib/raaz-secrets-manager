@@ -34,6 +34,7 @@ userSchema.index(
         partialFilterExpression: { username: { $type: 'string' } },
     },
 );
+userSchema.index({ isPlatformAdmin: -1, createdAt: -1, _id: -1 });
 userSchema.index({ createdAt: -1, _id: -1 });
 
 export const UserModel = mongoose.model<UserDoc>('User', userSchema);

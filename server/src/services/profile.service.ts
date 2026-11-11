@@ -1,6 +1,8 @@
 import { publicUserSchema } from '@raaz/shared-schemas';
 import { internalUserAvatarSchema } from '@raaz/shared-schemas/internal';
+import bcrypt from 'bcryptjs';
 import mongoose, { Types } from 'mongoose';
+import { PlatformConfigModel } from '../models/PlatformConfig.js';
 import { ProjectMembershipModel } from '../models/ProjectMembership.js';
 import { UserModel } from '../models/User.js';
 import { UserAvatarModel } from '../models/UserAvatar.js';
@@ -206,4 +208,55 @@ export async function getAuthorizedAvatar(
         byteLength: avatar.byteLength,
         version: avatar.version,
     };
+}
+
+export async function deactivateOwnAccount(userId: string, currentPassword: string): Promise<void> {
+    const existing = await UserModel.findById(userId).select('+passwordHash').lean();
+    if (!existing) {
+        throw new AppError(404, 'NOT_FOUND', 'User not found');
+    }
+
+    const passwordMatches = await bcrypt.compare(currentPassword, existing.passwordHash);
+    if (!passwordMatches) {
+        throw new AppError(401, 'UNAUTHENTICATED', 'Current password is incorrect');
+    }
+
+    const session = await mongoose.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const user = await UserModel.findById(userId).session(session);
+            if (!user || !user.isActive) {
+                throw new AppError(401, 'UNAUTHENTICATED', 'Account is not active');
+            }
+
+            if (user.isPlatformAdmin) {
+                const updated = await PlatformConfigModel.findOneAndUpdate(
+                    { _id: 'singleton', activePlatformAdminCount: { $gt: 1 } },
+                    { $inc: { activePlatformAdminCount: -1 } },
+                    { session },
+                );
+                if (!updated) {
+                    throw new AppError(
+                        409,
+                        'CONFLICT',
+                        'Cannot deactivate the last active platform admin',
+                    );
+                }
+            }
+
+            user.isActive = false;
+            user.tokenVersion += 1;
+            await user.save({ session });
+
+            await writeAuditEntry({
+                session,
+                userId,
+                targetUserId: userId,
+                action: 'user_deactivated',
+                result: 'allowed',
+            });
+        });
+    } finally {
+        await session.endSession();
+    }
 }

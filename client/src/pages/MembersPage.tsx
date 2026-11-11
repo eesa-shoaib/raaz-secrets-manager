@@ -177,9 +177,10 @@ export function MembersPage() {
                     <button
                         type="button"
                         onClick={handleOpenModal}
-                        className="btn btn-primary text-base-300 font-semibold rounded-xl flex items-center gap-2 hover:opacity-90 self-start sm:self-auto"
+                        className="btn btn-primary btn-sm h-9 px-4 text-primary-content font-semibold rounded-xl flex items-center gap-2 hover:opacity-90 self-start sm:self-auto"
                     >
                         <svg
+                            aria-hidden="true"
                             className="w-4 h-4"
                             fill="none"
                             viewBox="0 0 24 24"
@@ -206,15 +207,15 @@ export function MembersPage() {
                 />
             ) : (
                 <div className="space-y-4">
-                    <div className="overflow-x-auto rounded-3xl border border-base-300 bg-base-200 shadow-sm">
-                        <table className="table w-full text-sm">
+                    <div className="overflow-hidden rounded-3xl border border-base-300 bg-base-200 shadow-sm">
+                        <table className="table w-full table-fixed text-sm">
                             <thead>
                                 <tr className="border-b border-base-300 font-heading text-xs text-base-content/60 uppercase tracking-wider">
-                                    <th className="py-4 pl-6">Member</th>
+                                    <th className="w-[44%] py-4 pl-6">Member</th>
                                     <th className="py-4">Role</th>
-                                    <th className="py-4 pr-6 text-right">Joined</th>
+                                    <th className="w-28 py-4 text-right">Joined</th>
                                     {(canChangeRole || canRemove) && (
-                                        <th className="py-4 pr-6 text-right">Actions</th>
+                                        <th className="w-24 py-4 pr-6 text-right">Actions</th>
                                     )}
                                 </tr>
                             </thead>
@@ -225,7 +226,7 @@ export function MembersPage() {
                                         className="hover:bg-base-300/30 transition-colors"
                                     >
                                         <td className="py-4 pl-6">
-                                            <div className="flex items-center gap-3">
+                                            <div className="flex min-w-0 items-center gap-3">
                                                 <UserAvatar
                                                     userId={member.userId}
                                                     email={member.email}
@@ -234,14 +235,24 @@ export function MembersPage() {
                                                     avatarUpdatedAt={member.avatarUpdatedAt}
                                                     size="md"
                                                 />
-                                                <div className="min-w-0">
-                                                    <div className="font-medium text-base-content font-ui truncate">
+                                                <div className="min-w-0 flex-1">
+                                                    <div
+                                                        className="font-medium text-base-content font-ui truncate"
+                                                        title={
+                                                            member.username
+                                                                ? `@${member.username}`
+                                                                : member.email
+                                                        }
+                                                    >
                                                         {member.username
                                                             ? `@${member.username}`
                                                             : member.email}
                                                     </div>
                                                     {member.username && (
-                                                        <div className="text-xs text-base-content/60 truncate">
+                                                        <div
+                                                            className="text-xs text-base-content/60 truncate"
+                                                            title={member.email}
+                                                        >
                                                             {member.email}
                                                         </div>
                                                     )}
@@ -255,31 +266,68 @@ export function MembersPage() {
                                                     : member.role}
                                             </span>
                                         </td>
-                                        <td className="py-4 pr-6 text-right text-xs text-base-content/70">
+                                        <td className="py-4 text-right text-xs text-base-content/70 whitespace-nowrap">
                                             {formatDate(member.createdAt)}
                                         </td>
                                         {(canChangeRole || canRemove) && (
-                                            <td className="py-4 pr-6 text-right whitespace-nowrap">
-                                                {canChangeRole && (
-                                                    <button
-                                                        type="button"
-                                                        className="btn btn-ghost btn-sm"
-                                                        aria-label={`Change role for ${member.email}`}
-                                                        onClick={() => openAction('role', member)}
-                                                    >
-                                                        Change role
-                                                    </button>
-                                                )}
-                                                {canRemove && (
-                                                    <button
-                                                        type="button"
-                                                        className="btn btn-ghost btn-sm text-error"
-                                                        aria-label={`Remove ${member.email}`}
-                                                        onClick={() => openAction('remove', member)}
-                                                    >
-                                                        Remove
-                                                    </button>
-                                                )}
+                                            <td className="py-4 pr-6 text-right">
+                                                <div className="flex items-center justify-end gap-1">
+                                                    {canChangeRole && (
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-ghost btn-xs btn-square rounded-lg text-base-content/70 hover:text-primary"
+                                                            aria-label={`Change role for ${member.email}`}
+                                                            title={`Change role for ${member.email}`}
+                                                            onClick={() =>
+                                                                openAction('role', member)
+                                                            }
+                                                        >
+                                                            <svg
+                                                                aria-hidden="true"
+                                                                className="h-4 w-4"
+                                                                viewBox="0 0 24 24"
+                                                                fill="none"
+                                                                stroke="currentColor"
+                                                                strokeWidth="2"
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                            >
+                                                                <path d="M12 20h9" />
+                                                                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                                                            </svg>
+                                                            <span className="sr-only">
+                                                                Change role
+                                                            </span>
+                                                        </button>
+                                                    )}
+                                                    {canRemove && (
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-ghost btn-xs btn-square rounded-lg text-error/80 hover:text-error hover:bg-error/10"
+                                                            aria-label={`Remove ${member.email}`}
+                                                            title={`Remove ${member.email}`}
+                                                            onClick={() =>
+                                                                openAction('remove', member)
+                                                            }
+                                                        >
+                                                            <svg
+                                                                aria-hidden="true"
+                                                                className="h-4 w-4"
+                                                                viewBox="0 0 24 24"
+                                                                fill="none"
+                                                                stroke="currentColor"
+                                                                strokeWidth="2"
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                            >
+                                                                <path d="M3 6h18" />
+                                                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                                                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                                                            </svg>
+                                                            <span className="sr-only">Remove</span>
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </td>
                                         )}
                                     </tr>
@@ -364,14 +412,14 @@ export function MembersPage() {
                             type="button"
                             onClick={handleCloseModal}
                             disabled={isAdding}
-                            className="btn btn-ghost rounded-xl text-sm"
+                            className="btn btn-ghost btn-sm h-9 rounded-xl text-sm"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={isAdding}
-                            className="btn btn-primary text-base-300 font-semibold rounded-xl text-sm"
+                            className="btn btn-primary btn-sm h-9 px-4 text-primary-content font-semibold rounded-xl text-sm"
                         >
                             {isAdding ? (
                                 <span className="loading loading-spinner loading-sm"></span>
@@ -397,7 +445,7 @@ export function MembersPage() {
                             <span>New role for {action.member.email}</span>
                             <select
                                 aria-label="New role"
-                                className="select select-bordered w-full"
+                                className="select select-bordered select-sm h-9 w-full rounded-xl bg-base-300"
                                 value={nextRole}
                                 onChange={(event) =>
                                     setNextRole(event.target.value as MemberResponse['role'])

@@ -101,6 +101,17 @@ export function LoginPage() {
                         <span>Password updated. Sign in with your new password.</span>
                     </div>
                 )}
+                {reason === 'account-deactivated' && (
+                    <div
+                        role="status"
+                        className="alert alert-warning text-sm rounded-xl py-2.5 px-4 mb-4"
+                    >
+                        <span>
+                            Your account has been deactivated. Contact a Platform Admin to
+                            reactivate it.
+                        </span>
+                    </div>
+                )}
 
                 {/* Form */}
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-3" noValidate>

@@ -17,7 +17,21 @@ vi.mock('../middleware/authenticate.middleware.js', () => ({
 }));
 vi.mock('../services/admin.service.js', () => ({
     listUsers: vi.fn(async (page: number, limit: number) => ({ data: [], page, limit, total: 0 })),
+    listUsersCursor: vi.fn(async (_cursor: string | undefined, limit: number) => ({
+        data: [],
+        nextCursor: null,
+        hasMore: false,
+        limit,
+    })),
     updateUser: vi.fn(async () => ({ id: 'bbbbbbbbbbbbbbbbbbbbbbbb' })),
+}));
+vi.mock('../services/audit.service.js', () => ({
+    listPlatformAuditEntriesCursor: vi.fn(async (q: { limit?: number }) => ({
+        data: [],
+        nextCursor: null,
+        hasMore: false,
+        limit: q.limit ?? 25,
+    })),
 }));
 import { errorHandler } from '../middleware/error.middleware.js';
 import { adminRoutes } from './admin.routes.js';
@@ -29,6 +43,7 @@ describe('platform admin routes', () => {
     app.use(errorHandler);
     it('rejects non-admins before exposing user data', async () => {
         expect((await request(app).get('/api/admin/users')).status).toBe(403);
+        expect((await request(app).get('/api/admin/audit-log')).status).toBe(403);
     });
     it('validates pagination', async () => {
         expect(

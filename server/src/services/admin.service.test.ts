@@ -75,4 +75,29 @@ describe('platform admin invariant', () => {
             expect(session.endSession).toHaveBeenCalled();
         },
     );
+    it.each([{ isActive: false }, { isPlatformAdmin: false }])(
+        'prevents a Platform Admin from revoking own admin role or deactivating self when other admins exist',
+        async (input) => {
+            const session = {
+                withTransaction: async (fn: () => Promise<void>) => fn(),
+                endSession: vi.fn(),
+            };
+            vi.spyOn(mongoose, 'startSession').mockResolvedValue(session as never);
+            const save = vi.fn();
+            const user = {
+                _id: new mongoose.Types.ObjectId(),
+                isActive: true,
+                isPlatformAdmin: true,
+                tokenVersion: 0,
+                save,
+            };
+            vi.spyOn(UserModel, 'findById').mockReturnValue({ session: async () => user } as never);
+            vi.spyOn(PlatformConfigModel, 'findOneAndUpdate').mockResolvedValue({} as never);
+            await expect(
+                updateUser(user._id.toString(), user._id.toString(), input),
+            ).rejects.toMatchObject({ status: 403, code: 'FORBIDDEN' });
+            expect(save).not.toHaveBeenCalled();
+            expect(session.endSession).toHaveBeenCalled();
+        },
+    );
 });

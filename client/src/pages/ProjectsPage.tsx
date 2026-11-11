@@ -10,6 +10,7 @@ import { Modal } from '../components/Modal';
 import { PageHeader } from '../components/PageHeader';
 import { PaginationControls } from '../components/PaginationControls';
 import { ProjectCard } from '../components/ProjectCard';
+import { SearchInput } from '../components/SearchInput';
 import { useToast } from '../components/Toaster';
 import { useAuth } from '../hooks/useAuth';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
@@ -107,18 +108,22 @@ export function ProjectsPage() {
                 description="Manage encrypted secrets and team memberships across environments"
                 actions={
                     <div className="flex flex-wrap items-center gap-3">
-                        <input
-                            type="search"
+                        <SearchInput
                             value={searchInput}
-                            onChange={(e) => setSearchInput(e.target.value)}
+                            onChange={setSearchInput}
+                            onClear={() => {
+                                setDebouncedSearch('');
+                                setCursor(null);
+                                setCursorHistory([]);
+                            }}
                             placeholder="Search projects..."
-                            aria-label="Search projects"
-                            className="input input-bordered input-sm w-56 rounded-xl bg-base-200 font-ui text-sm"
+                            ariaLabel="Search projects"
+                            className="w-full sm:w-64"
                         />
                         <button
                             type="button"
                             onClick={handleOpenModal}
-                            className="btn btn-primary text-base-300 font-semibold rounded-xl flex items-center gap-2 hover:opacity-90"
+                            className="btn btn-primary btn-sm h-9 px-4 text-primary-content font-semibold rounded-xl flex items-center gap-2 hover:opacity-90"
                         >
                             <svg
                                 className="w-5 h-5"
@@ -247,7 +252,7 @@ export function ProjectsPage() {
 
                     <FormField
                         label="Description"
-                        hint="Optional summary shown in project cards and overview (up to 500 characters)"
+                        hint="Optional summary shown in the project overview (up to 500 characters)"
                         error={errors.description?.message}
                     >
                         {({ id, ...props }) => (

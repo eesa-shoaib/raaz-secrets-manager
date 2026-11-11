@@ -135,18 +135,19 @@ A reveal never writes any query key. The secret row is keyed by secret id, so th
 
 ## 2. Shared Widgets
 
-27 active widgets (`ProjectArchivedNotice`, `AdminUsersTable`, `UserAvatar`, `PaginationControls` included). File per row, in `client/src/components/`.
+28 active widgets (`ProjectArchivedNotice`, `AdminUsersTable`, `UserAvatar`, `PaginationControls`, `SearchInput` included). File per row, in `client/src/components/`.
 
 ### 2.1 Chrome and layout
 
-**Shared visual treatment:** use the responsive `page-gutter` class for equal horizontal padding on both sides of page content. The navbar is centered at 88% width with a visible solid border, compact internal padding, a text-only Raaz brand, and a 6rem height. Project navigation uses underlined links; environment selection uses a separately labeled segmented control. Filled buttons have a dark noise texture, while page backgrounds, cards, panels, and modals use a lighter texture. Ghost, link, outline, and transparent buttons stay clear. Keep text and focus indicators readable; visually check contrast when changing theme colors or texture strength. These styles reuse existing components and do not add widgets.
+**Shared visual treatment:** `<main>` uses the same `w-[84%] max-w-9xl mx-auto px-4 sm:px-6` container width as `NavBar` (`88%` outer wrapper inside viewport) so page content edges stay aligned with the header and no horizontal scrollbars occur on desktop. Project navigation uses underlined links; environment selection uses a separately labeled segmented control. Primary actions consistently use `btn-primary btn-sm h-9 text-primary-content`, ghost actions `btn-ghost btn-sm h-9`, and icon row actions `btn-ghost btn-xs btn-square rounded-lg`. Filled buttons have a dark noise texture, while page backgrounds, cards, panels, and modals (`rounded-3xl`) use a lighter texture. Ghost, link, outline, and transparent buttons stay clear. Keep text and focus indicators readable; visually check contrast when changing theme colors or texture strength.
 
 | Widget                  | Purpose                                                                                                |
 | ----------------------- | ------------------------------------------------------------------------------------------------------ |
 | `AppShell`              | Skip link, `NavBar`, `<main id="main">`, `Toaster`                                                     |
 | `NavBar`                | Brand, Projects link, Admin link (Platform Admin only), user dropdown with avatar, Settings, Sign out. |
 | `PageHeader`            | `<h1>` + optional actions slot                                                                         |
-| `TabNav`                | Project tabs and admin tabs. `items: { to, label, visible? }[]`                                        |
+| `TabNav`                | Project tabs (`Secrets`, `Members`, `Audit log`). `items: { to, label, visible? }[]`                   |
+| `SearchInput`           | Shared search input with leading magnifying-glass icon, consistent height (`h-9`), and clear button.   |
 | `StatusPage`            | Variants `not-found`, `unauthorized`                                                                   |
 | `ProjectArchivedNotice` | Replaces project chrome when `GET /projects/:id` returns 403                                           |
 | `PaginationControls`    | Reusable Previous / Next cursor navigation bar with page indicator, loading, and boundary states       |
@@ -175,18 +176,18 @@ A reveal never writes any query key. The secret row is keyed by secret id, so th
 
 ### 2.4 Domain
 
-| Widget            | Purpose                                                                                                            |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `Badge`           | One component, variants `role`, `environment`, `projectStatus`, `auditResult`, `userStatus`. Text always present.  |
-| `UserAvatar`      | Private avatar image with cache-busting `?v=` query and deterministic initials fallback when unset or on error.    |
-| `ProjectCard`     | One project on the list with optional 2-line description preview. Link when active; locked when archived.          |
-| `EnvironmentTabs` | Tab strip above the secrets table. State is `?environment=`.                                                       |
-| `SecretsTable`    | Frame + column headers                                                                                             |
-| `SecretRow`       | One secret: key, Copy key button, value cell, last-accessed, actions                                               |
-| `SecretValueCell` | The reveal state machine, per row. Owns the value in local state.                                                  |
-| `MembersTable`    | Members list with `UserAvatar`, username + email, and optional actions column                                      |
-| `AuditLogTable`   | Project audit entries with actor username/email and `project_updated` / `project_renamed` labels                   |
-| `AdminUsersTable` | Platform users table with `UserAvatar`, status/admin badges, and confirm-gated Activate/Deactivate & Admin actions |
+| Widget            | Purpose                                                                                                                                           |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Badge`           | One component, variants `role`, `environment`, `projectStatus`, `auditResult`, `userStatus`. Text always present.                                 |
+| `UserAvatar`      | Private avatar image with cache-busting `?v=` query and deterministic initials fallback when unset or on error.                                   |
+| `ProjectCard`     | One project on the list showing project name and role (active card links; archived card shows status). Description/count live in `/projects/:id`. |
+| `EnvironmentTabs` | Tab strip above the secrets table. State is `?environment=`.                                                                                      |
+| `SecretsTable`    | Frame + column headers (`Key`, `Value`, `Actions`, without horizontal scrollbars)                                                                 |
+| `SecretRow`       | One secret: truncated key, icon Copy button, `SecretValueCell`, icon Edit/Delete buttons                                                          |
+| `SecretValueCell` | The reveal state machine, per row. Owns the value in local state; icon Copy/Hide buttons when revealed.                                           |
+| `MembersTable`    | Members list with `UserAvatar`, truncated email/username, and icon role-change / remove buttons                                                   |
+| `AuditLogTable`   | Project audit entries with actor username/email and `project_updated` / `project_renamed` labels                                                  |
+| `AdminUsersTable` | Platform users sorted admins-first, truncated emails, active/inactive icons, DaisyUI `kbd` self indicator, and Manage modal trigger.              |
 
 ## 3. Page Specifications
 
@@ -205,9 +206,11 @@ noted, not omitted.
   (`autocomplete="current-password"`, show/hide), Sign in, link to
   `/signup`.
 
-- **Notices** from `state.reason`: `expired` → "Your session has ended.";
+- **Notices** from `state.reason`: `expired` → "Your session has ended. Please sign in again.";
   `logged-out` → "You've been signed out."; `signed-up` → "Account
-  created. Sign in to continue."
+  created. Sign in to continue."; `password-changed` → "Password updated.
+  Sign in with your new password."; `account-deactivated` → "Your account
+  has been deactivated. Contact a Platform Admin to reactivate it."
 
 - **States:** default; submitting; top-right toast, dismissed after 4 s (generic 401 copy,
   429 rate-limit toast "Too many attempts, try again in 15 minutes",
@@ -233,9 +236,9 @@ noted, not omitted.
 
 - **Data:** `useProjects()` → `GET /projects`. Each entry carries `status` and the caller's `role`; archived entries (post-MVP) render as locked cards.
 
-- Active project cards show the project name and role without displaying status, database IDs, or environment labels. Archived cards display their status. IDs remain in links and API requests.
+- Active project cards show only the project name and caller's role without displaying description, member count, status, database IDs, or environment labels. Archived cards display their status. IDs remain in links and API requests.
 
-- **Widgets:** `PageHeader`, grid of `ProjectCard`, `EmptyState`,
+- **Widgets:** `PageHeader`, `SearchInput`, grid of `ProjectCard`, `EmptyState`,
   `ErrorState`, `Skeleton`, `Toaster`.
 
 - **Controls:**
@@ -269,7 +272,7 @@ noted, not omitted.
 
 - **Tabs:** Secrets, Members, Audit log (all members).
 
-- **Layout:** project navigation and routed content occupy the main column; a subtly shadowed, divided information sidebar on the right shows a Project label, project name, and role. Status appears only for archived projects. The project page adds a small inset within the shared page gutter. On smaller screens, the columns stack. Project descriptions are not currently part of the project data model.
+- **Layout:** full-width `TabNav` above a 2-column grid (no inner inset or horizontal scrollbar); routed content occupies the main column while a right-side `Project information` card aligns vertically with the table/key header below page controls and displays the project name, `description`, caller `role`, total `memberCount`, optional archived status, and an icon button (Project Admin only) opening the Edit Project Details modal. On smaller screens, the columns stack.
 
 - **Back:** an inline back control returns to the previous in-app history entry; when opened directly, it returns to `/projects`. The project header does not display the database ID.
 
@@ -293,12 +296,11 @@ noted, not omitted.
 - **Data:** `useSecrets(projectId, environment)`. Missing or unknown
   environment → replace to `development`.
 
-- **Widgets:** `EnvironmentTabs`, `SecretsTable`, `SecretRow`,
+- **Widgets:** `EnvironmentTabs`, `SearchInput`, `SecretsTable`, `SecretRow`,
   `SecretValueCell`, `RevealConfirmDialog`, `Modal`, `ConfirmDialog`,
   `EmptyState`, `ErrorState`, `Skeleton`, `Toaster`.
 
-- **Columns:** Key · Value · Last accessed · Created · Actions.
-  (No "Last edited" column — the only timestamp also moves on reveal.)
+- **Columns:** Key · Value · Actions. (`Last Accessed` and `Created` are omitted to keep the table compact without horizontal scrollbars; Copy key, Edit, and Delete use accessible icon buttons with tooltips and `aria-label`s.)
 
 - **Controls by role:**
 
@@ -412,13 +414,13 @@ Unknown values render raw.
 
 ### 3.8 `AdminUsersPage` — `/admin/users` (and `/admin` redirect)
 
-**Platform user administration. Story 7.**
+**Platform user administration & platform role/activation audit log. Story 7.**
 
 - **Guard:** `RequireAuth` + `RequirePlatformAdmin` (non-admin redirects to `/unauthorized`).
-- **Data:** `useAdminUsers({ cursor, limit })` → `GET /api/admin/users?cursor=&limit=&mode=cursor`.
-- **Widgets:** `PageHeader`, `AdminUsersTable`, `UserAvatar`, `Badge`, `ConfirmDialog`, `PaginationControls`, `Skeleton`, `ErrorState`, `Toaster`.
-- **Columns:** User (`UserAvatar`, username if set, email) · Status (`Active` / `Deactivated`) · Platform Role (`Platform Admin` / `Standard`) · Created · Actions.
-- **Controls:** Activate / Deactivate and Grant / Revoke Platform Admin, each gated by `ConfirmDialog`. `409 CONFLICT` displays the last-active-Platform-Admin invariant message inside the dialog without closing it. Self-demotion or self-deactivation refreshes `['me']` and redirects appropriately. Never displays project or secret data.
+- **Tabs:**
+    1. **Users (`useAdminUsers`):** sorted Platform Admins first, cursor pagination (`limit=25`). Uses `AdminUsersTable` without badges (`<kbd>` for `You`, icon + text for Platform Role, inline active/inactive status icon beside user, truncated email, icon Manage trigger). Clicking Manage opens a single `Manage User` modal containing Make/Revoke Admin and Activate/Deactivate actions with inline confirmation and `409 CONFLICT` error handling. Self-revocation and self-deactivation from the Users page are disabled in the modal (and enforced `403` server-side).
+    2. **Audit Log (`useAdminAuditLog`):** `GET /api/admin/audit-log` displaying platform-wide role & activation events (`platform_admin_granted`, `platform_admin_revoked`, `user_activated`, `user_deactivated`) with Action and Result filters and cursor pagination. Never displays project or secret data.
+- **Widgets:** `PageHeader`, `AdminUsersTable`, `UserAvatar`, `Modal`, `PaginationControls`, `Skeleton`, `ErrorState`, `Toaster`.
 
 ### 3.9 `StatusPage` — `/unauthorized` and `*`
 
@@ -440,7 +442,8 @@ promise.
 - **Guard:** `RequireAuth`.
 - **Sections:**
     1. **Profile:** read-only email (`me.email`), optional `username` input (`3–30` lowercase `[a-z0-9_-]`, or clear to unset) saving via `PATCH /api/account/profile`, and profile picture controls (`UserAvatar` preview, Upload/Replace PNG/JPEG/WebP ≤ 2 MiB via `PUT /api/account/avatar`, Remove via `DELETE /api/account/avatar`).
-    2. **Security:** change password form (`currentPassword`, `newPassword`, `confirmNewPassword` with `8–72` chars and mismatch/same-password checks) submitting to `POST /api/auth/change-password`. Wrong current password (`401`) maps to `currentPassword` field error without logging out; success clears `queryClient` and redirects to `/login` with `state.reason = 'password-changed'`.
+    2. **Security:** change password form (`currentPassword`, `newPassword` with `8–72` chars) submitting to `POST /api/auth/change-password`. Wrong current password (`401`) surfaces an inline alert without logging out; success clears `queryClient` and redirects to `/login` with `state.reason = 'password-changed'`.
+    3. **Danger Zone (Deactivate Account):** `Deactivate Account` opens a password-confirmed modal submitting `POST /api/account/deactivate`. Wrong password returns `401`, last active Platform Admin returns `409 CONFLICT`, and `204` clears `queryClient` and redirects to `/login` with `state.reason = 'account-deactivated'`.
 
 ## 4. Per-Role UI Map
 

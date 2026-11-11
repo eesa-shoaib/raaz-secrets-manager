@@ -1,4 +1,8 @@
-import { auditLogEntrySchema, type AuditLogQuery } from '@raaz/shared-schemas';
+import {
+    auditLogEntrySchema,
+    type AdminAuditLogQuery,
+    type AuditLogQuery,
+} from '@raaz/shared-schemas';
 import { Types, type ClientSession } from 'mongoose';
 import { AuditLogEntryModel, type AuditLogEntryDoc } from '../models/AuditLogEntry.js';
 import { UserModel } from '../models/User.js';
@@ -84,6 +88,37 @@ export async function listProjectAuditEntriesCursor(projectId: string, filters: 
     const baseCriteria: Record<string, unknown> = {
         projectId: new Types.ObjectId(projectId),
         ...criteria,
+    };
+    const filter = decoded ? { $and: [baseCriteria, buildCursorCondition(decoded)] } : baseCriteria;
+
+    const rows = await AuditLogEntryModel.find(filter)
+        .sort({ createdAt: -1, _id: -1 })
+        .limit(limit + 1)
+        .lean();
+
+    const hasMore = rows.length > limit;
+    const items = hasMore ? rows.slice(0, limit) : rows;
+    const last = items[items.length - 1];
+    const nextCursor =
+        hasMore && last ? encodeCursor(scope, last.createdAt, last._id.toString()) : null;
+
+    return {
+        data: await hydrateAuditEntries(items),
+        nextCursor,
+        hasMore,
+        limit,
+    };
+}
+
+export async function listPlatformAuditEntriesCursor(filters: AdminAuditLogQuery) {
+    const limit = filters.limit ?? 25;
+    const scope = `admin:audit:${filters.action ?? ''}:${filters.result ?? ''}`;
+    const decoded = filters.cursor ? decodeCursor(filters.cursor, scope) : null;
+
+    const baseCriteria: Record<string, unknown> = {
+        projectId: null,
+        ...(filters.action !== undefined ? { action: filters.action } : {}),
+        ...(filters.result !== undefined ? { result: filters.result } : {}),
     };
     const filter = decoded ? { $and: [baseCriteria, buildCursorCondition(decoded)] } : baseCriteria;
 

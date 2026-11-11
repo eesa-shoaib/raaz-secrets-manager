@@ -24,6 +24,7 @@ vi.mock('../api/account', () => ({
     uploadAvatarFile: vi.fn(),
     uploadAvatarBase64: vi.fn(),
     deleteAvatar: vi.fn(),
+    deactivateAccount: vi.fn(),
     getUserAvatarUrl: vi.fn((id: string) => `/api/users/${id}/avatar`),
 }));
 
@@ -170,6 +171,69 @@ describe('SettingsPage', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Update Password' }));
         await waitFor(() => {
             expect(screen.getByTestId('login-reason').textContent).toBe('password-changed');
+        });
+        expect(client.getQueryData(queryKeys.me)).toBeNull();
+    });
+
+    it('handles self-deactivation 401/409 errors and redirects to login on 204', async () => {
+        HTMLDialogElement.prototype.showModal = function () {
+            this.setAttribute('open', '');
+        };
+        HTMLDialogElement.prototype.close = function () {
+            this.removeAttribute('open');
+        };
+
+        const { client } = renderSettings();
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: 'Deactivate Account' })).toBeTruthy();
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: 'Deactivate Account' }));
+
+        await waitFor(() => {
+            expect(screen.getByLabelText('Confirm Current Password')).toBeTruthy();
+        });
+
+        fireEvent.change(screen.getByLabelText('Confirm Current Password'), {
+            target: { value: 'wrongpassword' },
+        });
+
+        vi.mocked(accountApi.deactivateAccount).mockRejectedValueOnce({
+            status: 401,
+            code: 'UNAUTHENTICATED',
+            message: 'Invalid password',
+            name: 'ApiError',
+        } satisfies ApiError);
+
+        fireEvent.click(screen.getByRole('button', { name: 'Confirm Deactivation' }));
+
+        await waitFor(() => {
+            expect(screen.getByRole('alert').textContent).toContain(
+                'Current password is incorrect.',
+            );
+        });
+        expect(screen.queryByTestId('login-reason')).toBeNull();
+
+        vi.mocked(accountApi.deactivateAccount).mockRejectedValueOnce({
+            status: 409,
+            code: 'CONFLICT',
+            message: 'Cannot deactivate the last active Platform Admin.',
+            name: 'ApiError',
+        } satisfies ApiError);
+
+        fireEvent.click(screen.getByRole('button', { name: 'Confirm Deactivation' }));
+
+        await waitFor(() => {
+            expect(screen.getByRole('alert').textContent).toContain(
+                'Cannot deactivate the last active Platform Admin.',
+            );
+        });
+
+        vi.mocked(accountApi.deactivateAccount).mockResolvedValueOnce(undefined);
+        fireEvent.click(screen.getByRole('button', { name: 'Confirm Deactivation' }));
+
+        await waitFor(() => {
+            expect(screen.getByTestId('login-reason').textContent).toBe('account-deactivated');
         });
         expect(client.getQueryData(queryKeys.me)).toBeNull();
     });
