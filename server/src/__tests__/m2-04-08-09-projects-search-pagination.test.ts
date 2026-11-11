@@ -272,15 +272,20 @@ describe('M2-04, M2-08, M2-09: Project Details, Literal Search, and Cursor Pagin
         let cursor: string | null = null;
         let pages = 0;
         do {
-            const qs = cursor
+            const qs: string = cursor
                 ? `?mode=cursor&limit=2&cursor=${encodeURIComponent(cursor)}`
                 : '?mode=cursor&limit=2';
             const res = await request(app).get(`/api/projects${qs}`).set('Cookie', cookie);
             expect(res.status).toBe(200);
             pages += 1;
-            for (const p of res.body.data) seenProjects.push(p.id);
-            cursor = res.body.nextCursor;
-            if (!res.body.hasMore) expect(cursor).toBeNull();
+            const body = res.body as {
+                data: Array<{ id: string }>;
+                nextCursor: string | null;
+                hasMore: boolean;
+            };
+            for (const p of body.data) seenProjects.push(p.id);
+            cursor = body.nextCursor;
+            if (!body.hasMore) expect(cursor).toBeNull();
         } while (cursor);
         expect(pages).toBe(3);
         expect(new Set(seenProjects).size).toBe(5);
@@ -369,20 +374,24 @@ describe('M2-04, M2-08, M2-09: Project Details, Literal Search, and Cursor Pagin
         let auditCursor: string | null = null;
         let actorHasUsername = false;
         do {
-            const qs = auditCursor
+            const qs: string = auditCursor
                 ? `?mode=cursor&limit=3&cursor=${encodeURIComponent(auditCursor)}`
                 : '?mode=cursor&limit=3';
             const res = await request(app)
                 .get(`/api/projects/${projA}/audit-log${qs}`)
                 .set('Cookie', cookie);
             expect(res.status).toBe(200);
-            for (const entry of res.body.data) {
+            const body = res.body as {
+                data: Array<{ id: string; user?: { username?: string | null } }>;
+                nextCursor: string | null;
+            };
+            for (const entry of body.data) {
                 seenAuditIds.push(entry.id);
                 if (entry.user?.username === 'pag_admin') {
                     actorHasUsername = true;
                 }
             }
-            auditCursor = res.body.nextCursor;
+            auditCursor = body.nextCursor;
         } while (auditCursor);
         expect(actorHasUsername).toBe(true);
         expect(new Set(seenAuditIds).size).toBe(seenAuditIds.length);
