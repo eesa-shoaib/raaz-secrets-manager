@@ -28,11 +28,28 @@ export const queryClient = new QueryClient({
 export const queryKeys = {
     me: ['me'] as const,
     projects: ['projects'] as const,
+    projectsList: (filters?: { search?: string; cursor?: string | null; limit?: number }) =>
+        ['projects', 'list', filters ?? {}] as const,
     project: (id: string) => ['project', id] as const,
-    secrets: (projectId: string, environment: string) =>
-        ['secrets', projectId, environment] as const,
-    members: (projectId: string) => ['members', projectId] as const,
+    secrets: (
+        projectId: string,
+        environment: string,
+        filters?: { search?: string; cursor?: string | null; limit?: number },
+    ) =>
+        filters
+            ? (['secrets', projectId, environment, filters] as const)
+            : (['secrets', projectId, environment] as const),
+    secretsPrefix: (projectId: string, environment?: string) =>
+        environment
+            ? (['secrets', projectId, environment] as const)
+            : (['secrets', projectId] as const),
+    members: (projectId: string, filters?: { cursor?: string | null; limit?: number }) =>
+        filters ? (['members', projectId, filters] as const) : (['members', projectId] as const),
+    membersPrefix: (projectId: string) => ['members', projectId] as const,
     audit: (projectId: string, filters?: Record<string, unknown>) =>
         filters ? (['audit', projectId, filters] as const) : (['audit', projectId] as const),
     auditPrefix: (projectId: string) => ['audit', projectId] as const,
+    adminUsers: (filters?: { cursor?: string | null; limit?: number }) =>
+        ['admin', 'users', filters ?? {}] as const,
+    adminUsersPrefix: ['admin', 'users'] as const,
 };

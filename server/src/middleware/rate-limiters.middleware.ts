@@ -38,4 +38,25 @@ export const revealLimiter = rateLimit({
     },
 });
 
-export const rateLimiters = { authLimiter, signupLimiter, revealLimiter };
+export const passwordChangeLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => req.user?.id ?? req.ip ?? 'unknown',
+    handler: (_req, res) => {
+        res.status(429).json({
+            error: {
+                code: 'RATE_LIMITED',
+                message: 'Too many password change attempts, try again in 15 minutes',
+            },
+        });
+    },
+});
+
+export const rateLimiters = {
+    authLimiter,
+    signupLimiter,
+    revealLimiter,
+    passwordChangeLimiter,
+};

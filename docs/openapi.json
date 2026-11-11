@@ -99,6 +99,42 @@
                 "responses": { "204": { "description": "Logged out" } }
             }
         },
+        "/auth/change-password": {
+            "post": {
+                "summary": "Change own password and invalidate sessions",
+                "parameters": [{ "$ref": "#/components/parameters/origin" }],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["currentPassword", "newPassword"],
+                                "properties": {
+                                    "currentPassword": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "minLength": 1,
+                                        "maxLength": 72
+                                    },
+                                    "newPassword": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "minLength": 8,
+                                        "maxLength": 72
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": { "description": "Password updated and session cleared" },
+                    "401": { "description": "Current password incorrect or unauthenticated" },
+                    "422": { "description": "Validation error" }
+                }
+            }
+        },
         "/auth/me": {
             "get": {
                 "summary": "Current user",
@@ -108,9 +144,95 @@
                 }
             }
         },
+        "/account/profile": {
+            "patch": {
+                "summary": "Update own username",
+                "parameters": [{ "$ref": "#/components/parameters/origin" }],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["username"],
+                                "properties": {
+                                    "username": {
+                                        "type": "string",
+                                        "nullable": true,
+                                        "example": "ali_dev"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": { "description": "Updated user profile" },
+                    "409": { "description": "Username already taken" },
+                    "422": { "description": "Invalid username" }
+                }
+            }
+        },
+        "/account/avatar": {
+            "put": {
+                "summary": "Upload or replace own avatar",
+                "parameters": [{ "$ref": "#/components/parameters/origin" }],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["contentType", "data"],
+                                "properties": {
+                                    "contentType": {
+                                        "type": "string",
+                                        "enum": ["image/png", "image/jpeg", "image/webp"]
+                                    },
+                                    "data": {
+                                        "type": "string",
+                                        "description": "Base64-encoded image bytes"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": { "description": "Avatar updated" },
+                    "422": { "description": "Invalid or oversized image" }
+                }
+            },
+            "delete": {
+                "summary": "Remove own avatar",
+                "parameters": [{ "$ref": "#/components/parameters/origin" }],
+                "responses": {
+                    "200": { "description": "Avatar removed" }
+                }
+            }
+        },
+        "/users/{userId}/avatar": {
+            "parameters": [{ "$ref": "#/components/parameters/userId" }],
+            "get": {
+                "summary": "Read user avatar binary (owner, shared project member, or Platform Admin)",
+                "responses": {
+                    "200": { "description": "Normalized raster image binary" },
+                    "404": { "description": "No avatar or caller not authorized" }
+                }
+            }
+        },
         "/projects": {
             "get": {
                 "summary": "List projects",
+                "parameters": [
+                    { "name": "cursor", "in": "query", "schema": { "type": "string" } },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": { "type": "integer", "maximum": 100 }
+                    },
+                    { "name": "search", "in": "query", "schema": { "type": "string" } }
+                ],
                 "responses": { "200": { "description": "Projects" } }
             },
             "post": {
@@ -123,7 +245,10 @@
                             "schema": {
                                 "type": "object",
                                 "required": ["name"],
-                                "properties": { "name": { "type": "string", "example": "Demo" } }
+                                "properties": {
+                                    "name": { "type": "string", "example": "Demo" },
+                                    "description": { "type": "string", "maxLength": 500 }
+                                }
                             }
                         }
                     }
@@ -136,7 +261,30 @@
             "get": {
                 "summary": "Get project",
                 "responses": {
-                    "200": { "description": "Project" },
+                    "200": { "description": "Project with role and memberCount" },
+                    "404": { "description": "Not found or not a member" }
+                }
+            },
+            "patch": {
+                "summary": "Update project name or description (Project Admin only)",
+                "parameters": [{ "$ref": "#/components/parameters/origin" }],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+                                    "description": { "type": "string", "maxLength": 500 }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": { "description": "Updated project" },
+                    "403": { "description": "Forbidden (logged as denied)" },
                     "404": { "description": "Not found or not a member" }
                 }
             }

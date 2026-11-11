@@ -3,6 +3,7 @@ export type Role = 'projectAdmin' | 'developer' | 'auditor' | null;
 export type Environment = 'development' | 'staging' | 'production';
 
 export type Action =
+    | 'project.edit'
     | 'secrets.list'
     | 'secrets.create'
     | 'secrets.reveal'
@@ -16,6 +17,7 @@ export type Action =
 
 const permissionMatrix: Record<Exclude<Role, null>, Record<Action, Permission>> = {
     projectAdmin: {
+        'project.edit': 'enabled',
         'secrets.list': 'enabled',
         'secrets.create': 'enabled',
         'secrets.reveal': 'enabled',
@@ -28,6 +30,7 @@ const permissionMatrix: Record<Exclude<Role, null>, Record<Action, Permission>> 
         'audit.list': 'enabled',
     },
     developer: {
+        'project.edit': 'hidden',
         'secrets.list': 'enabled',
         'secrets.create': 'disabled',
         'secrets.reveal': 'enabled',
@@ -40,6 +43,7 @@ const permissionMatrix: Record<Exclude<Role, null>, Record<Action, Permission>> 
         'audit.list': 'enabled',
     },
     auditor: {
+        'project.edit': 'hidden',
         'secrets.list': 'enabled',
         'secrets.create': 'hidden',
         'secrets.reveal': 'hidden',
@@ -76,6 +80,7 @@ export function getRolePermissions(
     environment?: Environment,
 ): Record<Action, Permission> {
     const actions: Action[] = [
+        'project.edit',
         'secrets.list',
         'secrets.create',
         'secrets.reveal',
@@ -114,6 +119,7 @@ export function canViewAuditLog(role: Role): boolean {
 }
 
 export const PERMISSION_ACTIONS: { value: Action; label: string; category: string }[] = [
+    { value: 'project.edit', label: 'Edit project details', category: 'Project' },
     { value: 'secrets.list', label: 'List secrets', category: 'Secrets' },
     { value: 'secrets.create', label: 'Create secrets', category: 'Secrets' },
     { value: 'secrets.reveal', label: 'Reveal secrets', category: 'Secrets' },

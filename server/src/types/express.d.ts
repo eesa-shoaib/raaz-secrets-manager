@@ -4,6 +4,9 @@ declare global {
             user?: {
                 id: string;
                 email: string;
+                username?: string | null;
+                hasAvatar?: boolean;
+                avatarUpdatedAt?: Date | null;
                 isPlatformAdmin: boolean;
                 isActive: boolean;
                 createdAt: Date;

@@ -2,21 +2,40 @@ import { auditLogEntrySchema, type AuditLogQuery } from '@raaz/shared-schemas';
 import { Types, type ClientSession } from 'mongoose';
 import { AuditLogEntryModel, type AuditLogEntryDoc } from '../models/AuditLogEntry.js';
 import { UserModel } from '../models/User.js';
+import { buildCursorCondition, decodeCursor, encodeCursor } from '../utils/pagination.js';
 
-export async function listProjectAuditEntries(projectId: string, filters: AuditLogQuery) {
-    const { limit = 100, ...criteria } = filters;
-    const entries = await AuditLogEntryModel.find({ projectId, ...criteria })
-        .sort({ createdAt: -1, _id: -1 })
-        .limit(limit)
-        .lean();
+async function hydrateAuditEntries(
+    entries: (Pick<
+        AuditLogEntryDoc,
+        | 'action'
+        | 'result'
+        | 'createdAt'
+        | 'userId'
+        | 'targetUserId'
+        | 'secretKey'
+        | 'environment'
+        | 'previousRole'
+        | 'newRole'
+    > & { _id: Types.ObjectId })[],
+) {
+    if (entries.length === 0) return [];
     const ids = entries
         .flatMap((entry) => [entry.userId, entry.targetUserId])
         .filter((id): id is Types.ObjectId => id != null);
     const users = await UserModel.find({ _id: { $in: ids } })
-        .select('email')
+        .select('email username hasAvatar avatarUpdatedAt')
         .lean();
     const actors = new Map(
-        users.map((user) => [user._id.toString(), { id: user._id.toString(), email: user.email }]),
+        users.map((user) => [
+            user._id.toString(),
+            {
+                id: user._id.toString(),
+                email: user.email,
+                username: user.username ?? null,
+                hasAvatar: user.hasAvatar ?? false,
+                avatarUpdatedAt: user.avatarUpdatedAt ?? null,
+            },
+        ]),
     );
     return entries.map((entry) =>
         auditLogEntrySchema.parse({
@@ -34,6 +53,57 @@ export async function listProjectAuditEntries(projectId: string, filters: AuditL
             ...(entry.newRole != null ? { newRole: entry.newRole } : {}),
         }),
     );
+}
+
+function buildAuditCriteria(filters: AuditLogQuery): Record<string, unknown> {
+    return {
+        ...(filters.action !== undefined ? { action: filters.action } : {}),
+        ...(filters.result !== undefined ? { result: filters.result } : {}),
+        ...(filters.environment !== undefined ? { environment: filters.environment } : {}),
+    };
+}
+
+export async function listProjectAuditEntries(projectId: string, filters: AuditLogQuery) {
+    const limit = filters.limit ?? 100;
+    const entries = await AuditLogEntryModel.find({
+        projectId,
+        ...buildAuditCriteria(filters),
+    })
+        .sort({ createdAt: -1, _id: -1 })
+        .limit(limit)
+        .lean();
+    return hydrateAuditEntries(entries);
+}
+
+export async function listProjectAuditEntriesCursor(projectId: string, filters: AuditLogQuery) {
+    const limit = filters.limit ?? 25;
+    const criteria = buildAuditCriteria(filters);
+    const scope = `audit:${projectId}:${filters.action ?? ''}:${filters.result ?? ''}:${filters.environment ?? ''}`;
+    const decoded = filters.cursor ? decodeCursor(filters.cursor, scope) : null;
+
+    const baseCriteria: Record<string, unknown> = {
+        projectId: new Types.ObjectId(projectId),
+        ...criteria,
+    };
+    const filter = decoded ? { $and: [baseCriteria, buildCursorCondition(decoded)] } : baseCriteria;
+
+    const rows = await AuditLogEntryModel.find(filter)
+        .sort({ createdAt: -1, _id: -1 })
+        .limit(limit + 1)
+        .lean();
+
+    const hasMore = rows.length > limit;
+    const items = hasMore ? rows.slice(0, limit) : rows;
+    const last = items[items.length - 1];
+    const nextCursor =
+        hasMore && last ? encodeCursor(scope, last.createdAt, last._id.toString()) : null;
+
+    return {
+        data: await hydrateAuditEntries(items),
+        nextCursor,
+        hasMore,
+        limit,
+    };
 }
 
 interface WriteAuditEntryParams {
@@ -61,6 +131,7 @@ export async function writeAuditEntry(params: WriteAuditEntryParams): Promise<vo
         'member_removed',
         'project_created',
         'project_renamed',
+        'project_updated',
         'project_environments_changed',
         'project_archived',
         'project_restored',
@@ -71,6 +142,10 @@ export async function writeAuditEntry(params: WriteAuditEntryParams): Promise<vo
         'platform_admin_granted',
         'platform_admin_revoked',
         'bootstrap_admin',
+        'password_changed',
+        'profile_updated',
+        'avatar_updated',
+        'avatar_removed',
     ];
     if (
         (!projectActions.includes(params.action) && !platformActions.includes(params.action)) ||

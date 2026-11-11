@@ -41,7 +41,7 @@ const auditSchema = new mongoose.Schema<AuditLogEntryDoc>(
     { timestamps: { createdAt: true, updatedAt: false } },
 );
 
-auditSchema.index({ projectId: 1, createdAt: -1 });
-auditSchema.index({ createdAt: -1 });
+auditSchema.index({ projectId: 1, createdAt: -1, _id: -1 });
+auditSchema.index({ createdAt: -1, _id: -1 });
 
 export const AuditLogEntryModel = mongoose.model<AuditLogEntryDoc>('AuditLogEntry', auditSchema);

@@ -14,6 +14,10 @@ const fieldGuidance: Record<string, string> = {
     'body.email': 'email must be a valid email address',
     'body.password': 'password does not meet the requirements for this request',
     'body.name': 'name must contain 1–100 characters',
+    'body.description': 'description must be 500 characters or fewer',
+    'body.username':
+        'username must be 3–30 characters of lowercase letters, numbers, underscores, or hyphens',
+    'body.newPassword': 'newPassword must be 8–72 characters and different from currentPassword',
     'body.role': 'role must be projectAdmin, developer, or auditor',
     'body.confirm': 'confirm must be a boolean',
 };
@@ -21,7 +25,14 @@ const fieldGuidance: Record<string, string> = {
 export function validate(schema: AnyZodObject) {
     return asyncHandler(async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
         try {
-            await schema.parseAsync({ body: req.body, query: req.query, params: req.params });
+            const parsed = await schema.parseAsync({
+                body: req.body,
+                query: req.query,
+                params: req.params,
+            });
+            if (parsed.body !== undefined) req.body = parsed.body;
+            if (parsed.query !== undefined) req.query = parsed.query;
+            if (parsed.params !== undefined) req.params = parsed.params;
             next();
         } catch (err) {
             if (err instanceof ZodError) {

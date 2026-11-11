@@ -1,6 +1,13 @@
 import type { AddMemberInput, UpdateMemberRoleInput } from '@raaz/shared-schemas';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { getMembers, addMember, changeMemberRole, removeMember } from '../api/members';
+import { keepPreviousData, useQuery, useMutation } from '@tanstack/react-query';
+import {
+    getMembers,
+    getMembersPage,
+    addMember,
+    changeMemberRole,
+    removeMember,
+    type MembersPageParams,
+} from '../api/members';
 import { isApiError } from '../lib/errorHandling';
 import { queryClient, queryKeys } from '../lib/queryClient';
 
@@ -9,6 +16,18 @@ export function useMembers(projectId: string) {
         queryKey: queryKeys.members(projectId),
         queryFn: () => getMembers(projectId),
         enabled: Boolean(projectId),
+    });
+}
+
+export function useMembersPage(projectId: string, params: MembersPageParams = {}) {
+    const limit = params.limit ?? 25;
+    const cursor = params.cursor ?? null;
+
+    return useQuery({
+        queryKey: queryKeys.members(projectId, { cursor, limit }),
+        queryFn: () => getMembersPage(projectId, { cursor, limit }),
+        enabled: Boolean(projectId),
+        placeholderData: keepPreviousData,
     });
 }
 
@@ -48,6 +67,12 @@ export function useAddMember(projectId: string) {
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: queryKeys.members(projectId),
+            });
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.project(projectId),
+            });
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.projects,
             });
             queryClient.invalidateQueries({
                 queryKey: queryKeys.auditPrefix(projectId),

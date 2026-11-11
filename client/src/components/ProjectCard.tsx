@@ -37,15 +37,27 @@ export function ProjectCard({ project }: ProjectCardProps) {
                     <p className="text-xs font-ui text-base-content/70 italic mt-2">
                         Archived — a Platform Admin can restore it.
                     </p>
+                ) : project.description ? (
+                    <p className="text-xs font-ui text-base-content/70 line-clamp-2 mt-2">
+                        {project.description}
+                    </p>
                 ) : null}
             </div>
 
-            <div className="pt-4 mt-4 border-t border-base-300/60 flex items-center justify-between text-xs font-ui text-base-content/70">
-                <div className="flex items-center gap-1.5">
-                    <span>Role:</span>
-                    <span className="font-semibold text-base-content capitalize">
-                        {project.role === 'projectAdmin' ? 'Project Admin' : project.role}
-                    </span>
+            <div className="pt-4 mt-4 border-t border-base-300/60 flex items-center justify-between gap-2 text-xs font-ui text-base-content/70">
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1.5">
+                        <span>Role:</span>
+                        <span className="font-semibold text-base-content capitalize">
+                            {project.role === 'projectAdmin' ? 'Project Admin' : project.role}
+                        </span>
+                    </div>
+                    {project.memberCount !== undefined && (
+                        <span className="text-base-content/60">
+                            · {project.memberCount}{' '}
+                            {project.memberCount === 1 ? 'member' : 'members'}
+                        </span>
+                    )}
                 </div>
                 {!isArchived && (
                     <span className="text-primary font-medium flex items-center gap-1 hover:underline">

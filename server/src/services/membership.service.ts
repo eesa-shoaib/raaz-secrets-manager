@@ -3,24 +3,70 @@ import { ProjectModel } from '../models/Project.js';
 import { ProjectMembershipModel, type ProjectMembershipDoc } from '../models/ProjectMembership.js';
 import { UserModel } from '../models/User.js';
 import { AppError } from '../utils/app-error.js';
+import { buildCursorCondition, decodeCursor, encodeCursor } from '../utils/pagination.js';
 import { writeAuditEntry } from './audit.service.js';
+
+async function hydrateMemberRows(
+    memberships: (Pick<ProjectMembershipDoc, 'userId' | 'role' | 'createdAt'> & {
+        _id: Types.ObjectId;
+    })[],
+) {
+    if (memberships.length === 0) return [];
+    const users = await UserModel.find({
+        _id: { $in: memberships.map((membership) => membership.userId) },
+    })
+        .select('email username hasAvatar avatarUpdatedAt')
+        .lean();
+    const userMap = new Map(users.map((user) => [user._id.toString(), user]));
+    return memberships.map((membership) => {
+        const user = userMap.get(membership.userId.toString());
+        return {
+            userId: membership.userId.toString(),
+            email: user?.email ?? 'unknown',
+            username: user?.username ?? null,
+            hasAvatar: user?.hasAvatar ?? false,
+            avatarUpdatedAt: user?.avatarUpdatedAt ?? null,
+            role: membership.role,
+            createdAt: membership.createdAt,
+        };
+    });
+}
 
 export async function listProjectMembers(projectId: string) {
     const memberships = await ProjectMembershipModel.find({
         projectId: new Types.ObjectId(projectId),
-    }).lean();
-    const users = await UserModel.find({
-        _id: { $in: memberships.map((membership) => membership.userId) },
     })
-        .select('email')
+        .sort({ createdAt: -1, _id: -1 })
         .lean();
-    const emails = new Map(users.map((user) => [user._id.toString(), user.email]));
-    return memberships.map((membership) => ({
-        userId: membership.userId.toString(),
-        email: emails.get(membership.userId.toString()) ?? 'unknown',
-        role: membership.role,
-        createdAt: membership.createdAt,
-    }));
+    return hydrateMemberRows(memberships);
+}
+
+export async function listProjectMembersCursor(
+    projectId: string,
+    query: { cursor?: string; limit: number },
+) {
+    const scope = `members:${projectId}`;
+    const decoded = query.cursor ? decodeCursor(query.cursor, scope) : null;
+    const baseFilter = { projectId: new Types.ObjectId(projectId) };
+    const filter = decoded ? { $and: [baseFilter, buildCursorCondition(decoded)] } : baseFilter;
+
+    const rows = await ProjectMembershipModel.find(filter)
+        .sort({ createdAt: -1, _id: -1 })
+        .limit(query.limit + 1)
+        .lean();
+
+    const hasMore = rows.length > query.limit;
+    const items = hasMore ? rows.slice(0, query.limit) : rows;
+    const last = items[items.length - 1];
+    const nextCursor =
+        hasMore && last ? encodeCursor(scope, last.createdAt, last._id.toString()) : null;
+
+    return {
+        data: await hydrateMemberRows(items),
+        nextCursor,
+        hasMore,
+        limit: query.limit,
+    };
 }
 
 export async function addProjectMember(

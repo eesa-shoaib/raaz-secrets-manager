@@ -133,12 +133,58 @@ export function verifyToken(token: string): { sub: string; tv: number; pa: boole
     }
 }
 
+export async function changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+): Promise<void> {
+    if (currentPassword === newPassword) {
+        throw new AppError(
+            422,
+            'VALIDATION_ERROR',
+            'New password must be different from current password',
+        );
+    }
+
+    const session = await mongoose.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const user = await UserModel.findById(userId).select('+passwordHash').session(session);
+            if (!user || !user.isActive) {
+                throw new AppError(401, 'UNAUTHENTICATED', 'Authentication required');
+            }
+
+            const matches = await bcrypt.compare(currentPassword, user.passwordHash);
+            if (!matches) {
+                throw new AppError(401, 'UNAUTHENTICATED', 'Current password is incorrect');
+            }
+
+            user.passwordHash = await bcrypt.hash(newPassword, 10);
+            user.tokenVersion += 1;
+            await user.save({ session });
+
+            await writeAuditEntry({
+                session,
+                userId,
+                targetUserId: userId,
+                action: 'password_changed',
+                result: 'allowed',
+            });
+        });
+    } finally {
+        await session.endSession();
+    }
+}
+
 export async function findAuthenticatedUser(userId: string, tokenVersion: number) {
     const user = await UserModel.findById(userId).lean();
     if (!user || user.tokenVersion !== tokenVersion || !user.isActive) return null;
     return {
         id: user._id.toString(),
         email: user.email,
+        username: user.username ?? null,
+        hasAvatar: Boolean(user.hasAvatar),
+        avatarUpdatedAt: user.avatarUpdatedAt ?? null,
         isPlatformAdmin: user.isPlatformAdmin,
         isActive: user.isActive,
         createdAt: user.createdAt,

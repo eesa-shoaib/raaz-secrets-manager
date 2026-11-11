@@ -1,6 +1,14 @@
 import type { CreateSecretInput, EditSecretInput } from '@raaz/shared-schemas';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { createSecret, deleteSecret, editSecret, getSecrets, revealSecret } from '../api/secrets';
+import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query';
+import {
+    createSecret,
+    deleteSecret,
+    editSecret,
+    getSecrets,
+    getSecretsPage,
+    revealSecret,
+    type SecretsPageParams,
+} from '../api/secrets';
 import { isApiError } from '../lib/errorHandling';
 import type { Environment } from '../lib/permissions';
 import { queryClient, queryKeys } from '../lib/queryClient';
@@ -10,6 +18,23 @@ export function useSecrets(projectId: string, environment: Environment) {
         queryKey: queryKeys.secrets(projectId, environment),
         queryFn: () => getSecrets(projectId, environment),
         enabled: Boolean(projectId && environment),
+    });
+}
+
+export function useSecretsPage(
+    projectId: string,
+    environment: Environment,
+    params: SecretsPageParams = {},
+) {
+    const limit = params.limit ?? 25;
+    const cursor = params.cursor ?? null;
+    const search = params.search?.trim() || undefined;
+
+    return useQuery({
+        queryKey: queryKeys.secrets(projectId, environment, { cursor, limit, search }),
+        queryFn: () => getSecretsPage(projectId, environment, { cursor, limit, search }),
+        enabled: Boolean(projectId && environment),
+        placeholderData: keepPreviousData,
     });
 }
 

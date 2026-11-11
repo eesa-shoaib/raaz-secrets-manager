@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 import express, { type Express } from 'express';
 import mongoSanitize from 'express-mongo-sanitize';
 import helmet from 'helmet';
-import { getClientOrigin, getPort } from './config/index.js';
+import { getClientOrigin, getPort, getTrustProxy } from './config/index.js';
 import { csrfMiddleware } from './middleware/csrf.middleware.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
 import { apiRoutes } from './routes/index.js';
@@ -17,6 +17,10 @@ dotenv.config();
 
 export function createApp(): Express {
     const app = express();
+    const trustProxy = getTrustProxy();
+    if (trustProxy > 0) {
+        app.set('trust proxy', trustProxy);
+    }
 
     app.use(helmet());
     app.use(
@@ -25,11 +29,24 @@ export function createApp(): Express {
             credentials: true,
         }),
     );
+    app.use(
+        '/api/account/avatar',
+        express.raw({
+            type: ['image/png', 'image/jpeg', 'image/webp', 'application/octet-stream'],
+            limit: '2mb',
+        }),
+        express.json({ limit: '3mb' }),
+    );
     app.use(express.json({ limit: '1mb' }));
     app.use(cookieParser());
     app.use(mongoSanitize());
     app.use(requestLogger);
     app.use(csrfMiddleware);
+    app.use('/api', (_req, res, next) => {
+        res.setHeader('Cache-Control', 'no-store');
+        res.setHeader('Pragma', 'no-cache');
+        next();
+    });
     app.use('/api', apiRoutes);
     app.use(notFoundHandler);
     app.use(errorHandler);

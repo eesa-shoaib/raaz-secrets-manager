@@ -1,13 +1,32 @@
-import type { CreateProjectInput, ProjectResponse } from '@raaz/shared-schemas';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { getProjects, getProject, createProject } from '../api/projects';
+import type { CreateProjectInput, ProjectResponse, UpdateProjectInput } from '@raaz/shared-schemas';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+    createProject,
+    getProject,
+    getProjects,
+    getProjectsPage,
+    updateProject,
+    type ProjectsPageParams,
+} from '../api/projects';
 import { isApiError } from '../lib/errorHandling';
-import { queryClient, queryKeys } from '../lib/queryClient';
+import { queryKeys } from '../lib/queryClient';
 
 export function useProjects() {
     return useQuery({
         queryKey: queryKeys.projects,
         queryFn: getProjects,
+    });
+}
+
+export function useProjectsPage(params: ProjectsPageParams = {}) {
+    const limit = params.limit ?? 25;
+    const cursor = params.cursor ?? null;
+    const search = params.search?.trim() || undefined;
+
+    return useQuery({
+        queryKey: queryKeys.projectsList({ cursor, limit, search }),
+        queryFn: () => getProjectsPage({ cursor, limit, search }),
+        placeholderData: keepPreviousData,
     });
 }
 
@@ -25,11 +44,24 @@ export function useProject(projectId: string | undefined) {
 }
 
 export function useCreateProject() {
+    const qc = useQueryClient();
     return useMutation({
         mutationFn: (data: CreateProjectInput) => createProject(data),
         onSuccess: (newProject: ProjectResponse) => {
-            queryClient.invalidateQueries({ queryKey: queryKeys.projects });
-            queryClient.setQueryData(queryKeys.project(newProject.id), newProject);
+            qc.invalidateQueries({ queryKey: queryKeys.projects });
+            qc.setQueryData(queryKeys.project(newProject.id), newProject);
+        },
+    });
+}
+
+export function useUpdateProject(projectId: string) {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (data: UpdateProjectInput) => updateProject(projectId, data),
+        onSuccess: (updated: ProjectResponse) => {
+            qc.setQueryData(queryKeys.project(projectId), updated);
+            qc.invalidateQueries({ queryKey: queryKeys.projects });
+            qc.invalidateQueries({ queryKey: queryKeys.auditPrefix(projectId) });
         },
     });
 }

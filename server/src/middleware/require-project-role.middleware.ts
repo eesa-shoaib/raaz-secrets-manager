@@ -34,7 +34,15 @@ export function requireProjectRole(...allowedRoles: ('projectAdmin' | 'developer
                                 ? 'delete'
                                 : 'reveal',
                 });
-            } else {
+            } else if (req.method === 'PATCH') {
+                const hasNameOnly =
+                    typeof req.body?.name === 'string' && req.body?.description === undefined;
+                await writeDeniedAuditEntry({
+                    userId,
+                    projectId,
+                    action: hasNameOnly ? 'project_renamed' : 'project_updated',
+                });
+            } else if (req.method === 'POST') {
                 await writeDeniedAuditEntry({
                     userId,
                     projectId,

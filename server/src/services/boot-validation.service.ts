@@ -38,6 +38,10 @@ export function validateBootConfig(): void {
     if (process.env.NODE_ENV === 'production' && !process.env.CLIENT_ORIGIN) {
         throw new Error('CLIENT_ORIGIN is required in production');
     }
+
+    if (process.env.TRUST_PROXY !== undefined && !/^\d+$/.test(process.env.TRUST_PROXY)) {
+        throw new Error('TRUST_PROXY must be a non-negative integer hop count');
+    }
 }
 
 export const getMasterKey = (): Buffer => {
@@ -72,11 +76,23 @@ const logger = pino.default({
     redact: {
         paths: [
             'password',
+            'currentPassword',
+            'newPassword',
             'value',
+            'description',
+            'data',
             'body.password',
+            'body.currentPassword',
+            'body.newPassword',
             'body.value',
+            'body.description',
+            'body.data',
             'req.body.password',
+            'req.body.currentPassword',
+            'req.body.newPassword',
             'req.body.value',
+            'req.body.description',
+            'req.body.data',
         ],
         censor: '[Redacted]',
     },

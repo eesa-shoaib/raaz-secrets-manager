@@ -4,12 +4,14 @@ import type {
     AuditResult,
     ProjectEnvironment,
 } from '@raaz/shared-schemas';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { Badge } from '../components/Badge';
 import { EmptyState, ErrorState } from '../components/FullPageState';
 import { Skeleton } from '../components/LoadingSkeleton';
-import { useProjectAuditLog } from '../hooks/useAuditLog';
+import { PaginationControls } from '../components/PaginationControls';
+import { UserAvatar } from '../components/UserAvatar';
+import { useProjectAuditLogPage } from '../hooks/useAuditLog';
 import { isApiError } from '../lib/errorHandling';
 
 const PROJECT_ACTIONS: { value: AuditAction; label: string }[] = [
@@ -22,6 +24,7 @@ const PROJECT_ACTIONS: { value: AuditAction; label: string }[] = [
     { value: 'member_removed', label: 'Remove member' },
     { value: 'project_created', label: 'Create project' },
     { value: 'project_renamed', label: 'Rename project' },
+    { value: 'project_updated', label: 'Update project details' },
     { value: 'project_environments_changed', label: 'Change environments' },
     { value: 'project_archived', label: 'Archive project' },
     { value: 'project_restored', label: 'Restore project' },
@@ -37,6 +40,7 @@ const ACTION_LABELS: Record<string, string> = {
     member_removed: 'Remove member',
     project_created: 'Create project',
     project_renamed: 'Rename project',
+    project_updated: 'Update project details',
     project_environments_changed: 'Change environments',
     project_archived: 'Archive project',
     project_restored: 'Restore project',
@@ -45,6 +49,10 @@ const ACTION_LABELS: Record<string, string> = {
     platform_admin_granted: 'Grant platform admin',
     platform_admin_revoked: 'Revoke platform admin',
     bootstrap_admin: 'Bootstrap admin',
+    password_changed: 'Change password',
+    profile_updated: 'Update profile',
+    avatar_updated: 'Update avatar',
+    avatar_removed: 'Remove avatar',
 };
 
 function formatActionLabel(action: string): string {
@@ -77,23 +85,43 @@ export function ProjectAuditLogPage() {
     const resultFilter = (searchParams.get('result') as AuditResult) || undefined;
     const environmentFilter = (searchParams.get('environment') as ProjectEnvironment) || undefined;
 
+    const [cursor, setCursor] = useState<string | null>(null);
+    const [cursorHistory, setCursorHistory] = useState<(string | null)[]>([]);
+
+    useEffect(() => {
+        setCursor(null);
+        setCursorHistory([]);
+    }, [actionFilter, resultFilter, environmentFilter]);
+
     const filters = useMemo(
         () => ({
             action: actionFilter,
             result: resultFilter,
             environment: environmentFilter,
-            limit: 100,
+            cursor,
+            limit: 25,
         }),
-        [actionFilter, resultFilter, environmentFilter],
+        [actionFilter, resultFilter, environmentFilter, cursor],
     );
 
-    const {
-        data: entries,
-        isLoading,
-        isError,
-        error,
-        refetch,
-    } = useProjectAuditLog(projectId!, filters);
+    const { data, isLoading, isFetching, isError, error, refetch } = useProjectAuditLogPage(
+        projectId!,
+        filters,
+    );
+    const entries = data?.data ?? [];
+
+    const handleNext = () => {
+        if (!data?.nextCursor) return;
+        setCursorHistory((prev) => [...prev, cursor]);
+        setCursor(data.nextCursor);
+    };
+
+    const handlePrevious = () => {
+        if (cursorHistory.length === 0) return;
+        const previousCursor = cursorHistory[cursorHistory.length - 1] ?? null;
+        setCursorHistory((prev) => prev.slice(0, -1));
+        setCursor(previousCursor);
+    };
 
     const hasActiveFilters = Boolean(actionFilter || resultFilter || environmentFilter);
 
@@ -271,87 +299,119 @@ export function ProjectAuditLogPage() {
                     message={isApiError(error) ? error.message : 'Failed to load project audit log'}
                     onRetry={() => refetch()}
                 />
-            ) : entries && entries.length > 0 ? (
-                <div className="overflow-x-auto rounded-3xl border border-base-300 bg-base-200 shadow-sm">
-                    <table className="table w-full text-sm">
-                        <thead>
-                            <tr className="border-b border-base-300 font-heading text-xs text-base-content/60 uppercase tracking-wider">
-                                <th className="py-4 pl-6 text-center">Time</th>
-                                <th className="py-4 text-center">User</th>
-                                <th className="py-4 text-center">Action</th>
-                                <th className="py-4 text-center">Details</th>
-                                <th className="py-4 pr-6 text-center">Result</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-base-300/60 font-ui">
-                            {entries.map((entry) => {
-                                const ts = formatTimestamp(entry.createdAt);
-                                return (
-                                    <tr
-                                        key={entry.id}
-                                        className="hover:bg-base-300/30 transition-colors"
-                                    >
-                                        {/* Time in local timezone with ISO datetime attribute */}
-                                        <td className="py-4 pl-6 text-xs text-base-content/70 whitespace-nowrap">
-                                            <time
-                                                dateTime={ts.iso}
-                                                title={ts.iso}
-                                                className="flex flex-col"
-                                            >
-                                                <span>
-                                                    {new Date(ts.iso).toLocaleDateString(
-                                                        undefined,
-                                                        {
-                                                            year: 'numeric',
-                                                            month: 'short',
-                                                            day: 'numeric',
-                                                        },
-                                                    )}
-                                                </span>
-                                                <span className="text-base-content/55">
-                                                    {new Date(ts.iso).toLocaleTimeString(
-                                                        undefined,
-                                                        {
-                                                            hour: '2-digit',
-                                                            minute: '2-digit',
-                                                            second: '2-digit',
-                                                        },
-                                                    )}
-                                                </span>
-                                            </time>
-                                        </td>
+            ) : entries.length > 0 ? (
+                <div className="space-y-4">
+                    <div className="overflow-x-auto rounded-3xl border border-base-300 bg-base-200 shadow-sm">
+                        <table className="table w-full text-sm">
+                            <thead>
+                                <tr className="border-b border-base-300 font-heading text-xs text-base-content/60 uppercase tracking-wider">
+                                    <th className="py-4 pl-6 text-center">Time</th>
+                                    <th className="py-4 text-center">User</th>
+                                    <th className="py-4 text-center">Action</th>
+                                    <th className="py-4 text-center">Details</th>
+                                    <th className="py-4 pr-6 text-center">Result</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-base-300/60 font-ui">
+                                {entries.map((entry) => {
+                                    const ts = formatTimestamp(entry.createdAt);
+                                    return (
+                                        <tr
+                                            key={entry.id}
+                                            className="hover:bg-base-300/30 transition-colors"
+                                        >
+                                            {/* Time in local timezone with ISO datetime attribute */}
+                                            <td className="py-4 pl-6 text-xs text-base-content/70 whitespace-nowrap">
+                                                <time
+                                                    dateTime={ts.iso}
+                                                    title={ts.iso}
+                                                    className="flex flex-col"
+                                                >
+                                                    <span>
+                                                        {new Date(ts.iso).toLocaleDateString(
+                                                            undefined,
+                                                            {
+                                                                year: 'numeric',
+                                                                month: 'short',
+                                                                day: 'numeric',
+                                                            },
+                                                        )}
+                                                    </span>
+                                                    <span className="text-base-content/55">
+                                                        {new Date(ts.iso).toLocaleTimeString(
+                                                            undefined,
+                                                            {
+                                                                hour: '2-digit',
+                                                                minute: '2-digit',
+                                                                second: '2-digit',
+                                                            },
+                                                        )}
+                                                    </span>
+                                                </time>
+                                            </td>
 
-                                        {/* User */}
-                                        <td className="py-4">
-                                            <span
-                                                className="block max-w-32 truncate font-medium text-base-content text-xs"
-                                                title={entry.user?.email || 'Unknown user'}
-                                            >
-                                                {entry.user ? entry.user.email : 'Unknown user'}
-                                            </span>
-                                        </td>
+                                            {/* User */}
+                                            <td className="py-4">
+                                                {entry.user ? (
+                                                    <div className="flex items-center gap-2 max-w-44">
+                                                        <UserAvatar
+                                                            userId={entry.user.id}
+                                                            email={entry.user.email}
+                                                            username={entry.user.username}
+                                                            hasAvatar={entry.user.hasAvatar}
+                                                            avatarUpdatedAt={
+                                                                entry.user.avatarUpdatedAt
+                                                            }
+                                                            size="sm"
+                                                        />
+                                                        <span
+                                                            className="block truncate font-medium text-base-content text-xs"
+                                                            title={entry.user.email}
+                                                        >
+                                                            {entry.user.username
+                                                                ? `@${entry.user.username}`
+                                                                : entry.user.email}
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-xs text-base-content/60">
+                                                        Unknown user
+                                                    </span>
+                                                )}
+                                            </td>
 
-                                        {/* Action */}
-                                        <td className="py-4 font-heading font-medium text-xs text-base-content">
-                                            {formatActionLabel(entry.action)}
-                                        </td>
+                                            {/* Action */}
+                                            <td className="py-4 font-heading font-medium text-xs text-base-content">
+                                                {formatActionLabel(entry.action)}
+                                            </td>
 
-                                        {/* Details */}
-                                        <td className="py-4 text-center text-xs">
-                                            <div className="flex justify-center">
-                                                {renderDetails(entry)}
-                                            </div>
-                                        </td>
+                                            {/* Details */}
+                                            <td className="py-4 text-center text-xs">
+                                                <div className="flex justify-center">
+                                                    {renderDetails(entry)}
+                                                </div>
+                                            </td>
 
-                                        {/* Result */}
-                                        <td className="py-4 pr-6 text-right">
-                                            <Badge variant="auditResult" value={entry.result} />
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
+                                            {/* Result */}
+                                            <td className="py-4 pr-6 text-right">
+                                                <Badge variant="auditResult" value={entry.result} />
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                    <PaginationControls
+                        hasPrevious={cursorHistory.length > 0}
+                        hasNext={Boolean(data?.hasMore && data?.nextCursor)}
+                        onPrevious={handlePrevious}
+                        onNext={handleNext}
+                        pageNumber={cursorHistory.length + 1}
+                        itemCount={entries.length}
+                        isFetching={isFetching}
+                        noun="entries"
+                    />
                 </div>
             ) : (
                 <EmptyState

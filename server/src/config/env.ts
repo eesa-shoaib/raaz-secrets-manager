@@ -14,3 +14,12 @@ export function getPort(): number {
 
     return port;
 }
+
+export function getTrustProxy(): number {
+    const raw = process.env.TRUST_PROXY ?? '0';
+    if (!/^\d+$/.test(raw)) {
+        throw new Error('TRUST_PROXY must be a non-negative integer hop count');
+    }
+
+    return Number.parseInt(raw, 10);
+}

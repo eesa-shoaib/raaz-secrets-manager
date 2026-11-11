@@ -1,4 +1,9 @@
-import type { LoginInput, PublicUser, SignupInput } from '@raaz/shared-schemas';
+import type {
+    ChangePasswordInput,
+    LoginInput,
+    PublicUser,
+    SignupInput,
+} from '@raaz/shared-schemas';
 import { isApiError } from '../lib/errorHandling';
 import apiClient from './axios';
 
@@ -29,4 +34,8 @@ export async function signup(data: SignupInput): Promise<PublicUser> {
 
 export async function logout(): Promise<void> {
     await apiClient.post('/auth/logout');
+}
+
+export async function changePassword(data: ChangePasswordInput): Promise<void> {
+    await apiClient.post('/auth/change-password', data);
 }

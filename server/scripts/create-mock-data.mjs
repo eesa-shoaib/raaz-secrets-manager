@@ -9,6 +9,18 @@ const origin = process.env.MOCK_CLIENT_ORIGIN ?? 'http://localhost:5173';
 const password = process.env.MOCK_USER_PASSWORD;
 const domain = process.env.MOCK_EMAIL_DOMAIN ?? 'example.com';
 
+const parsedBase = new URL(baseUrl);
+const isLocalTarget =
+  parsedBase.hostname === 'localhost' ||
+  parsedBase.hostname === '127.0.0.1' ||
+  parsedBase.hostname === '::1';
+if (!isLocalTarget && process.env.ALLOW_NONLOCAL_MOCK_DATA !== 'true') {
+  console.error(
+    `Refusing to seed mock accounts against non-local URL "${baseUrl}". Set ALLOW_NONLOCAL_MOCK_DATA=true only for an explicitly disposable staging environment.`,
+  );
+  process.exit(1);
+}
+
 if (!password || password.length < 8 || password.length > 72) {
   console.error('Set MOCK_USER_PASSWORD to a password of 8–72 characters.');
   process.exit(1);

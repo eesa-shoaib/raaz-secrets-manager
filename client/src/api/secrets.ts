@@ -1,11 +1,18 @@
 import type {
     CreateSecretInput,
+    CursorPaginatedResponse,
     EditSecretInput,
     RevealSecretResponse,
     SecretResponse,
 } from '@raaz/shared-schemas';
 import type { Environment } from '../lib/permissions';
 import apiClient from './axios';
+
+export interface SecretsPageParams {
+    cursor?: string | null;
+    limit?: number;
+    search?: string;
+}
 
 export async function getSecrets(
     projectId: string,
@@ -20,6 +27,26 @@ export async function getSecrets(
     const data = res.data;
     if (Array.isArray(data)) return data;
     return (data as { secrets?: SecretResponse[] }).secrets ?? [];
+}
+
+export async function getSecretsPage(
+    projectId: string,
+    environment: Environment,
+    params: SecretsPageParams = {},
+): Promise<CursorPaginatedResponse<SecretResponse>> {
+    const query: Record<string, unknown> = {
+        environment,
+        mode: 'cursor',
+        limit: params.limit ?? 25,
+    };
+    if (params.cursor) query.cursor = params.cursor;
+    if (params.search && params.search.trim()) query.search = params.search.trim();
+
+    const res = await apiClient.get<CursorPaginatedResponse<SecretResponse>>(
+        `/projects/${projectId}/secrets`,
+        { params: query },
+    );
+    return res.data;
 }
 
 export async function createSecret(

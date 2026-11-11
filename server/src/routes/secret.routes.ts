@@ -2,7 +2,7 @@ import {
     createSecretSchema,
     editSecretSchema,
     revealSecretSchema,
-    projectEnvironmentEnum,
+    secretsListQuerySchema,
 } from '@raaz/shared-schemas';
 import { Router } from 'express';
 import { z } from 'zod';
@@ -25,7 +25,7 @@ const router = Router();
 
 const listSchema = z.object({
     params: z.object({ projectId: z.string().regex(/^[a-f\d]{24}$/i, 'Invalid ObjectId') }),
-    query: z.object({ environment: projectEnvironmentEnum }),
+    query: secretsListQuerySchema,
 });
 
 const createSchema = z.object({
