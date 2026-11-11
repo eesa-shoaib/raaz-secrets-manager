@@ -92,9 +92,9 @@ describe('SecretsPage', () => {
 
         expect(mockWriteText).toHaveBeenCalledTimes(1);
         expect(mockWriteText).toHaveBeenCalledWith('DATABASE_URL');
-        expect(
-            screen.getByRole('button', { name: 'Copy key DATABASE_URL' }).textContent,
-        ).toContain('Copied!');
+        expect(screen.getByRole('button', { name: 'Copy key DATABASE_URL' }).textContent).toContain(
+            'Copied!',
+        );
     });
 
     it('supports cursor pagination via Next and Previous controls', () => {

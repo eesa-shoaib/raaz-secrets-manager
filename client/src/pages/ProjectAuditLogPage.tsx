@@ -302,115 +302,117 @@ export function ProjectAuditLogPage() {
             ) : entries.length > 0 ? (
                 <div className="space-y-4">
                     <div className="overflow-x-auto rounded-3xl border border-base-300 bg-base-200 shadow-sm">
-                    <table className="table w-full text-sm">
-                        <thead>
-                            <tr className="border-b border-base-300 font-heading text-xs text-base-content/60 uppercase tracking-wider">
-                                <th className="py-4 pl-6 text-center">Time</th>
-                                <th className="py-4 text-center">User</th>
-                                <th className="py-4 text-center">Action</th>
-                                <th className="py-4 text-center">Details</th>
-                                <th className="py-4 pr-6 text-center">Result</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-base-300/60 font-ui">
-                            {entries.map((entry) => {
-                                const ts = formatTimestamp(entry.createdAt);
-                                return (
-                                    <tr
-                                        key={entry.id}
-                                        className="hover:bg-base-300/30 transition-colors"
-                                    >
-                                        {/* Time in local timezone with ISO datetime attribute */}
-                                        <td className="py-4 pl-6 text-xs text-base-content/70 whitespace-nowrap">
-                                            <time
-                                                dateTime={ts.iso}
-                                                title={ts.iso}
-                                                className="flex flex-col"
-                                            >
-                                                <span>
-                                                    {new Date(ts.iso).toLocaleDateString(
-                                                        undefined,
-                                                        {
-                                                            year: 'numeric',
-                                                            month: 'short',
-                                                            day: 'numeric',
-                                                        },
-                                                    )}
-                                                </span>
-                                                <span className="text-base-content/55">
-                                                    {new Date(ts.iso).toLocaleTimeString(
-                                                        undefined,
-                                                        {
-                                                            hour: '2-digit',
-                                                            minute: '2-digit',
-                                                            second: '2-digit',
-                                                        },
-                                                    )}
-                                                </span>
-                                            </time>
-                                        </td>
-
-                                        {/* User */}
-                                        <td className="py-4">
-                                            {entry.user ? (
-                                                <div className="flex items-center gap-2 max-w-44">
-                                                    <UserAvatar
-                                                        userId={entry.user.id}
-                                                        email={entry.user.email}
-                                                        username={entry.user.username}
-                                                        hasAvatar={entry.user.hasAvatar}
-                                                        avatarUpdatedAt={entry.user.avatarUpdatedAt}
-                                                        size="sm"
-                                                    />
-                                                    <span
-                                                        className="block truncate font-medium text-base-content text-xs"
-                                                        title={entry.user.email}
-                                                    >
-                                                        {entry.user.username
-                                                            ? `@${entry.user.username}`
-                                                            : entry.user.email}
+                        <table className="table w-full text-sm">
+                            <thead>
+                                <tr className="border-b border-base-300 font-heading text-xs text-base-content/60 uppercase tracking-wider">
+                                    <th className="py-4 pl-6 text-center">Time</th>
+                                    <th className="py-4 text-center">User</th>
+                                    <th className="py-4 text-center">Action</th>
+                                    <th className="py-4 text-center">Details</th>
+                                    <th className="py-4 pr-6 text-center">Result</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-base-300/60 font-ui">
+                                {entries.map((entry) => {
+                                    const ts = formatTimestamp(entry.createdAt);
+                                    return (
+                                        <tr
+                                            key={entry.id}
+                                            className="hover:bg-base-300/30 transition-colors"
+                                        >
+                                            {/* Time in local timezone with ISO datetime attribute */}
+                                            <td className="py-4 pl-6 text-xs text-base-content/70 whitespace-nowrap">
+                                                <time
+                                                    dateTime={ts.iso}
+                                                    title={ts.iso}
+                                                    className="flex flex-col"
+                                                >
+                                                    <span>
+                                                        {new Date(ts.iso).toLocaleDateString(
+                                                            undefined,
+                                                            {
+                                                                year: 'numeric',
+                                                                month: 'short',
+                                                                day: 'numeric',
+                                                            },
+                                                        )}
                                                     </span>
+                                                    <span className="text-base-content/55">
+                                                        {new Date(ts.iso).toLocaleTimeString(
+                                                            undefined,
+                                                            {
+                                                                hour: '2-digit',
+                                                                minute: '2-digit',
+                                                                second: '2-digit',
+                                                            },
+                                                        )}
+                                                    </span>
+                                                </time>
+                                            </td>
+
+                                            {/* User */}
+                                            <td className="py-4">
+                                                {entry.user ? (
+                                                    <div className="flex items-center gap-2 max-w-44">
+                                                        <UserAvatar
+                                                            userId={entry.user.id}
+                                                            email={entry.user.email}
+                                                            username={entry.user.username}
+                                                            hasAvatar={entry.user.hasAvatar}
+                                                            avatarUpdatedAt={
+                                                                entry.user.avatarUpdatedAt
+                                                            }
+                                                            size="sm"
+                                                        />
+                                                        <span
+                                                            className="block truncate font-medium text-base-content text-xs"
+                                                            title={entry.user.email}
+                                                        >
+                                                            {entry.user.username
+                                                                ? `@${entry.user.username}`
+                                                                : entry.user.email}
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-xs text-base-content/60">
+                                                        Unknown user
+                                                    </span>
+                                                )}
+                                            </td>
+
+                                            {/* Action */}
+                                            <td className="py-4 font-heading font-medium text-xs text-base-content">
+                                                {formatActionLabel(entry.action)}
+                                            </td>
+
+                                            {/* Details */}
+                                            <td className="py-4 text-center text-xs">
+                                                <div className="flex justify-center">
+                                                    {renderDetails(entry)}
                                                 </div>
-                                            ) : (
-                                                <span className="text-xs text-base-content/60">
-                                                    Unknown user
-                                                </span>
-                                            )}
-                                        </td>
+                                            </td>
 
-                                        {/* Action */}
-                                        <td className="py-4 font-heading font-medium text-xs text-base-content">
-                                            {formatActionLabel(entry.action)}
-                                        </td>
-
-                                        {/* Details */}
-                                        <td className="py-4 text-center text-xs">
-                                            <div className="flex justify-center">
-                                                {renderDetails(entry)}
-                                            </div>
-                                        </td>
-
-                                        {/* Result */}
-                                        <td className="py-4 pr-6 text-right">
-                                            <Badge variant="auditResult" value={entry.result} />
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
+                                            {/* Result */}
+                                            <td className="py-4 pr-6 text-right">
+                                                <Badge variant="auditResult" value={entry.result} />
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                    <PaginationControls
+                        hasPrevious={cursorHistory.length > 0}
+                        hasNext={Boolean(data?.hasMore && data?.nextCursor)}
+                        onPrevious={handlePrevious}
+                        onNext={handleNext}
+                        pageNumber={cursorHistory.length + 1}
+                        itemCount={entries.length}
+                        isFetching={isFetching}
+                        noun="entries"
+                    />
                 </div>
-                <PaginationControls
-                    hasPrevious={cursorHistory.length > 0}
-                    hasNext={Boolean(data?.hasMore && data?.nextCursor)}
-                    onPrevious={handlePrevious}
-                    onNext={handleNext}
-                    pageNumber={cursorHistory.length + 1}
-                    itemCount={entries.length}
-                    isFetching={isFetching}
-                    noun="entries"
-                />
-            </div>
             ) : (
                 <EmptyState
                     title={

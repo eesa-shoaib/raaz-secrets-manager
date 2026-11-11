@@ -40,7 +40,9 @@ export const queryKeys = {
             ? (['secrets', projectId, environment, filters] as const)
             : (['secrets', projectId, environment] as const),
     secretsPrefix: (projectId: string, environment?: string) =>
-        environment ? (['secrets', projectId, environment] as const) : (['secrets', projectId] as const),
+        environment
+            ? (['secrets', projectId, environment] as const)
+            : (['secrets', projectId] as const),
     members: (projectId: string, filters?: { cursor?: string | null; limit?: number }) =>
         filters ? (['members', projectId, filters] as const) : (['members', projectId] as const),
     membersPrefix: (projectId: string) => ['members', projectId] as const,

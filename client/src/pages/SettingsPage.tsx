@@ -209,7 +209,8 @@ export function SettingsPage() {
                             )}
                         </div>
                         <p className="text-xs text-base-content/60">
-                            PNG, JPEG, or WebP up to 2 MiB. Automatically normalized and stripped of metadata.
+                            PNG, JPEG, or WebP up to 2 MiB. Automatically normalized and stripped of
+                            metadata.
                         </p>
                     </div>
                 </div>
@@ -254,7 +255,8 @@ export function SettingsPage() {
                             </span>
                         ) : (
                             <span className="mt-1 text-xs text-base-content/60">
-                                3–30 lowercase letters, digits, or underscores. Leave blank to clear.
+                                3–30 lowercase letters, digits, or underscores. Leave blank to
+                                clear.
                             </span>
                         )}
                     </div>
@@ -278,7 +280,8 @@ export function SettingsPage() {
                         Change Password
                     </h2>
                     <p className="text-xs font-ui text-base-content/60 mt-1">
-                        Changing your password invalidates all existing sessions and requires signing in again.
+                        Changing your password invalidates all existing sessions and requires
+                        signing in again.
                     </p>
                 </div>
 

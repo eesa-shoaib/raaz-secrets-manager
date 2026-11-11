@@ -17,11 +17,10 @@ const JWT_SECRET = '0123456789abcdef0123456789abcdef';
 const MASTER_KEY = Buffer.alloc(32, 9).toString('base64');
 
 function signAuthCookie(userId: string, tokenVersion = 0, isPlatformAdmin = false): string {
-    const token = jwt.sign(
-        { sub: userId, tv: tokenVersion, pa: isPlatformAdmin },
-        JWT_SECRET,
-        { algorithm: 'HS256', expiresIn: '1h' },
-    );
+    const token = jwt.sign({ sub: userId, tv: tokenVersion, pa: isPlatformAdmin }, JWT_SECRET, {
+        algorithm: 'HS256',
+        expiresIn: '1h',
+    });
     return `token=${token}`;
 }
 
@@ -54,10 +53,30 @@ describe('M2-01 Security, RBAC, Crypto, and Replica-Set Transaction Proofs', () 
         const app = createApp();
 
         const [adminUser, devUser, auditorUser, platformAdminUser] = await UserModel.create([
-            { email: 'padmin@example.com', passwordHash: '$2a$12$abcdefghijklmnopqrstuu5c8r8B9f8f8f8f8f8f8f8f8f8f8f8f8', isActive: true, isPlatformAdmin: false },
-            { email: 'dev@example.com', passwordHash: '$2a$12$abcdefghijklmnopqrstuu5c8r8B9f8f8f8f8f8f8f8f8f8f8f8f8', isActive: true, isPlatformAdmin: false },
-            { email: 'auditor@example.com', passwordHash: '$2a$12$abcdefghijklmnopqrstuu5c8r8B9f8f8f8f8f8f8f8f8f8f8f8f8', isActive: true, isPlatformAdmin: false },
-            { email: 'platadmin@example.com', passwordHash: '$2a$12$abcdefghijklmnopqrstuu5c8r8B9f8f8f8f8f8f8f8f8f8f8f8f8', isActive: true, isPlatformAdmin: true },
+            {
+                email: 'padmin@example.com',
+                passwordHash: '$2a$12$abcdefghijklmnopqrstuu5c8r8B9f8f8f8f8f8f8f8f8f8f8f8f8',
+                isActive: true,
+                isPlatformAdmin: false,
+            },
+            {
+                email: 'dev@example.com',
+                passwordHash: '$2a$12$abcdefghijklmnopqrstuu5c8r8B9f8f8f8f8f8f8f8f8f8f8f8f8',
+                isActive: true,
+                isPlatformAdmin: false,
+            },
+            {
+                email: 'auditor@example.com',
+                passwordHash: '$2a$12$abcdefghijklmnopqrstuu5c8r8B9f8f8f8f8f8f8f8f8f8f8f8f8',
+                isActive: true,
+                isPlatformAdmin: false,
+            },
+            {
+                email: 'platadmin@example.com',
+                passwordHash: '$2a$12$abcdefghijklmnopqrstuu5c8r8B9f8f8f8f8f8f8f8f8f8f8f8f8',
+                isActive: true,
+                isPlatformAdmin: true,
+            },
         ]);
 
         const adminCookie = signAuthCookie(adminUser._id.toString());
@@ -226,12 +245,19 @@ describe('M2-01 Security, RBAC, Crypto, and Replica-Set Transaction Proofs', () 
             .post(`/api/projects/${projectId}/secrets`)
             .set('Origin', ORIGIN)
             .set('Cookie', adminCookie)
-            .send({ environment: 'development', key: 'ROLLED_BACK_KEY', value: 'should-not-persist' });
+            .send({
+                environment: 'development',
+                key: 'ROLLED_BACK_KEY',
+                value: 'should-not-persist',
+            });
         expect(failedSecretRes.status).toBe(500);
         expect(failedSecretRes.body.error.code).toBe('INTERNAL_ERROR');
 
         // Verify the secret document was rolled back and does not exist in MongoDB
-        const orphanedSecret = await SecretModel.findOne({ projectId, key: 'ROLLED_BACK_KEY' }).lean();
+        const orphanedSecret = await SecretModel.findOne({
+            projectId,
+            key: 'ROLLED_BACK_KEY',
+        }).lean();
         expect(orphanedSecret).toBeNull();
     }, 30000);
 
@@ -242,8 +268,18 @@ describe('M2-01 Security, RBAC, Crypto, and Replica-Set Transaction Proofs', () 
         await PlatformConfigModel.create({ _id: 'singleton', activePlatformAdminCount: 1 });
 
         const [adminA, adminB] = await UserModel.create([
-            { email: 'admina@example.com', passwordHash: '$2a$12$abcdefghijklmnopqrstuu5c8r8B9f8f8f8f8f8f8f8f8f8f8f8f8', isActive: true, isPlatformAdmin: true },
-            { email: 'adminb@example.com', passwordHash: '$2a$12$abcdefghijklmnopqrstuu5c8r8B9f8f8f8f8f8f8f8f8f8f8f8f8', isActive: true, isPlatformAdmin: false },
+            {
+                email: 'admina@example.com',
+                passwordHash: '$2a$12$abcdefghijklmnopqrstuu5c8r8B9f8f8f8f8f8f8f8f8f8f8f8f8',
+                isActive: true,
+                isPlatformAdmin: true,
+            },
+            {
+                email: 'adminb@example.com',
+                passwordHash: '$2a$12$abcdefghijklmnopqrstuu5c8r8B9f8f8f8f8f8f8f8f8f8f8f8f8',
+                isActive: true,
+                isPlatformAdmin: false,
+            },
         ]);
 
         const cookieA = signAuthCookie(adminA._id.toString(), 0, true);
@@ -399,7 +435,12 @@ describe('M2-01 Security, RBAC, Crypto, and Replica-Set Transaction Proofs', () 
         const listRes = await request(app).get('/api/projects').set('Cookie', cookie);
         expect(listRes.status).toBe(200);
         const listItems = Array.isArray(listRes.body) ? listRes.body : listRes.body.data;
-        expect(listItems.some((p: { id: string; status: string }) => p.id === projectId && p.status === 'archived')).toBe(true);
+        expect(
+            listItems.some(
+                (p: { id: string; status: string }) =>
+                    p.id === projectId && p.status === 'archived',
+            ),
+        ).toBe(true);
     }, 30000);
 
     it('enforces identical 401 for unknown email, wrong password, and deactivated account, plus tokenVersion and Origin CSRF checks', async () => {

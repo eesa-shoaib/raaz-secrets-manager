@@ -38,6 +38,10 @@ export function validateBootConfig(): void {
     if (process.env.NODE_ENV === 'production' && !process.env.CLIENT_ORIGIN) {
         throw new Error('CLIENT_ORIGIN is required in production');
     }
+
+    if (process.env.TRUST_PROXY !== undefined && !/^\d+$/.test(process.env.TRUST_PROXY)) {
+        throw new Error('TRUST_PROXY must be a non-negative integer hop count');
+    }
 }
 
 export const getMasterKey = (): Buffer => {

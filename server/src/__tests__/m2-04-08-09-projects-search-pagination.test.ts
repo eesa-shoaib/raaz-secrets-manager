@@ -13,11 +13,10 @@ const MASTER_KEY = Buffer.alloc(32, 9).toString('base64');
 const DUMMY_HASH = '$2a$12$abcdefghijklmnopqrstuu5c8r8B9f8f8f8f8f8f8f8f8f8f8f8f8';
 
 function signAuthCookie(userId: string, tokenVersion = 0, isPlatformAdmin = false): string {
-    const token = jwt.sign(
-        { sub: userId, tv: tokenVersion, pa: isPlatformAdmin },
-        JWT_SECRET,
-        { algorithm: 'HS256', expiresIn: '1h' },
-    );
+    const token = jwt.sign({ sub: userId, tv: tokenVersion, pa: isPlatformAdmin }, JWT_SECRET, {
+        algorithm: 'HS256',
+        expiresIn: '1h',
+    });
     return `token=${token}`;
 }
 
@@ -53,10 +52,36 @@ describe('M2-04, M2-08, M2-09: Project Details, Literal Search, and Cursor Pagin
         const app = createApp();
 
         const [admin, dev, deactivatedUser, outsider] = await UserModel.create([
-            { email: 'admin@example.com', username: 'admin_one', hasAvatar: true, avatarUpdatedAt: new Date('2026-11-01T00:00:00Z'), passwordHash: DUMMY_HASH, isActive: true, isPlatformAdmin: false },
-            { email: 'dev@example.com', username: 'dev_two', hasAvatar: false, passwordHash: DUMMY_HASH, isActive: true, isPlatformAdmin: false },
-            { email: 'deact@example.com', username: 'deact_user', passwordHash: DUMMY_HASH, isActive: false, isPlatformAdmin: false },
-            { email: 'outsider@example.com', passwordHash: DUMMY_HASH, isActive: true, isPlatformAdmin: false },
+            {
+                email: 'admin@example.com',
+                username: 'admin_one',
+                hasAvatar: true,
+                avatarUpdatedAt: new Date('2026-11-01T00:00:00Z'),
+                passwordHash: DUMMY_HASH,
+                isActive: true,
+                isPlatformAdmin: false,
+            },
+            {
+                email: 'dev@example.com',
+                username: 'dev_two',
+                hasAvatar: false,
+                passwordHash: DUMMY_HASH,
+                isActive: true,
+                isPlatformAdmin: false,
+            },
+            {
+                email: 'deact@example.com',
+                username: 'deact_user',
+                passwordHash: DUMMY_HASH,
+                isActive: false,
+                isPlatformAdmin: false,
+            },
+            {
+                email: 'outsider@example.com',
+                passwordHash: DUMMY_HASH,
+                isActive: true,
+                isPlatformAdmin: false,
+            },
         ]);
 
         const adminCookie = signAuthCookie(admin._id.toString());
@@ -139,19 +164,27 @@ describe('M2-04, M2-08, M2-09: Project Details, Literal Search, and Cursor Pagin
         expect(devPatch.status).toBe(403);
 
         // Outsider non-member -> 404 + no audit entry
-        const outsiderAuditBefore = await AuditLogEntryModel.countDocuments({ userId: outsider._id });
+        const outsiderAuditBefore = await AuditLogEntryModel.countDocuments({
+            userId: outsider._id,
+        });
         const outsiderPatch = await request(app)
             .patch(`/api/projects/${projectId}`)
             .set('Origin', ORIGIN)
             .set('Cookie', outsiderCookie)
             .send({ name: 'Hacked' });
         expect(outsiderPatch.status).toBe(404);
-        const outsiderAuditAfter = await AuditLogEntryModel.countDocuments({ userId: outsider._id });
+        const outsiderAuditAfter = await AuditLogEntryModel.countDocuments({
+            userId: outsider._id,
+        });
         expect(outsiderAuditAfter).toBe(outsiderAuditBefore);
 
         const audits = await AuditLogEntryModel.find({ projectId }).sort({ createdAt: 1 }).lean();
-        expect(audits.some((a) => a.action === 'project_renamed' && a.result === 'allowed')).toBe(true);
-        expect(audits.some((a) => a.action === 'project_updated' && a.result === 'allowed')).toBe(true);
+        expect(audits.some((a) => a.action === 'project_renamed' && a.result === 'allowed')).toBe(
+            true,
+        );
+        expect(audits.some((a) => a.action === 'project_updated' && a.result === 'allowed')).toBe(
+            true,
+        );
         expect(
             audits.some(
                 (a) =>
@@ -178,7 +211,12 @@ describe('M2-04, M2-08, M2-09: Project Details, Literal Search, and Cursor Pagin
         const app = createApp();
 
         const [admin] = await UserModel.create([
-            { email: 'searchadmin@example.com', passwordHash: DUMMY_HASH, isActive: true, isPlatformAdmin: false },
+            {
+                email: 'searchadmin@example.com',
+                passwordHash: DUMMY_HASH,
+                isActive: true,
+                isPlatformAdmin: false,
+            },
         ]);
         const cookie = signAuthCookie(admin._id.toString());
 
@@ -239,7 +277,9 @@ describe('M2-04, M2-08, M2-09: Project Details, Literal Search, and Cursor Pagin
 
         // Unrelated project p2 shouldn't share secrets
         const p2Secrets = await request(app)
-            .get(`/api/projects/${p2.body.id}/secrets?environment=development&mode=cursor&search=db`)
+            .get(
+                `/api/projects/${p2.body.id}/secrets?environment=development&mode=cursor&search=db`,
+            )
             .set('Cookie', cookie);
         expect(p2Secrets.body.data).toEqual([]);
     }, 25000);
@@ -249,9 +289,29 @@ describe('M2-04, M2-08, M2-09: Project Details, Literal Search, and Cursor Pagin
         const app = createApp();
 
         const [admin, dev, auditor] = await UserModel.create([
-            { email: 'pag_admin@example.com', username: 'pag_admin', hasAvatar: true, avatarUpdatedAt: new Date('2026-11-02T00:00:00Z'), passwordHash: DUMMY_HASH, isActive: true, isPlatformAdmin: false },
-            { email: 'pag_dev@example.com', username: 'pag_dev', hasAvatar: false, passwordHash: DUMMY_HASH, isActive: true, isPlatformAdmin: false },
-            { email: 'pag_aud@example.com', passwordHash: DUMMY_HASH, isActive: true, isPlatformAdmin: false },
+            {
+                email: 'pag_admin@example.com',
+                username: 'pag_admin',
+                hasAvatar: true,
+                avatarUpdatedAt: new Date('2026-11-02T00:00:00Z'),
+                passwordHash: DUMMY_HASH,
+                isActive: true,
+                isPlatformAdmin: false,
+            },
+            {
+                email: 'pag_dev@example.com',
+                username: 'pag_dev',
+                hasAvatar: false,
+                passwordHash: DUMMY_HASH,
+                isActive: true,
+                isPlatformAdmin: false,
+            },
+            {
+                email: 'pag_aud@example.com',
+                passwordHash: DUMMY_HASH,
+                isActive: true,
+                isPlatformAdmin: false,
+            },
         ]);
         const cookie = signAuthCookie(admin._id.toString());
 
@@ -272,15 +332,20 @@ describe('M2-04, M2-08, M2-09: Project Details, Literal Search, and Cursor Pagin
         let cursor: string | null = null;
         let pages = 0;
         do {
-            const qs = cursor
+            const qs: string = cursor
                 ? `?mode=cursor&limit=2&cursor=${encodeURIComponent(cursor)}`
                 : '?mode=cursor&limit=2';
             const res = await request(app).get(`/api/projects${qs}`).set('Cookie', cookie);
             expect(res.status).toBe(200);
             pages += 1;
-            for (const p of res.body.data) seenProjects.push(p.id);
-            cursor = res.body.nextCursor;
-            if (!res.body.hasMore) expect(cursor).toBeNull();
+            const body = res.body as {
+                data: Array<{ id: string }>;
+                nextCursor: string | null;
+                hasMore: boolean;
+            };
+            for (const p of body.data) seenProjects.push(p.id);
+            cursor = body.nextCursor;
+            if (!body.hasMore) expect(cursor).toBeNull();
         } while (cursor);
         expect(pages).toBe(3);
         expect(new Set(seenProjects).size).toBe(5);
@@ -310,7 +375,9 @@ describe('M2-04, M2-08, M2-09: Project Details, Literal Search, and Cursor Pagin
         expect(mPage1.body.data).toHaveLength(2);
         expect(mPage1.body.hasMore).toBe(true);
         const mPage2 = await request(app)
-            .get(`/api/projects/${projA}/members?mode=cursor&limit=2&cursor=${encodeURIComponent(mPage1.body.nextCursor)}`)
+            .get(
+                `/api/projects/${projA}/members?mode=cursor&limit=2&cursor=${encodeURIComponent(mPage1.body.nextCursor)}`,
+            )
             .set('Cookie', cookie);
         expect(mPage2.status).toBe(200);
         expect(mPage2.body.data).toHaveLength(1);
@@ -346,19 +413,25 @@ describe('M2-04, M2-08, M2-09: Project Details, Literal Search, and Cursor Pagin
 
         // Cross-environment cursor rejection (422)
         const crossEnv = await request(app)
-            .get(`/api/projects/${projA}/secrets?environment=staging&limit=2&cursor=${encodeURIComponent(sPage1.body.nextCursor)}`)
+            .get(
+                `/api/projects/${projA}/secrets?environment=staging&limit=2&cursor=${encodeURIComponent(sPage1.body.nextCursor)}`,
+            )
             .set('Cookie', cookie);
         expect(crossEnv.status).toBe(422);
 
         // Cross-project cursor rejection (422)
         const crossProj = await request(app)
-            .get(`/api/projects/${projB}/secrets?environment=development&limit=2&cursor=${encodeURIComponent(sPage1.body.nextCursor)}`)
+            .get(
+                `/api/projects/${projB}/secrets?environment=development&limit=2&cursor=${encodeURIComponent(sPage1.body.nextCursor)}`,
+            )
             .set('Cookie', cookie);
         expect(crossProj.status).toBe(422);
 
         // Second page of secrets succeeds
         const sPage2 = await request(app)
-            .get(`/api/projects/${projA}/secrets?environment=development&limit=2&cursor=${encodeURIComponent(sPage1.body.nextCursor)}`)
+            .get(
+                `/api/projects/${projA}/secrets?environment=development&limit=2&cursor=${encodeURIComponent(sPage1.body.nextCursor)}`,
+            )
             .set('Cookie', cookie);
         expect(sPage2.status).toBe(200);
         expect(sPage2.body.data).toHaveLength(1);
@@ -369,30 +442,57 @@ describe('M2-04, M2-08, M2-09: Project Details, Literal Search, and Cursor Pagin
         let auditCursor: string | null = null;
         let actorHasUsername = false;
         do {
-            const qs = auditCursor
+            const qs: string = auditCursor
                 ? `?mode=cursor&limit=3&cursor=${encodeURIComponent(auditCursor)}`
                 : '?mode=cursor&limit=3';
             const res = await request(app)
                 .get(`/api/projects/${projA}/audit-log${qs}`)
                 .set('Cookie', cookie);
             expect(res.status).toBe(200);
-            for (const entry of res.body.data) {
+            const body = res.body as {
+                data: Array<{ id: string; user?: { username?: string | null } }>;
+                nextCursor: string | null;
+            };
+            for (const entry of body.data) {
                 seenAuditIds.push(entry.id);
                 if (entry.user?.username === 'pag_admin') {
                     actorHasUsername = true;
                 }
             }
-            auditCursor = res.body.nextCursor;
+            auditCursor = body.nextCursor;
         } while (auditCursor);
         expect(actorHasUsername).toBe(true);
         expect(new Set(seenAuditIds).size).toBe(seenAuditIds.length);
         expect(seenAuditIds.length).toBeGreaterThanOrEqual(7);
 
         // Reject tampered cursor, page param, and oversized limit (422)
-        expect((await request(app).get(`/api/projects?mode=cursor&cursor=not-a-valid-cursor`).set('Cookie', cookie)).status).toBe(422);
-        expect((await request(app).get(`/api/projects?page=2`).set('Cookie', cookie)).status).toBe(422);
-        expect((await request(app).get(`/api/projects/${projA}/members?page=2`).set('Cookie', cookie)).status).toBe(422);
-        expect((await request(app).get(`/api/projects/${projA}/secrets?environment=development&page=2`).set('Cookie', cookie)).status).toBe(422);
-        expect((await request(app).get(`/api/projects/${projA}/audit-log?limit=101`).set('Cookie', cookie)).status).toBe(422);
+        expect(
+            (
+                await request(app)
+                    .get(`/api/projects?mode=cursor&cursor=not-a-valid-cursor`)
+                    .set('Cookie', cookie)
+            ).status,
+        ).toBe(422);
+        expect((await request(app).get(`/api/projects?page=2`).set('Cookie', cookie)).status).toBe(
+            422,
+        );
+        expect(
+            (await request(app).get(`/api/projects/${projA}/members?page=2`).set('Cookie', cookie))
+                .status,
+        ).toBe(422);
+        expect(
+            (
+                await request(app)
+                    .get(`/api/projects/${projA}/secrets?environment=development&page=2`)
+                    .set('Cookie', cookie)
+            ).status,
+        ).toBe(422);
+        expect(
+            (
+                await request(app)
+                    .get(`/api/projects/${projA}/audit-log?limit=101`)
+                    .set('Cookie', cookie)
+            ).status,
+        ).toBe(422);
     }, 25000);
 });

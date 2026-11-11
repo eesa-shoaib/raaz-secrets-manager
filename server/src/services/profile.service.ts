@@ -81,7 +81,9 @@ export async function uploadAvatar(
     try {
         let updatedUser: ReturnType<typeof toPublicUser> | undefined;
         await session.withTransaction(async () => {
-            const existingAvatar = await UserAvatarModel.findOne({ userId: new Types.ObjectId(userId) })
+            const existingAvatar = await UserAvatarModel.findOne({
+                userId: new Types.ObjectId(userId),
+            })
                 .select('version')
                 .session(session)
                 .lean();
@@ -197,7 +199,9 @@ export async function getAuthorizedAvatar(
     }
 
     return {
-        data: Buffer.isBuffer(avatar.data) ? avatar.data : Buffer.from((avatar.data as { buffer: Uint8Array }).buffer),
+        data: Buffer.isBuffer(avatar.data)
+            ? avatar.data
+            : Buffer.from((avatar.data as { buffer: Uint8Array }).buffer),
         contentType: avatar.contentType,
         byteLength: avatar.byteLength,
         version: avatar.version,

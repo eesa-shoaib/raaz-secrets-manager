@@ -12,7 +12,7 @@ export const usernameSchema = z
     .toLowerCase()
     .regex(
         usernameRegex,
-        'Username must be 3–30 characters of lowercase letters, numbers, underscores, or hyphens'
+        'Username must be 3–30 characters of lowercase letters, numbers, underscores, or hyphens',
     );
 export type Username = z.infer<typeof usernameSchema>;
 
@@ -52,7 +52,10 @@ export type AvatarContentType = z.infer<typeof avatarContentTypeEnum>;
 export const avatarUploadInputSchema = z
     .object({
         contentType: avatarContentTypeEnum,
-        data: z.string().min(1, 'Image data is required').max(2_800_000, 'Image payload exceeds maximum size'),
+        data: z
+            .string()
+            .min(1, 'Image data is required')
+            .max(2_800_000, 'Image payload exceeds maximum size'),
     })
     .strict();
 export type AvatarUploadInput = z.infer<typeof avatarUploadInputSchema>;

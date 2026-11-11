@@ -379,71 +379,73 @@ export function SecretsPage() {
                                                 </div>
                                             </td>
 
-                                        {/* Value */}
-                                        <td className="py-4">
-                                            <SecretValueCell
-                                                secretId={secret.id}
-                                                secretKey={secret.key}
-                                                projectId={projectId!}
-                                                environment={currentEnv}
-                                                canReveal={canReveal}
-                                            />
-                                        </td>
+                                            {/* Value */}
+                                            <td className="py-4">
+                                                <SecretValueCell
+                                                    secretId={secret.id}
+                                                    secretKey={secret.key}
+                                                    projectId={projectId!}
+                                                    environment={currentEnv}
+                                                    canReveal={canReveal}
+                                                />
+                                            </td>
 
-                                        {/* Last Accessed */}
-                                        <td className="py-4 text-xs text-base-content/70">
-                                            {formatDate(secret.lastAccessedAt)}
-                                        </td>
+                                            {/* Last Accessed */}
+                                            <td className="py-4 text-xs text-base-content/70">
+                                                {formatDate(secret.lastAccessedAt)}
+                                            </td>
 
-                                        {/* Created */}
-                                        <td className="py-4 text-xs text-base-content/70">
-                                            {formatDate(secret.createdAt)}
-                                        </td>
+                                            {/* Created */}
+                                            <td className="py-4 text-xs text-base-content/70">
+                                                {formatDate(secret.createdAt)}
+                                            </td>
 
-                                        {/* Actions */}
-                                        <td className="py-4 pr-6 text-right">
-                                            <div className="flex items-center justify-end gap-1">
-                                                {canEdit !== 'hidden' && (
-                                                    <div
-                                                        className={
-                                                            canEdit === 'disabled'
-                                                                ? 'tooltip tooltip-left'
-                                                                : ''
-                                                        }
-                                                        data-tip={
-                                                            canEdit === 'disabled'
-                                                                ? disabledReason
-                                                                : undefined
-                                                        }
-                                                    >
+                                            {/* Actions */}
+                                            <td className="py-4 pr-6 text-right">
+                                                <div className="flex items-center justify-end gap-1">
+                                                    {canEdit !== 'hidden' && (
+                                                        <div
+                                                            className={
+                                                                canEdit === 'disabled'
+                                                                    ? 'tooltip tooltip-left'
+                                                                    : ''
+                                                            }
+                                                            data-tip={
+                                                                canEdit === 'disabled'
+                                                                    ? disabledReason
+                                                                    : undefined
+                                                            }
+                                                        >
+                                                            <button
+                                                                type="button"
+                                                                disabled={canEdit === 'disabled'}
+                                                                onClick={() =>
+                                                                    handleOpenEdit(secret)
+                                                                }
+                                                                className="btn btn-ghost btn-xs font-ui text-base-content/80 hover:text-base-content disabled:opacity-40"
+                                                                aria-label={`Edit ${secret.key}`}
+                                                            >
+                                                                Edit
+                                                            </button>
+                                                        </div>
+                                                    )}
+
+                                                    {canDelete === 'enabled' && (
                                                         <button
                                                             type="button"
-                                                            disabled={canEdit === 'disabled'}
-                                                            onClick={() => handleOpenEdit(secret)}
-                                                            className="btn btn-ghost btn-xs font-ui text-base-content/80 hover:text-base-content disabled:opacity-40"
-                                                            aria-label={`Edit ${secret.key}`}
+                                                            onClick={() => handleOpenDelete(secret)}
+                                                            className="btn btn-ghost btn-xs font-ui text-error/80 hover:text-error hover:bg-error/10"
+                                                            aria-label={`Delete ${secret.key}`}
                                                         >
-                                                            Edit
+                                                            Delete
                                                         </button>
-                                                    </div>
-                                                )}
-
-                                                {canDelete === 'enabled' && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleOpenDelete(secret)}
-                                                        className="btn btn-ghost btn-xs font-ui text-error/80 hover:text-error hover:bg-error/10"
-                                                        aria-label={`Delete ${secret.key}`}
-                                                    >
-                                                        Delete
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
                         <PaginationControls
                             hasPrevious={cursorHistory.length > 0}

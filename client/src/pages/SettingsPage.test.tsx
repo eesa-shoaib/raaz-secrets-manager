@@ -41,7 +41,9 @@ const BASE_USER = {
 
 function LoginSentinel() {
     const loc = useLocation();
-    return <div data-testid="login-reason">{(loc.state as { reason?: string } | null)?.reason}</div>;
+    return (
+        <div data-testid="login-reason">{(loc.state as { reason?: string } | null)?.reason}</div>
+    );
 }
 
 describe('SettingsPage', () => {
@@ -158,7 +160,9 @@ describe('SettingsPage', () => {
 
         fireEvent.click(screen.getByRole('button', { name: 'Update Password' }));
         await waitFor(() => {
-            expect(screen.getByRole('alert').textContent).toContain('Current password is incorrect.');
+            expect(screen.getByRole('alert').textContent).toContain(
+                'Current password is incorrect.',
+            );
         });
         expect(screen.queryByTestId('login-reason')).toBeNull();
 

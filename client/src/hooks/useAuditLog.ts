@@ -1,9 +1,5 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import {
-    getProjectAuditLog,
-    getProjectAuditLogPage,
-    type AuditLogFilters,
-} from '../api/audit';
+import { getProjectAuditLog, getProjectAuditLogPage, type AuditLogFilters } from '../api/audit';
 import { queryKeys } from '../lib/queryClient';
 
 export function useProjectAuditLog(projectId: string, filters: AuditLogFilters = {}) {

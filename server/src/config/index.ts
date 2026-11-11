@@ -1,1 +1,1 @@
-export { defaultClientOrigin, getClientOrigin, getPort } from './env.js';
+export { defaultClientOrigin, getClientOrigin, getPort, getTrustProxy } from './env.js';

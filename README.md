@@ -37,40 +37,20 @@ Client (React + Vite)  →  Server (Express)  →  MongoDB Atlas
 ## MVP Status
 
 **MVP 1 is closed at the owner's direction.** See the
-[closure record](./docs/MVP_BOARD.md); outstanding security/browser verification
-is carried forward, not claimed complete.
+[closure record](./docs/MVP_BOARD.md).
 
-**MVP 2 is planned, not implemented.** The [active board](./docs/MVP_2_BOARD.md)
-organizes work by outcome and dependency, without weekly schedules:
+**MVP 2 (Team Pilot) features are implemented and verified locally.** See the
+[MVP 2 board](./docs/MVP_2_BOARD.md) and [operations runbook](./docs/RUNBOOK.md):
 
-- Account settings: optional username and profile picture, plus password change.
-- Project name/description and total member count in the project page's
-  right-side column, with an edit
-  dialog for Project Admins; the same panel stacks on mobile.
-- Server-side pagination for projects, secrets, members, audit and admin users;
-  metadata search and copy-key actions on existing screens.
-- Platform Admin users UI, security proof, hosted deployment and recovery testing.
-
-Profile thumbnails are planned as binary documents in a private `userAvatars`
-collection in the existing Atlas database, served through authorized API reads.
-No upload endpoint, avatar collection, new settings page or storage service is
-claimed implemented. Do not put secret values in profile/project metadata.
-
-The server has authentication, project, membership, secret, project audit-log, and backend-only Platform Admin user routes. Security-sensitive behavior still needs replica-set integration tests. The client includes API modules, hooks, and MVP pages; see the frontend checklist for outstanding verification.
-
-The accepted MVP 1 feature set includes:
-
-- Project-scoped secrets with environment isolation (dev/staging/prod)
-- Role-based access: Project Admin, Developer, Auditor
-- Audited secret reveals with production confirmation modal
-- Per-project team management (add members, change roles, and remove members)
-- Read-only audit log with filtering
-
-For current server setup, manual testing, and mock data generation, see [server/IMPLEMENTED.md](./server/IMPLEMENTED.md). See [server/TODO.md](./server/TODO.md) for remaining server work.
+- **Account settings (`/settings`)**: optional unique username, 256x256 JPEG/PNG/WebP profile picture stored as bounded BSON binary in private `userAvatars` (transactional with audit log), and authenticated password change invalidating active sessions via `tokenVersion`.
+- **Platform Admin user management (`/admin/users`)**: cursor-paginated user directory, promote/demote and activate/deactivate with atomic last-active-admin protection (`409 CONFLICT`) and zero substitute access to project data.
+- **Project descriptions & editable details**: optional 500-char plain-text description, server-computed read-only `memberCount`, and Project-Admin-only edit modal (`PATCH /api/projects/:projectId`).
+- **Cursor pagination & metadata search**: bounded cursor pagination (default 25, max 100) across projects, secrets, members, audit logs, and admin users, plus server-side literal metadata search, `Copy` key action, and accessible permission explanations.
+- **Deployment & recovery readiness**: SPA CSP/no-store headers in `client/vercel.json`, `TRUST_PROXY` hop validation, `/api` `no-store` cache headers, mock-seed safety guard, `server/scripts/rehearse-recovery.mjs`, and `docs/RUNBOOK.md`. Live hosted pilot smoke verification requires target Render/Vercel/Atlas credentials.
 
 ## Environment Variables
 
-See `server/.env.example` for the full list. Required for local dev:
+See `server/.env.example` for the full list (including optional `TRUST_PROXY`, `CLIENT_ORIGIN`, `COOKIE_DOMAIN`, `COOKIE_SAMESITE`). Required for local dev:
 
 - `MONGO_URI` — MongoDB Atlas connection string
 - `JWT_SECRET` — 32+ char random string

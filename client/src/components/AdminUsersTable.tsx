@@ -48,7 +48,10 @@ export function AdminUsersTable({
                     {users.map((entry) => {
                         const isSelf = entry.id === currentUserId;
                         return (
-                            <tr key={entry.id} className="border-b border-base-300/60 last:border-b-0">
+                            <tr
+                                key={entry.id}
+                                className="border-b border-base-300/60 last:border-b-0"
+                            >
                                 <td>
                                     <div className="flex items-center gap-3">
                                         <UserAvatar
@@ -62,7 +65,9 @@ export function AdminUsersTable({
                                         <div className="min-w-0">
                                             <div className="flex items-center gap-2">
                                                 <span className="font-medium text-base-content truncate">
-                                                    {entry.username ? `@${entry.username}` : entry.email}
+                                                    {entry.username
+                                                        ? `@${entry.username}`
+                                                        : entry.email}
                                                 </span>
                                                 {isSelf && (
                                                     <span className="badge badge-ghost badge-xs">
@@ -93,7 +98,9 @@ export function AdminUsersTable({
                                         value={entry.isActive ? 'active' : 'inactive'}
                                     />
                                 </td>
-                                <td className="text-base-content/70">{formatDate(entry.createdAt)}</td>
+                                <td className="text-base-content/70">
+                                    {formatDate(entry.createdAt)}
+                                </td>
                                 <td>
                                     <div className="flex items-center justify-end gap-2">
                                         <button

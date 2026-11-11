@@ -1,8 +1,4 @@
-import type {
-    CursorPaginatedResponse,
-    PublicUser,
-    UpdateUserInput,
-} from '@raaz/shared-schemas';
+import type { CursorPaginatedResponse, PublicUser, UpdateUserInput } from '@raaz/shared-schemas';
 import apiClient from './axios';
 
 export interface AdminUsersParams {
@@ -26,10 +22,7 @@ export async function getAdminUsers(
     return res.data;
 }
 
-export async function updateAdminUser(
-    userId: string,
-    data: UpdateUserInput,
-): Promise<PublicUser> {
+export async function updateAdminUser(userId: string, data: UpdateUserInput): Promise<PublicUser> {
     const res = await apiClient.patch<PublicUser | { user: PublicUser }>(
         `/admin/users/${userId}`,
         data,
