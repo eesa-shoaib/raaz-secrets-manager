@@ -95,7 +95,9 @@ export async function addProjectMember(
         });
         await session.commitTransaction();
     } catch (error) {
-        await session.abortTransaction();
+        if (typeof session.inTransaction !== 'function' || session.inTransaction()) {
+            await session.abortTransaction();
+        }
         throw error;
     } finally {
         await session.endSession();

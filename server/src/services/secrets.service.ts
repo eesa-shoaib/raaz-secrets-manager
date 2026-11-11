@@ -161,24 +161,22 @@ export async function createSecret(
     });
 
     const session = await mongoose.startSession();
-    session.startTransaction();
     try {
-        await secret.save({ session });
-        await writeAuditEntry({
-            session,
-            userId,
-            projectId,
-            secretId: secretId.toString(),
-            secretKey: key,
-            environment: secret.environment,
-            action: 'create',
-            result: 'allowed',
+        await session.withTransaction(async () => {
+            secret.isNew = true;
+            await secret.save({ session });
+            await writeAuditEntry({
+                session,
+                userId,
+                projectId,
+                secretId: secretId.toString(),
+                secretKey: key,
+                environment: secret.environment,
+                action: 'create',
+                result: 'allowed',
+            });
         });
-        await session.commitTransaction();
         return secret;
-    } catch (error) {
-        await session.abortTransaction();
-        throw error;
     } finally {
         await session.endSession();
     }
@@ -227,39 +225,35 @@ export async function editSecret(
     const encrypted = encrypt(value, projectId, secretId, oldSecret.environment);
 
     const session = await mongoose.startSession();
-    session.startTransaction();
     try {
-        const updated = await SecretModel.findOneAndUpdate(
-            { _id: secretObjectId, projectId },
-            {
-                $set: {
-                    ciphertext: encrypted.ciphertext,
-                    iv: encrypted.iv,
-                    authTag: encrypted.authTag,
-                    encryptionKeyVersion: encrypted.encryptionKeyVersion,
-                    lastEditedBy: userId,
-                    updatedAt: new Date(),
+        await session.withTransaction(async () => {
+            const updated = await SecretModel.findOneAndUpdate(
+                { _id: secretObjectId, projectId },
+                {
+                    $set: {
+                        ciphertext: encrypted.ciphertext,
+                        iv: encrypted.iv,
+                        authTag: encrypted.authTag,
+                        encryptionKeyVersion: encrypted.encryptionKeyVersion,
+                        lastEditedBy: userId,
+                        updatedAt: new Date(),
+                    },
                 },
-            },
-            { new: true, session },
-        ).exec();
-        if (!updated) throw new AppError(404, 'NOT_FOUND', 'Secret not found');
+                { new: true, session },
+            ).exec();
+            if (!updated) throw new AppError(404, 'NOT_FOUND', 'Secret not found');
 
-        await writeAuditEntry({
-            session,
-            userId,
-            projectId,
-            secretId,
-            secretKey: oldSecret.key,
-            environment: oldSecret.environment,
-            action: 'edit',
-            result: 'allowed',
+            await writeAuditEntry({
+                session,
+                userId,
+                projectId,
+                secretId,
+                secretKey: oldSecret.key,
+                environment: oldSecret.environment,
+                action: 'edit',
+                result: 'allowed',
+            });
         });
-
-        await session.commitTransaction();
-    } catch (error) {
-        await session.abortTransaction();
-        throw error;
     } finally {
         await session.endSession();
     }
@@ -282,29 +276,25 @@ export async function deleteSecret(
     }
 
     const session = await mongoose.startSession();
-    session.startTransaction();
     try {
-        const deleted = await SecretModel.findOneAndDelete(
-            { _id: secretObjectId, projectId },
-            { session },
-        ).lean();
-        if (!deleted) throw new AppError(404, 'NOT_FOUND', 'Secret not found');
+        await session.withTransaction(async () => {
+            const deleted = await SecretModel.findOneAndDelete(
+                { _id: secretObjectId, projectId },
+                { session },
+            ).lean();
+            if (!deleted) throw new AppError(404, 'NOT_FOUND', 'Secret not found');
 
-        await writeAuditEntry({
-            session,
-            userId,
-            projectId,
-            secretId,
-            secretKey: deleted.key,
-            environment: deleted.environment,
-            action: 'delete',
-            result: 'allowed',
+            await writeAuditEntry({
+                session,
+                userId,
+                projectId,
+                secretId,
+                secretKey: deleted.key,
+                environment: deleted.environment,
+                action: 'delete',
+                result: 'allowed',
+            });
         });
-
-        await session.commitTransaction();
-    } catch (error) {
-        await session.abortTransaction();
-        throw error;
     } finally {
         await session.endSession();
     }
@@ -348,27 +338,24 @@ export async function revealSecret(
 
     // Record access audit entry
     const session = await mongoose.startSession();
-    session.startTransaction();
     try {
-        await writeAuditEntry({
-            session,
-            userId,
-            projectId,
-            secretId,
-            environment: secret.environment,
-            secretKey: secret.key,
-            action: 'reveal',
-            result: 'allowed',
+        await session.withTransaction(async () => {
+            await writeAuditEntry({
+                session,
+                userId,
+                projectId,
+                secretId,
+                environment: secret.environment,
+                secretKey: secret.key,
+                action: 'reveal',
+                result: 'allowed',
+            });
+            await SecretModel.updateOne(
+                { _id: secretId, projectId },
+                { $set: { lastAccessedAt: new Date(), lastAccessedBy: userId } },
+                { session },
+            );
         });
-        await SecretModel.updateOne(
-            { _id: secretId, projectId },
-            { $set: { lastAccessedAt: new Date(), lastAccessedBy: userId } },
-            { session },
-        );
-        await session.commitTransaction();
-    } catch (error) {
-        await session.abortTransaction();
-        throw error;
     } finally {
         await session.endSession();
     }
