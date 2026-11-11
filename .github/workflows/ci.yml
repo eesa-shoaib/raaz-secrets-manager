@@ -48,7 +48,7 @@ jobs:
       RECOVERY_MONGO_URI: mongodb://127.0.0.1:27017/raaz_recovery_ci?replicaSet=rs0&directConnection=true
       REQUIRE_TEST_DB: 'true'
       JWT_SECRET: test-secret-that-is-at-least-32-characters-long
-      MASTER_KEY: dGVzdC1tYXN0ZXJrZXktdGhhdC1pcy1leGFjdGx5LTMyLWJ5dGVz
+      MASTER_KEY: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
       MASTER_KEY_VERSION: 1
       NODE_ENV: test
       CLIENT_ORIGIN: http://localhost:5173
@@ -93,10 +93,17 @@ jobs:
             } catch (e) {
               if (!/already initialized/i.test(e.message)) throw e;
             }
-            for (let i = 0; i < 30; i++) {
+            let ready = false;
+            for (let i = 0; i < 60; i++) {
               const status = await client.db("admin").command({ hello: 1 });
-              if (status.isWritablePrimary) break;
+              if (status.isWritablePrimary) {
+                ready = true;
+                break;
+              }
               await new Promise((r) => setTimeout(r, 500));
+            }
+            if (!ready) {
+              throw new Error("MongoDB replica set did not become primary in time");
             }
             await client.close();
           '
