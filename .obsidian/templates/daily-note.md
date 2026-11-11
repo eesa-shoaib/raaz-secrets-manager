@@ -5,6 +5,8 @@ date: <% tp.date.now("YYYY-MM-DD") %>
 
 # <% tp.date.now("dddd, MMMM Do YYYY") %>
 
+Active milestone: [[MVP_2_BOARD.md]] — work item M2-XX.
+
 ## Goals
 
 - [ ]
@@ -29,6 +31,11 @@ date: <% tp.date.now("YYYY-MM-DD") %>
 
 -
 
+## Verification Evidence
+
+- Revision, commands and results:
+- Remaining acceptance checks:
+
 ## Decisions Made
 
 -
@@ -36,4 +43,4 @@ date: <% tp.date.now("YYYY-MM-DD") %>
 ## Links
 
 - [[PRODUCT.md#Cut from MVP]]
-- [[ARCHITECTURE.md#RBAC Pipeline]]
+- [[ARCHITECTURE.md#Authorization (RBAC) Pipeline]]
