@@ -40,7 +40,7 @@ jobs:
 
   test-server:
     name: Test Server
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: lint-and-format
     env:
       MONGO_URI: mongodb://127.0.0.1:27017/?replicaSet=rs0&directConnection=true
@@ -60,13 +60,46 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-      - name: Start MongoDB 8 single-node replica set
-        uses: supercharge/mongodb-github-action@1.12.1
+      - name: Cache MongoDB 8.0.4 binary
+        id: cache-mongo
+        uses: actions/cache@v4
         with:
-          mongodb-version: '8.0'
-          mongodb-replica-set: rs0
-          mongodb-port: 27017
+          path: /tmp/mongodb-8.0.4
+          key: mongodb-ubuntu2404-8.0.4
+      - name: Install and start MongoDB 8 single-node replica set
+        run: |
+          if [ "${{ steps.cache-mongo.outputs.cache-hit }}" != "true" ]; then
+            curl -fsSL https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu2404-8.0.4.tgz -o /tmp/mongodb.tgz
+            mkdir -p /tmp/mongodb-8.0.4
+            tar -xzf /tmp/mongodb.tgz --strip-components=1 -C /tmp/mongodb-8.0.4
+            rm -f /tmp/mongodb.tgz
+          fi
+          mkdir -p /tmp/mongo-data
+          /tmp/mongodb-8.0.4/bin/mongod \
+            --replSet rs0 \
+            --bind_ip 127.0.0.1 \
+            --port 27017 \
+            --dbpath /tmp/mongo-data \
+            --fork \
+            --logpath /tmp/mongod.log || { cat /tmp/mongod.log; exit 1; }
       - run: npm ci
+      - name: Initialize MongoDB replica set
+        run: |
+          node --input-type=module -e '
+            import mongoose from "mongoose";
+            const client = await mongoose.mongo.MongoClient.connect("mongodb://127.0.0.1:27017/?directConnection=true");
+            try {
+              await client.db("admin").command({ replSetInitiate: { _id: "rs0", members: [{ _id: 0, host: "127.0.0.1:27017" }] } });
+            } catch (e) {
+              if (!/already initialized/i.test(e.message)) throw e;
+            }
+            for (let i = 0; i < 30; i++) {
+              const status = await client.db("admin").command({ hello: 1 });
+              if (status.isWritablePrimary) break;
+              await new Promise((r) => setTimeout(r, 500));
+            }
+            await client.close();
+          '
       - run: npm run build -w packages/shared-schemas
       - run: npm run build -w server
       - run: npm run test -w server
