@@ -25,7 +25,10 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
 
     if (isPayloadTooLargeError(err)) {
         res.status(422).json({
-            error: { code: 'VALIDATION_ERROR', message: 'Request payload exceeds maximum allowed size' },
+            error: {
+                code: 'VALIDATION_ERROR',
+                message: 'Request payload exceeds maximum allowed size',
+            },
         });
         return;
     }
@@ -49,9 +52,6 @@ function isDuplicateKeyError(err: unknown): err is { code: number } {
 
 function isPayloadTooLargeError(err: unknown): boolean {
     return (
-        typeof err === 'object' &&
-        err !== null &&
-        'type' in err &&
-        err.type === 'entity.too.large'
+        typeof err === 'object' && err !== null && 'type' in err && err.type === 'entity.too.large'
     );
 }

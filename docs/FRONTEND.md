@@ -23,14 +23,14 @@ implementing each MVP 2 feature; unlisted follow-up work remains deferred.
 
 ## MVP 2 surfaces — active contract
 
-| Surface                         | Specification                                                                                                                                                  |
-| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/settings`                     | `RequireAuth`; `SettingsPage` with Profile (optional username, upload/replace/remove picture) and Security (password change); accessible from account menu     |
-| `/admin/users`                  | `RequireAuth` + `RequirePlatformAdmin`; `AdminUsersPage` with cursor-paginated users and activation/Platform-Admin role actions; no project/secret data        |
-| Project page right-side column  | Name, full description, total `memberCount`, role, and status across all project tabs; Project Admin "Edit details" opens a dialog; stacks on mobile           |
-| Resource lists                  | Projects, secrets, members, audit log, and admin users render `PaginationControls` with Previous/Next navigation and boundary/loading/error states             |
-| Project & secret list headers   | Server-side metadata search over all authorized results, resetting cursor state; secret search is scoped to the selected environment                           |
-| Secret row                      | Explicit "Copy key" button on every row (all roles including Auditor) with toast/button feedback; reveal rules unchanged                                       |
+| Surface                        | Specification                                                                                                                                              |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/settings`                    | `RequireAuth`; `SettingsPage` with Profile (optional username, upload/replace/remove picture) and Security (password change); accessible from account menu |
+| `/admin/users`                 | `RequireAuth` + `RequirePlatformAdmin`; `AdminUsersPage` with cursor-paginated users and activation/Platform-Admin role actions; no project/secret data    |
+| Project page right-side column | Name, full description, total `memberCount`, role, and status across all project tabs; Project Admin "Edit details" opens a dialog; stacks on mobile       |
+| Resource lists                 | Projects, secrets, members, audit log, and admin users render `PaginationControls` with Previous/Next navigation and boundary/loading/error states         |
+| Project & secret list headers  | Server-side metadata search over all authorized results, resetting cursor state; secret search is scoped to the selected environment                       |
+| Secret row                     | Explicit "Copy key" button on every row (all roles including Auditor) with toast/button feedback; reveal rules unchanged                                   |
 
 Show the read-only Members count beside the description in the right-side project
 panel, including when no description is set. Use the project detail's server
@@ -121,15 +121,15 @@ One Axios instance (`client/src/api/`) with a response interceptor turns every f
 
 **Query keys and invalidation.**
 
-| Key                                                        | Data                                | Invalidated by                                                                                      |
-| ---------------------------------------------------------- | ----------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `['me']`                                                   | `GET /auth/me`                      | set on login / profile / avatar update; cleared on logout, password change, and 401                 |
-| `['projects', { cursor, limit, search }]`                  | project list                        | create project, edit project details (`invalidateQueries({ queryKey: ['projects'] })`)              |
-| `['project', projectId]`                                   | project detail incl. `role` & count | edit project details, member add/remove, any 403 on a mutation in that project                      |
-| `['secrets', projectId, environment, { cursor, limit, search }]` | secrets list                  | create / edit / delete in that environment; a settled reveal (`lastAccessedAt` moves)               |
-| `['members', projectId, { cursor, limit }]`                | members list                        | add, change role, or remove member; profile/avatar update                                           |
-| `['audit', projectId, { action, result, environment, cursor, limit }]` | project audit log       | any secret mutation, reveal, project edit, or membership change (invalidate `['audit', projectId]`) |
-| `['admin-users', { cursor, limit }]`                       | platform users list                 | activate/deactivate user, grant/revoke Platform Admin                                               |
+| Key                                                                    | Data                                | Invalidated by                                                                                      |
+| ---------------------------------------------------------------------- | ----------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `['me']`                                                               | `GET /auth/me`                      | set on login / profile / avatar update; cleared on logout, password change, and 401                 |
+| `['projects', { cursor, limit, search }]`                              | project list                        | create project, edit project details (`invalidateQueries({ queryKey: ['projects'] })`)              |
+| `['project', projectId]`                                               | project detail incl. `role` & count | edit project details, member add/remove, any 403 on a mutation in that project                      |
+| `['secrets', projectId, environment, { cursor, limit, search }]`       | secrets list                        | create / edit / delete in that environment; a settled reveal (`lastAccessedAt` moves)               |
+| `['members', projectId, { cursor, limit }]`                            | members list                        | add, change role, or remove member; profile/avatar update                                           |
+| `['audit', projectId, { action, result, environment, cursor, limit }]` | project audit log                   | any secret mutation, reveal, project edit, or membership change (invalidate `['audit', projectId]`) |
+| `['admin-users', { cursor, limit }]`                                   | platform users list                 | activate/deactivate user, grant/revoke Platform Admin                                               |
 
 A reveal never writes any query key. The secret row is keyed by secret id, so the list refetch after a reveal doesn't remount the cell or clear its value; paging away unmounts the row and clears its local state.
 
@@ -175,18 +175,18 @@ A reveal never writes any query key. The secret row is keyed by secret id, so th
 
 ### 2.4 Domain
 
-| Widget            | Purpose                                                                                                           |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `Badge`           | One component, variants `role`, `environment`, `projectStatus`, `auditResult`, `userStatus`. Text always present. |
-| `UserAvatar`      | Private avatar image with cache-busting `?v=` query and deterministic initials fallback when unset or on error.   |
-| `ProjectCard`     | One project on the list with optional 2-line description preview. Link when active; locked when archived.         |
-| `EnvironmentTabs` | Tab strip above the secrets table. State is `?environment=`.                                                      |
-| `SecretsTable`    | Frame + column headers                                                                                            |
-| `SecretRow`       | One secret: key, Copy key button, value cell, last-accessed, actions                                              |
-| `SecretValueCell` | The reveal state machine, per row. Owns the value in local state.                                                 |
-| `MembersTable`    | Members list with `UserAvatar`, username + email, and optional actions column                                     |
-| `AuditLogTable`   | Project audit entries with actor username/email and `project_updated` / `project_renamed` labels                  |
-| `AdminUsersTable` | Platform users table with `UserAvatar`, status/admin badges, and confirm-gated Activate/Deactivate & Admin actions|
+| Widget            | Purpose                                                                                                            |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `Badge`           | One component, variants `role`, `environment`, `projectStatus`, `auditResult`, `userStatus`. Text always present.  |
+| `UserAvatar`      | Private avatar image with cache-busting `?v=` query and deterministic initials fallback when unset or on error.    |
+| `ProjectCard`     | One project on the list with optional 2-line description preview. Link when active; locked when archived.          |
+| `EnvironmentTabs` | Tab strip above the secrets table. State is `?environment=`.                                                       |
+| `SecretsTable`    | Frame + column headers                                                                                             |
+| `SecretRow`       | One secret: key, Copy key button, value cell, last-accessed, actions                                               |
+| `SecretValueCell` | The reveal state machine, per row. Owns the value in local state.                                                  |
+| `MembersTable`    | Members list with `UserAvatar`, username + email, and optional actions column                                      |
+| `AuditLogTable`   | Project audit entries with actor username/email and `project_updated` / `project_renamed` labels                   |
+| `AdminUsersTable` | Platform users table with `UserAvatar`, status/admin badges, and confirm-gated Activate/Deactivate & Admin actions |
 
 ## 3. Page Specifications
 
@@ -394,13 +394,13 @@ Invariants (correctness properties, not features — see §9):
 
 - **Action labels (17 total; the 12 project-scoped shown here):**
 
-| `action`                                                                                                         | Label                                                             |
-| ---------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| `reveal` / `create` / `edit` / `delete`                                                                          | Reveal / Create / Edit / Delete secret                            |
-| `member_added` / `member_role_changed` / `member_removed`                                                                            | Add / Change role / Remove member                                            |
+| `action`                                                                                                                             | Label                                                                              |
+| ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| `reveal` / `create` / `edit` / `delete`                                                                                              | Reveal / Create / Edit / Delete secret                                             |
+| `member_added` / `member_role_changed` / `member_removed`                                                                            | Add / Change role / Remove member                                                  |
 | `project_created` / `project_renamed` / `project_updated` / `project_environments_changed` / `project_archived` / `project_restored` | Create / Rename / Update details / Change environments / Archive / Restore project |
-| `user_activated` / `user_deactivated` / `platform_admin_granted` / `platform_admin_revoked` / `bootstrap_admin`                      | Platform-wide only — post-MVP                                                |
-| `password_changed` / `profile_updated` / `avatar_updated` / `avatar_removed`                                                         | Platform-wide account events (no project audit reader)                       |
+| `user_activated` / `user_deactivated` / `platform_admin_granted` / `platform_admin_revoked` / `bootstrap_admin`                      | Platform-wide only — post-MVP                                                      |
+| `password_changed` / `profile_updated` / `avatar_updated` / `avatar_removed`                                                         | Platform-wide account events (no project audit reader)                             |
 
 Unknown values render raw.
 
@@ -439,30 +439,30 @@ promise.
 
 - **Guard:** `RequireAuth`.
 - **Sections:**
-  1. **Profile:** read-only email (`me.email`), optional `username` input (`3–30` lowercase `[a-z0-9_-]`, or clear to unset) saving via `PATCH /api/account/profile`, and profile picture controls (`UserAvatar` preview, Upload/Replace PNG/JPEG/WebP ≤ 2 MiB via `PUT /api/account/avatar`, Remove via `DELETE /api/account/avatar`).
-  2. **Security:** change password form (`currentPassword`, `newPassword`, `confirmNewPassword` with `8–72` chars and mismatch/same-password checks) submitting to `POST /api/auth/change-password`. Wrong current password (`401`) maps to `currentPassword` field error without logging out; success clears `queryClient` and redirects to `/login` with `state.reason = 'password-changed'`.
+    1. **Profile:** read-only email (`me.email`), optional `username` input (`3–30` lowercase `[a-z0-9_-]`, or clear to unset) saving via `PATCH /api/account/profile`, and profile picture controls (`UserAvatar` preview, Upload/Replace PNG/JPEG/WebP ≤ 2 MiB via `PUT /api/account/avatar`, Remove via `DELETE /api/account/avatar`).
+    2. **Security:** change password form (`currentPassword`, `newPassword`, `confirmNewPassword` with `8–72` chars and mismatch/same-password checks) submitting to `POST /api/auth/change-password`. Wrong current password (`401`) maps to `currentPassword` field error without logging out; success clears `queryClient` and redirects to `/login` with `state.reason = 'password-changed'`.
 
 ## 4. Per-Role UI Map
 
 Derived from permissions matrix. `E` = enabled, `D` =
 disabled with reason, `H` = hidden, `—` = route unreachable.
 
-| Control                     | Project Admin | Developer (dev) | Developer (other) | Auditor | Platform Admin |
-| --------------------------- | ------------- | --------------- | ----------------- | ------- | -------------- |
-| View project & `memberCount`| E             | E               | E                 | E       | — (404)¹       |
-| Edit project details        | E             | H               | H                 | H       | — (404)¹       |
-| View secrets list & search  | E             | E               | E                 | E       | — (404)¹       |
-| Copy secret key             | E             | E               | E                 | E       | —              |
-| New secret                  | E             | E               | D                 | H       | —              |
-| Reveal                      | E             | E               | E (prod: modal)   | H       | —              |
-| Edit value                  | E             | E               | D                 | H       | —              |
-| Delete secret               | E             | H               | H                 | H       | —              |
-| View members                | E             | E               | E                 | E       | —              |
-| Add member                  | E             | H               | H                 | H       | API-only       |
-| Change role / remove member | E             | H               | H                 | H       | API-only       |
-| View project audit log      | E             | E               | E                 | E       | —              |
-| `/admin/users`              | H             | H               | H                 | H       | E              |
-| `/settings` (own account)   | E             | E               | E                 | E       | E              |
+| Control                      | Project Admin | Developer (dev) | Developer (other) | Auditor | Platform Admin |
+| ---------------------------- | ------------- | --------------- | ----------------- | ------- | -------------- |
+| View project & `memberCount` | E             | E               | E                 | E       | — (404)¹       |
+| Edit project details         | E             | H               | H                 | H       | — (404)¹       |
+| View secrets list & search   | E             | E               | E                 | E       | — (404)¹       |
+| Copy secret key              | E             | E               | E                 | E       | —              |
+| New secret                   | E             | E               | D                 | H       | —              |
+| Reveal                       | E             | E               | E (prod: modal)   | H       | —              |
+| Edit value                   | E             | E               | D                 | H       | —              |
+| Delete secret                | E             | H               | H                 | H       | —              |
+| View members                 | E             | E               | E                 | E       | —              |
+| Add member                   | E             | H               | H                 | H       | API-only       |
+| Change role / remove member  | E             | H               | H                 | H       | API-only       |
+| View project audit log       | E             | E               | E                 | E       | —              |
+| `/admin/users`               | H             | H               | H                 | H       | E              |
+| `/settings` (own account)    | E             | E               | E                 | E       | E              |
 
 ¹ Platform Admin without membership gets 404 on project-scoped routes (`/projects/:id/*`). A platform-wide project overview is post-MVP.
 

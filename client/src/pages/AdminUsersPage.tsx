@@ -1,8 +1,5 @@
 import React, { useState } from 'react';
-import {
-    AdminUsersTable,
-    type AdminUserActionRequest,
-} from '../components/AdminUsersTable';
+import { AdminUsersTable, type AdminUserActionRequest } from '../components/AdminUsersTable';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { EmptyState, ErrorState } from '../components/FullPageState';
 import { Skeleton } from '../components/LoadingSkeleton';
@@ -97,7 +94,8 @@ export function AdminUsersPage() {
             if (isApiError(err)) {
                 if (err.status === 409) {
                     setActionError(
-                        err.message || 'Cannot demote or deactivate the last active Platform Admin.',
+                        err.message ||
+                            'Cannot demote or deactivate the last active Platform Admin.',
                     );
                 } else {
                     setActionError(err.message || 'Failed to update user.');

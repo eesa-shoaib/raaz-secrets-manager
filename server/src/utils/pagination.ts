@@ -14,7 +14,8 @@ export interface DecodedCursor {
 }
 
 export function encodeCursor(scope: string, createdAt: Date | string, id: string): string {
-    const iso = createdAt instanceof Date ? createdAt.toISOString() : new Date(createdAt).toISOString();
+    const iso =
+        createdAt instanceof Date ? createdAt.toISOString() : new Date(createdAt).toISOString();
     const payload = JSON.stringify({ scope, createdAt: iso, id });
     return Buffer.from(payload, 'utf8').toString('base64url');
 }
@@ -24,7 +25,11 @@ export function decodeCursor(cursor: string, expectedScope: string): DecodedCurs
         const json = Buffer.from(cursor, 'base64url').toString('utf8');
         const parsed = cursorPayloadSchema.parse(JSON.parse(json));
         if (parsed.scope !== expectedScope) {
-            throw new AppError(422, 'VALIDATION_ERROR', 'Pagination cursor does not match request scope');
+            throw new AppError(
+                422,
+                'VALIDATION_ERROR',
+                'Pagination cursor does not match request scope',
+            );
         }
         const date = new Date(parsed.createdAt);
         if (Number.isNaN(date.getTime())) {

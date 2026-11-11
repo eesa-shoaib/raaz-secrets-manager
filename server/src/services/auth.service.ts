@@ -149,9 +149,7 @@ export async function changePassword(
     const session = await mongoose.startSession();
     try {
         await session.withTransaction(async () => {
-            const user = await UserModel.findById(userId)
-                .select('+passwordHash')
-                .session(session);
+            const user = await UserModel.findById(userId).select('+passwordHash').session(session);
             if (!user || !user.isActive) {
                 throw new AppError(401, 'UNAUTHENTICATED', 'Authentication required');
             }

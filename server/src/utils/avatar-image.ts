@@ -51,8 +51,17 @@ export function normalizeAvatarImage(
 }
 
 function assertNotSvgOrMarkup(buf: Buffer): void {
-    const head = buf.subarray(0, Math.min(buf.byteLength, 512)).toString('utf8').trimStart().toLowerCase();
-    if (head.startsWith('<svg') || head.startsWith('<?xml') || head.startsWith('<!doctype') || head.startsWith('<html')) {
+    const head = buf
+        .subarray(0, Math.min(buf.byteLength, 512))
+        .toString('utf8')
+        .trimStart()
+        .toLowerCase();
+    if (
+        head.startsWith('<svg') ||
+        head.startsWith('<?xml') ||
+        head.startsWith('<!doctype') ||
+        head.startsWith('<html')
+    ) {
         throw new AppError(422, 'VALIDATION_ERROR', 'SVG and HTML payloads are not permitted');
     }
 }
@@ -164,7 +173,11 @@ function normalizePng(buf: Buffer): NormalizedAvatar {
     }
 
     // Attempt pure-Node downscale for standard 8-bit non-interlaced PNGs
-    if (bitDepth === 8 && interlace === 0 && (colorType === 2 || colorType === 6 || colorType === 0 || colorType === 4)) {
+    if (
+        bitDepth === 8 &&
+        interlace === 0 &&
+        (colorType === 2 || colorType === 6 || colorType === 0 || colorType === 4)
+    ) {
         const idatBuffers = chunks.filter((c) => c.type === 'IDAT').map((c) => c.data);
         const compressed = Buffer.concat(idatBuffers);
         const rawScanlines = inflateSync(compressed, { maxOutputLength: 64 * 1024 * 1024 });

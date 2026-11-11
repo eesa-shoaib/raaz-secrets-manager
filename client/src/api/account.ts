@@ -31,10 +31,7 @@ export async function deleteAvatar(): Promise<PublicUser> {
     return body.user ?? body;
 }
 
-export function getUserAvatarUrl(
-    userId: string,
-    avatarUpdatedAt?: string | Date | null,
-): string {
+export function getUserAvatarUrl(userId: string, avatarUpdatedAt?: string | Date | null): string {
     const base = `/api/users/${encodeURIComponent(userId)}/avatar`;
     if (!avatarUpdatedAt) return base;
     const stamp =

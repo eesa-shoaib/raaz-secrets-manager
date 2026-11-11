@@ -12,9 +12,11 @@ export const MAX_AVATAR_DIMENSION = 256;
 
 export const internalUserAvatarSchema = z.object({
     userId: z.string(),
-    data: z.instanceof(Buffer).refine((buf) => buf.byteLength > 0 && buf.byteLength <= MAX_AVATAR_STORAGE_BYTES, {
-        message: 'Avatar binary payload must be between 1 and 131072 bytes',
-    }),
+    data: z
+        .instanceof(Buffer)
+        .refine((buf) => buf.byteLength > 0 && buf.byteLength <= MAX_AVATAR_STORAGE_BYTES, {
+            message: 'Avatar binary payload must be between 1 and 131072 bytes',
+        }),
     contentType: avatarContentTypeEnum,
     width: z.number().int().min(1).max(MAX_AVATAR_DIMENSION),
     height: z.number().int().min(1).max(MAX_AVATAR_DIMENSION),

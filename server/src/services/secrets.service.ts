@@ -5,10 +5,20 @@ import { SecretModel } from '../models/Secret.js';
 import type { SecretDoc } from '../models/Secret.js';
 import { encrypt, decrypt } from '../services/encryption.service.js';
 import { AppError } from '../utils/app-error.js';
-import { buildCursorCondition, decodeCursor, encodeCursor, escapeRegex } from '../utils/pagination.js';
+import {
+    buildCursorCondition,
+    decodeCursor,
+    encodeCursor,
+    escapeRegex,
+} from '../utils/pagination.js';
 import { writeAuditEntry } from './audit.service.js';
 
-function toSecretSummary(secret: Pick<SecretDoc, 'key' | 'environment' | 'createdAt' | 'updatedAt' | 'lastAccessedAt'> & { _id: Types.ObjectId }) {
+function toSecretSummary(
+    secret: Pick<
+        SecretDoc,
+        'key' | 'environment' | 'createdAt' | 'updatedAt' | 'lastAccessedAt'
+    > & { _id: Types.ObjectId },
+) {
     return {
         id: secret._id.toString(),
         key: secret.key,

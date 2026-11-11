@@ -55,22 +55,31 @@ async function hydrateAuditEntries(
     );
 }
 
+function buildAuditCriteria(filters: AuditLogQuery): Record<string, unknown> {
+    return {
+        ...(filters.action !== undefined ? { action: filters.action } : {}),
+        ...(filters.result !== undefined ? { result: filters.result } : {}),
+        ...(filters.environment !== undefined ? { environment: filters.environment } : {}),
+    };
+}
+
 export async function listProjectAuditEntries(projectId: string, filters: AuditLogQuery) {
-    const { limit = 100, cursor: _cursor, mode: _mode, page: _page, ...criteria } = filters;
-    const entries = await AuditLogEntryModel.find({ projectId, ...criteria })
+    const limit = filters.limit ?? 100;
+    const entries = await AuditLogEntryModel.find({
+        projectId,
+        ...buildAuditCriteria(filters),
+    })
         .sort({ createdAt: -1, _id: -1 })
         .limit(limit)
         .lean();
     return hydrateAuditEntries(entries);
 }
 
-export async function listProjectAuditEntriesCursor(
-    projectId: string,
-    filters: AuditLogQuery,
-) {
-    const { limit = 25, cursor, mode: _mode, page: _page, ...criteria } = filters;
-    const scope = `audit:${projectId}:${criteria.action ?? ''}:${criteria.result ?? ''}:${criteria.environment ?? ''}`;
-    const decoded = cursor ? decodeCursor(cursor, scope) : null;
+export async function listProjectAuditEntriesCursor(projectId: string, filters: AuditLogQuery) {
+    const limit = filters.limit ?? 25;
+    const criteria = buildAuditCriteria(filters);
+    const scope = `audit:${projectId}:${filters.action ?? ''}:${filters.result ?? ''}:${filters.environment ?? ''}`;
+    const decoded = filters.cursor ? decodeCursor(filters.cursor, scope) : null;
 
     const baseCriteria: Record<string, unknown> = {
         projectId: new Types.ObjectId(projectId),

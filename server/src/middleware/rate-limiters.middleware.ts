@@ -46,7 +46,10 @@ export const passwordChangeLimiter = rateLimit({
     keyGenerator: (req) => req.user?.id ?? req.ip ?? 'unknown',
     handler: (_req, res) => {
         res.status(429).json({
-            error: { code: 'RATE_LIMITED', message: 'Too many password change attempts, try again in 15 minutes' },
+            error: {
+                code: 'RATE_LIMITED',
+                message: 'Too many password change attempts, try again in 15 minutes',
+            },
         });
     },
 });

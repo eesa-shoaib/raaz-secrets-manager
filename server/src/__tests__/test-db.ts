@@ -14,10 +14,11 @@ export interface TestDbHandle {
 
 export async function connectDisposableTestDb(suitePrefix = 'suite'): Promise<TestDbHandle> {
     const baseUri = process.env.TEST_MONGO_URI || process.env.MONGO_URI;
-    const suffix = `${suitePrefix}_${Date.now().toString(36)}_${crypto.randomBytes(3).toString('hex')}`
-        .toLowerCase()
-        .replace(/[^a-z0-9_]/g, '')
-        .slice(0, 24);
+    const suffix =
+        `${suitePrefix}_${Date.now().toString(36)}_${crypto.randomBytes(3).toString('hex')}`
+            .toLowerCase()
+            .replace(/[^a-z0-9_]/g, '')
+            .slice(0, 24);
     const dbName = `raaz_test_${suffix}`;
 
     if (!dbName.startsWith('raaz_test_')) {
@@ -48,7 +49,9 @@ export async function connectDisposableTestDb(suitePrefix = 'suite'): Promise<Te
         const activeDbName = mongoose.connection.db?.databaseName ?? '';
         if (!activeDbName.startsWith('raaz_test_')) {
             await mongoose.disconnect();
-            throw new Error(`Safety guard triggered: connected database "${activeDbName}" does not start with raaz_test_`);
+            throw new Error(
+                `Safety guard triggered: connected database "${activeDbName}" does not start with raaz_test_`,
+            );
         }
 
         return {
@@ -77,7 +80,10 @@ export async function connectDisposableTestDb(suitePrefix = 'suite'): Promise<Te
         if (process.env.REQUIRE_TEST_DB === 'true') {
             throw err;
         }
-        console.warn('[test-db] replica-set connection skipped:', err instanceof Error ? err.message : String(err));
+        console.warn(
+            '[test-db] replica-set connection skipped:',
+            err instanceof Error ? err.message : String(err),
+        );
         return {
             connected: false,
             dbName,

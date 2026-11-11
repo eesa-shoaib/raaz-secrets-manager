@@ -258,7 +258,9 @@ describe('M2-02, M2-03 & M2-07 Account Profile, Avatar, Password Change & Admin 
             .expect(422);
 
         // Owner and Platform Admin can read avatar with private security headers; stranger cannot (404)
-        const ownerGet = await request(app).get(`/api/users/${u1Id}/avatar`).set('Cookie', u1Cookie);
+        const ownerGet = await request(app)
+            .get(`/api/users/${u1Id}/avatar`)
+            .set('Cookie', u1Cookie);
         expect(ownerGet.status).toBe(200);
         expect(ownerGet.headers['content-type']).toContain('image/png');
         expect(ownerGet.headers['cache-control']).toBe('private, no-cache');
@@ -266,7 +268,10 @@ describe('M2-02, M2-03 & M2-07 Account Profile, Avatar, Password Change & Admin 
         expect(ownerGet.headers['content-security-policy']).toBe("default-src 'none'");
 
         await request(app).get(`/api/users/${u1Id}/avatar`).set('Cookie', platCookie).expect(200);
-        await request(app).get(`/api/users/${u1Id}/avatar`).set('Cookie', strangerCookie).expect(404);
+        await request(app)
+            .get(`/api/users/${u1Id}/avatar`)
+            .set('Cookie', strangerCookie)
+            .expect(404);
         await request(app).get(`/api/users/${u1Id}/avatar`).set('Cookie', coCookie).expect(404);
 
         // Once owner adds co-member to a project, co-member can read owner's avatar; stranger still gets 404
@@ -284,7 +289,10 @@ describe('M2-02, M2-03 & M2-07 Account Profile, Avatar, Password Change & Admin 
             .expect(201);
 
         await request(app).get(`/api/users/${u1Id}/avatar`).set('Cookie', coCookie).expect(200);
-        await request(app).get(`/api/users/${u1Id}/avatar`).set('Cookie', strangerCookie).expect(404);
+        await request(app)
+            .get(`/api/users/${u1Id}/avatar`)
+            .set('Cookie', strangerCookie)
+            .expect(404);
 
         // Remove avatar -> clears metadata, deletes UserAvatar, records audit, returns 404 on read
         const delRes = await request(app)
@@ -307,7 +315,9 @@ describe('M2-02, M2-03 & M2-07 Account Profile, Avatar, Password Change & Admin 
         expect(p1.body.nextCursor).toBeTruthy();
 
         const p2 = await request(app)
-            .get(`/api/admin/users?mode=cursor&limit=2&cursor=${encodeURIComponent(p1.body.nextCursor)}`)
+            .get(
+                `/api/admin/users?mode=cursor&limit=2&cursor=${encodeURIComponent(p1.body.nextCursor)}`,
+            )
             .set('Cookie', platCookie)
             .expect(200);
         expect(p2.body.data).toHaveLength(2);

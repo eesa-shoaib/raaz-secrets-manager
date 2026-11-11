@@ -48,9 +48,7 @@ export async function listProjectsController(req: Request, res: Response) {
         return;
     }
     res.json(
-        (await listProjectsForUser(req.user!.id, query.search)).map((project) =>
-            response(project),
-        ),
+        (await listProjectsForUser(req.user!.id, query.search)).map((project) => response(project)),
     );
 }
 export async function createProjectController(req: Request, res: Response) {

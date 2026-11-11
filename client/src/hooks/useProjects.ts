@@ -1,8 +1,4 @@
-import type {
-    CreateProjectInput,
-    ProjectResponse,
-    UpdateProjectInput,
-} from '@raaz/shared-schemas';
+import type { CreateProjectInput, ProjectResponse, UpdateProjectInput } from '@raaz/shared-schemas';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
     createProject,

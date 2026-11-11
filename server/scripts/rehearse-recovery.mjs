@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { Buffer } from 'node:buffer';
 import { createHash, createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';

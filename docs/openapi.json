@@ -189,7 +189,10 @@
                                         "type": "string",
                                         "enum": ["image/png", "image/jpeg", "image/webp"]
                                     },
-                                    "data": { "type": "string", "description": "Base64-encoded image bytes" }
+                                    "data": {
+                                        "type": "string",
+                                        "description": "Base64-encoded image bytes"
+                                    }
                                 }
                             }
                         }
@@ -223,7 +226,11 @@
                 "summary": "List projects",
                 "parameters": [
                     { "name": "cursor", "in": "query", "schema": { "type": "string" } },
-                    { "name": "limit", "in": "query", "schema": { "type": "integer", "maximum": 100 } },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": { "type": "integer", "maximum": 100 }
+                    },
                     { "name": "search", "in": "query", "schema": { "type": "string" } }
                 ],
                 "responses": { "200": { "description": "Projects" } }

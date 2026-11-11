@@ -3,7 +3,12 @@ import { ProjectModel } from '../models/Project.js';
 import type { ProjectDoc } from '../models/Project.js';
 import { ProjectMembershipModel } from '../models/ProjectMembership.js';
 import { AppError } from '../utils/app-error.js';
-import { buildCursorCondition, decodeCursor, encodeCursor, escapeRegex } from '../utils/pagination.js';
+import {
+    buildCursorCondition,
+    decodeCursor,
+    encodeCursor,
+    escapeRegex,
+} from '../utils/pagination.js';
 import { writeAuditEntry } from './audit.service.js';
 import { createMembership } from './membership.service.js';
 
@@ -25,10 +30,7 @@ async function getMemberCountsMap(projectIds: Types.ObjectId[]): Promise<Map<str
     return new Map(counts.map((entry) => [entry._id.toString(), entry.count]));
 }
 
-export async function listProjectsForUser(
-    userId: string,
-    search?: string,
-): Promise<ProjectView[]> {
+export async function listProjectsForUser(userId: string, search?: string): Promise<ProjectView[]> {
     const memberships = await ProjectMembershipModel.find({
         userId: new Types.ObjectId(userId),
     }).lean();
