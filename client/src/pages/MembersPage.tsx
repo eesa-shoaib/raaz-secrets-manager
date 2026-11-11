@@ -8,9 +8,11 @@ import { FormField } from '../components/FormField';
 import { ErrorState } from '../components/FullPageState';
 import { Skeleton } from '../components/LoadingSkeleton';
 import { Modal } from '../components/Modal';
+import { PaginationControls } from '../components/PaginationControls';
 import { useToast } from '../components/Toaster';
+import { UserAvatar } from '../components/UserAvatar';
 import {
-    useMembers,
+    useMembersPage,
     useAddMember,
     useChangeMemberRole,
     useRemoveMember,
@@ -31,7 +33,26 @@ function formatDate(date: string | Date | null | undefined): string {
 
 export function MembersPage() {
     const { projectId } = useParams<{ projectId: string }>();
-    const { data: members, isLoading, isError, error, refetch } = useMembers(projectId!);
+    const [cursor, setCursor] = useState<string | null>(null);
+    const [cursorHistory, setCursorHistory] = useState<(string | null)[]>([]);
+    const { data, isLoading, isFetching, isError, error, refetch } = useMembersPage(projectId!, {
+        cursor,
+        limit: 25,
+    });
+    const members = data?.data ?? [];
+
+    const handleNext = () => {
+        if (!data?.nextCursor) return;
+        setCursorHistory((prev) => [...prev, cursor]);
+        setCursor(data.nextCursor);
+    };
+
+    const handlePrevious = () => {
+        if (cursorHistory.length === 0) return;
+        const previousCursor = cursorHistory[cursorHistory.length - 1] ?? null;
+        setCursorHistory((prev) => prev.slice(0, -1));
+        setCursor(previousCursor);
+    };
     const { can } = usePermissions(projectId);
     const { mutateAsync: addMemberMutation, isPending: isAdding } = useAddMember(projectId!);
     const changeRole = useChangeMemberRole(projectId!);
@@ -184,74 +205,98 @@ export function MembersPage() {
                     onRetry={() => refetch()}
                 />
             ) : (
-                <div className="overflow-x-auto rounded-3xl border border-base-300 bg-base-200 shadow-sm">
-                    <table className="table w-full text-sm">
-                        <thead>
-                            <tr className="border-b border-base-300 font-heading text-xs text-base-content/60 uppercase tracking-wider">
-                                <th className="py-4 pl-6">Member</th>
-                                <th className="py-4">Role</th>
-                                <th className="py-4 pr-6 text-right">Joined</th>
-                                {(canChangeRole || canRemove) && (
-                                    <th className="py-4 pr-6 text-right">Actions</th>
-                                )}
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-base-300/60 font-ui">
-                            {members?.map((member) => (
-                                <tr
-                                    key={member.userId}
-                                    className="hover:bg-base-300/30 transition-colors"
-                                >
-                                    <td className="py-4 pl-6">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-base-300 text-primary font-bold text-xs flex items-center justify-center uppercase">
-                                                {member.email.charAt(0)}
-                                            </div>
-                                            <div>
-                                                <div className="font-medium text-base-content font-ui">
-                                                    {member.email}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="py-4">
-                                        <span className="font-semibold text-base-content capitalize">
-                                            {member.role === 'projectAdmin'
-                                                ? 'Project Admin'
-                                                : member.role}
-                                        </span>
-                                    </td>
-                                    <td className="py-4 pr-6 text-right text-xs text-base-content/70">
-                                        {formatDate(member.createdAt)}
-                                    </td>
+                <div className="space-y-4">
+                    <div className="overflow-x-auto rounded-3xl border border-base-300 bg-base-200 shadow-sm">
+                        <table className="table w-full text-sm">
+                            <thead>
+                                <tr className="border-b border-base-300 font-heading text-xs text-base-content/60 uppercase tracking-wider">
+                                    <th className="py-4 pl-6">Member</th>
+                                    <th className="py-4">Role</th>
+                                    <th className="py-4 pr-6 text-right">Joined</th>
                                     {(canChangeRole || canRemove) && (
-                                        <td className="py-4 pr-6 text-right whitespace-nowrap">
-                                            {canChangeRole && (
-                                                <button
-                                                    type="button"
-                                                    className="btn btn-ghost btn-sm"
-                                                    aria-label={`Change role for ${member.email}`}
-                                                    onClick={() => openAction('role', member)}
-                                                >
-                                                    Change role
-                                                </button>
-                                            )}
-                                            {canRemove && (
-                                                <button
-                                                    type="button"
-                                                    className="btn btn-ghost btn-sm text-error"
-                                                    aria-label={`Remove ${member.email}`}
-                                                    onClick={() => openAction('remove', member)}
-                                                >
-                                                    Remove
-                                                </button>
-                                            )}
-                                        </td>
+                                        <th className="py-4 pr-6 text-right">Actions</th>
                                     )}
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-base-300/60 font-ui">
+                                {members.map((member) => (
+                                    <tr
+                                        key={member.userId}
+                                        className="hover:bg-base-300/30 transition-colors"
+                                    >
+                                        <td className="py-4 pl-6">
+                                            <div className="flex items-center gap-3">
+                                                <UserAvatar
+                                                    userId={member.userId}
+                                                    email={member.email}
+                                                    username={member.username}
+                                                    hasAvatar={member.hasAvatar}
+                                                    avatarUpdatedAt={member.avatarUpdatedAt}
+                                                    size="md"
+                                                />
+                                                <div className="min-w-0">
+                                                    <div className="font-medium text-base-content font-ui truncate">
+                                                        {member.username
+                                                            ? `@${member.username}`
+                                                            : member.email}
+                                                    </div>
+                                                    {member.username && (
+                                                        <div className="text-xs text-base-content/60 truncate">
+                                                            {member.email}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="py-4">
+                                            <span className="font-semibold text-base-content capitalize">
+                                                {member.role === 'projectAdmin'
+                                                    ? 'Project Admin'
+                                                    : member.role}
+                                            </span>
+                                        </td>
+                                        <td className="py-4 pr-6 text-right text-xs text-base-content/70">
+                                            {formatDate(member.createdAt)}
+                                        </td>
+                                        {(canChangeRole || canRemove) && (
+                                            <td className="py-4 pr-6 text-right whitespace-nowrap">
+                                                {canChangeRole && (
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-ghost btn-sm"
+                                                        aria-label={`Change role for ${member.email}`}
+                                                        onClick={() => openAction('role', member)}
+                                                    >
+                                                        Change role
+                                                    </button>
+                                                )}
+                                                {canRemove && (
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-ghost btn-sm text-error"
+                                                        aria-label={`Remove ${member.email}`}
+                                                        onClick={() => openAction('remove', member)}
+                                                    >
+                                                        Remove
+                                                    </button>
+                                                )}
+                                            </td>
+                                        )}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                    <PaginationControls
+                        hasPrevious={cursorHistory.length > 0}
+                        hasNext={Boolean(data?.hasMore && data?.nextCursor)}
+                        onPrevious={handlePrevious}
+                        onNext={handleNext}
+                        pageNumber={cursorHistory.length + 1}
+                        itemCount={members.length}
+                        isFetching={isFetching}
+                        noun="members"
+                    />
                 </div>
             )}
 

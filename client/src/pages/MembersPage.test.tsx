@@ -13,16 +13,25 @@ vi.mock('../hooks/usePermissions', () => ({
     usePermissions: () => ({ can: () => (state.canManage ? 'enabled' : 'hidden') }),
 }));
 vi.mock('../hooks/useMembers', () => ({
-    useMembers: () => ({
-        data: [
-            {
-                userId: 'member-id',
-                email: 'member@example.com',
-                role: 'projectAdmin',
-                createdAt: '2026-01-01',
-            },
-        ],
+    useMembersPage: () => ({
+        data: {
+            data: [
+                {
+                    userId: 'member-id',
+                    email: 'member@example.com',
+                    username: null,
+                    hasAvatar: false,
+                    avatarUpdatedAt: null,
+                    role: 'projectAdmin',
+                    createdAt: '2026-01-01',
+                },
+            ],
+            nextCursor: null,
+            hasMore: false,
+            limit: 25,
+        },
         isLoading: false,
+        isFetching: false,
         isError: false,
     }),
     useAddMember: () => ({ mutateAsync: vi.fn(), isPending: false }),

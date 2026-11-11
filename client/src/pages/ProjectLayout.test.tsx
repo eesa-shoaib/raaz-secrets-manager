@@ -15,12 +15,18 @@ vi.mock('../hooks/useProjects', () => ({
         data: {
             id: 'aaaaaaaaaaaaaaaaaaaaaaaa',
             name: 'Test project',
+            description: 'Project summary text',
             role: 'developer',
+            memberCount: 3,
             status: mocks.status,
         },
         isLoading: false,
         isError: false,
     }),
+    useUpdateProject: () => ({ mutateAsync: vi.fn(), isPending: false }),
+}));
+vi.mock('../components/Toaster', () => ({
+    useToast: () => ({ toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() } }),
 }));
 vi.mock('../components/TabNav', () => ({ TabNav: () => null }));
 import { ProjectLayout } from './ProjectLayout';

@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createProjectSchema, type CreateProjectInput } from '@raaz/shared-schemas';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { FormField } from '../components/FormField';
@@ -8,16 +8,36 @@ import { EmptyState, ErrorState } from '../components/FullPageState';
 import { Skeleton } from '../components/LoadingSkeleton';
 import { Modal } from '../components/Modal';
 import { PageHeader } from '../components/PageHeader';
+import { PaginationControls } from '../components/PaginationControls';
 import { ProjectCard } from '../components/ProjectCard';
 import { useToast } from '../components/Toaster';
 import { useAuth } from '../hooks/useAuth';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
-import { useProjects, useCreateProject } from '../hooks/useProjects';
+import { useProjectsPage, useCreateProject } from '../hooks/useProjects';
 import { isApiError } from '../lib/errorHandling';
 
 export function ProjectsPage() {
     useDocumentTitle('Raaz');
-    const { data: projects, isLoading, isError, error, refetch } = useProjects();
+    const [searchInput, setSearchInput] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [cursor, setCursor] = useState<string | null>(null);
+    const [cursorHistory, setCursorHistory] = useState<(string | null)[]>([]);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchInput.trim());
+            setCursor(null);
+            setCursorHistory([]);
+        }, 250);
+        return () => clearTimeout(timer);
+    }, [searchInput]);
+
+    const { data, isLoading, isFetching, isError, error, refetch } = useProjectsPage({
+        cursor,
+        limit: 25,
+        search: debouncedSearch || undefined,
+    });
+    const projects = data?.data ?? [];
     const { mutateAsync: createProject, isPending: isCreating } = useCreateProject();
     const { user } = useAuth();
     const { toast } = useToast();
@@ -35,8 +55,22 @@ export function ProjectsPage() {
         resolver: zodResolver(createProjectSchema),
         defaultValues: {
             name: '',
+            description: '',
         },
     });
+
+    const handleNext = () => {
+        if (!data?.nextCursor) return;
+        setCursorHistory((prev) => [...prev, cursor]);
+        setCursor(data.nextCursor);
+    };
+
+    const handlePrevious = () => {
+        if (cursorHistory.length === 0) return;
+        const previousCursor = cursorHistory[cursorHistory.length - 1] ?? null;
+        setCursorHistory((prev) => prev.slice(0, -1));
+        setCursor(previousCursor);
+    };
 
     const handleOpenModal = () => {
         reset();
@@ -72,26 +106,36 @@ export function ProjectsPage() {
                 title="Projects"
                 description="Manage encrypted secrets and team memberships across environments"
                 actions={
-                    <button
-                        type="button"
-                        onClick={handleOpenModal}
-                        className="btn btn-primary text-base-300 font-semibold rounded-xl flex items-center gap-2 hover:opacity-90"
-                    >
-                        <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
+                    <div className="flex flex-wrap items-center gap-3">
+                        <input
+                            type="search"
+                            value={searchInput}
+                            onChange={(e) => setSearchInput(e.target.value)}
+                            placeholder="Search projects..."
+                            aria-label="Search projects"
+                            className="input input-bordered input-sm w-56 rounded-xl bg-base-200 font-ui text-sm"
+                        />
+                        <button
+                            type="button"
+                            onClick={handleOpenModal}
+                            className="btn btn-primary text-base-300 font-semibold rounded-xl flex items-center gap-2 hover:opacity-90"
                         >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 4v16m8-8H4"
-                            />
-                        </svg>
-                        New Project
-                    </button>
+                            <svg
+                                className="w-5 h-5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M12 4v16m8-8H4"
+                                />
+                            </svg>
+                            New Project
+                        </button>
+                    </div>
                 }
             />
 
@@ -106,12 +150,43 @@ export function ProjectsPage() {
                     }
                     onRetry={() => refetch()}
                 />
-            ) : projects && projects.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {projects.map((project) => (
-                        <ProjectCard key={project.id} project={project} />
-                    ))}
+            ) : projects.length > 0 ? (
+                <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {projects.map((project) => (
+                            <ProjectCard key={project.id} project={project} />
+                        ))}
+                    </div>
+                    <PaginationControls
+                        hasPrevious={cursorHistory.length > 0}
+                        hasNext={Boolean(data?.hasMore && data?.nextCursor)}
+                        onPrevious={handlePrevious}
+                        onNext={handleNext}
+                        pageNumber={cursorHistory.length + 1}
+                        itemCount={projects.length}
+                        isFetching={isFetching}
+                        noun="projects"
+                    />
                 </div>
+            ) : debouncedSearch ? (
+                <EmptyState
+                    title="No matching projects"
+                    description={`No projects matched "${debouncedSearch}".`}
+                    action={
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setSearchInput('');
+                                setDebouncedSearch('');
+                                setCursor(null);
+                                setCursorHistory([]);
+                            }}
+                            className="btn btn-outline btn-sm rounded-xl"
+                        >
+                            Clear Search
+                        </button>
+                    }
+                />
             ) : (
                 <EmptyState
                     title="No projects yet"
@@ -165,6 +240,25 @@ export function ProjectsPage() {
                                     errors.name ? 'input-error' : ''
                                 }`}
                                 {...register('name')}
+                                {...props}
+                            />
+                        )}
+                    </FormField>
+
+                    <FormField
+                        label="Description"
+                        hint="Optional summary shown in project cards and overview (up to 500 characters)"
+                        error={errors.description?.message}
+                    >
+                        {({ id, ...props }) => (
+                            <textarea
+                                id={id}
+                                rows={3}
+                                placeholder="What does this project manage?"
+                                className={`textarea textarea-bordered w-full bg-base-300 rounded-xl focus:border-primary text-sm font-ui ${
+                                    errors.description ? 'textarea-error' : ''
+                                }`}
+                                {...register('description')}
                                 {...props}
                             />
                         )}
