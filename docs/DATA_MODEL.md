@@ -11,14 +11,15 @@ changes in [MVP_2_BOARD.md](./MVP_2_BOARD.md) have not been applied to models or
 shared schemas. Record exact field types, indexes and audit enum additions here
 before implementing each slice.
 
-| Planned data             | Constraints                                                                                                                                                                                                         |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| User username            | Optional normalized lowercase handle, 3–30 ASCII letters/digits/underscore/hyphen; partial unique index for set usernames; legacy users still work                                                                  |
-| `userAvatars` collection | One document per user, unique userId; normalized 256 × 256 thumbnail, at most 128 KiB BSON binary payload plus validated content type/version metadata; keep bytes out of User, public schemas and list projections |
-| Project description      | Optional trimmed plain text up to 500 characters; missing legacy values read as empty; no changes to project IDs, environments or secret AAD                                                                        |
-| Project name editing     | Existing length limits; member-scoped Project Admin update with transactional audit; refresh browser title and lists                                                                                                |
-| Pagination indexes       | Stable timestamp + ID ordering scoped by membership/project/environment/filter; inspect existing indexes/query plans before additions                                                                               |
-| New audit actions        | Profile/avatar, password change and project-details mutations need explicit action names and project-vs-platform scope before code; no image/password/description payloads in entries                               |
+| Planned data             | Constraints                                                                                                                                                                                                              |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| User username            | Optional normalized lowercase handle, 3–30 ASCII letters/digits/underscore/hyphen; partial unique index for set usernames; legacy users still work                                                                       |
+| `userAvatars` collection | One document per user, unique userId; normalized 256 × 256 thumbnail, at most 128 KiB BSON binary payload plus validated content type/version metadata; keep bytes out of User, public schemas and list projections      |
+| Project description      | Optional trimmed plain text up to 500 characters; missing legacy values read as empty; no changes to project IDs, environments or secret AAD                                                                             |
+| Project member count     | Planned read-only project-detail response field `memberCount`, derived from ProjectMembership records for that project, including deactivated accounts still assigned; not a stored counter and not a member-page length |
+| Project name editing     | Existing length limits; member-scoped Project Admin update with transactional audit; refresh browser title and lists                                                                                                     |
+| Pagination indexes       | Stable timestamp + ID ordering scoped by membership/project/environment/filter; inspect existing indexes/query plans before additions                                                                                    |
+| New audit actions        | Profile/avatar, password change and project-details mutations need explicit action names and project-vs-platform scope before code; no image/password/description payloads in entries                                    |
 
 Avatar replacement/removal and its audit record use ordinary collection writes
 in one transaction; storage/audit failure leaves the previous image intact.

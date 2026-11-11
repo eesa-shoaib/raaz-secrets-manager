@@ -23,14 +23,21 @@ implementing each MVP 2 feature; unlisted follow-up work remains deferred.
 
 ## MVP 2 surfaces — planned, not implemented
 
-| Surface                         | Planned behavior                                                                                                                           |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `/settings`                     | RequireAuth; Profile (optional username, upload/replace/remove picture) and Security (password change); open from account menu             |
-| `/admin/users`                  | RequirePlatformAdmin; paginated users and existing activation/admin-role actions; no project/secret data                                   |
-| Project page right-side column  | Name, full description, role and status across all project tabs; Project Admin Edit details opens a dialog; stack the same panel on mobile |
-| Existing lists                  | Projects, secrets, members, audit and admin users get bounded Previous/Next navigation with boundary/loading/error states                  |
-| Existing project/secret headers | Server-side metadata search over all authorized results, resetting page state; secret search scoped to the selected environment            |
-| Existing secret row             | Explicit Copy key only, with success/failure feedback; reveal rules unchanged                                                              |
+| Surface                         | Planned behavior                                                                                                                                               |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/settings`                     | RequireAuth; Profile (optional username, upload/replace/remove picture) and Security (password change); open from account menu                                 |
+| `/admin/users`                  | RequirePlatformAdmin; paginated users and existing activation/admin-role actions; no project/secret data                                                       |
+| Project page right-side column  | Name, full description, total member count, role and status across all project tabs; Project Admin Edit details opens a dialog; stack the same panel on mobile |
+| Existing lists                  | Projects, secrets, members, audit and admin users get bounded Previous/Next navigation with boundary/loading/error states                                      |
+| Existing project/secret headers | Server-side metadata search over all authorized results, resetting page state; secret search scoped to the selected environment                                |
+| Existing secret row             | Explicit Copy key only, with success/failure feedback; reveal rules unchanged                                                                                  |
+
+Show the planned read-only Members count beside the description in the existing
+right-side project panel, including when no description is set. Use the project
+detail's server `memberCount`; never derive totals from the paginated member list.
+Refresh detail after member add/remove and when returning to the project view.
+Use a loading/unavailable state instead of a false zero. The same details panel
+remains across all project tabs and stacks on mobile.
 
 Reuse one avatar treatment with initials/broken-image fallback; display usernames
 with email available for identity disambiguation. Do not add public profiles,

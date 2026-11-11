@@ -23,6 +23,10 @@ each extension is implemented and verified.
   change is approved by the plan.
 - Project details editing adds a member-scoped Project Admin permission, not a
   Platform Admin bypass. Metadata is plain text; environments stay canonical.
+- Project detail derives total membership count server-side after membership/
+  status gates; no stored counter and no dependency on member-list pagination.
+  The planned right-side panel shows it with the description and refreshes on
+  membership changes. Deactivated users remain counted until membership removal.
 - All lists become bounded server queries. Apply authorization and metadata
   search/filters before cursor pagination; cache keys include page scope.
   Paging away from a revealed row clears its local value and mutation state.

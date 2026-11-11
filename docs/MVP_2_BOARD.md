@@ -274,10 +274,20 @@ belongs to, and a Project Admin can correct those details without recreating it.
       description; no rewrite of existing secrets or encryption metadata.
 - [ ] Extend the create-project dialog with the optional field. Show a short
       preview on project cards and the full description in the project page’s existing
-      right-side information column, alongside project name, role and status. Keep
+      right-side information column, alongside project name, member count, role and status. Keep
       the details visible across Secrets, Members and Audit tabs. On narrow screens,
       stack the same panel with the main content; do not add a separate details page.
       Omit empty placeholders; do not create an extra description widget.
+- [ ] Show a read-only Members count in the same right-side details/description
+      panel, even when description is empty. Use the server-provided `memberCount`
+      from the project detail response, not the size of a paginated members page.
+      Count all current ProjectMembership records, including deactivated accounts
+      that still hold membership; removing membership decreases the count.
+- [ ] Calculate the count in the project service after membership/status checks;
+      do not add a stored counter or expose member identities with the count.
+      All project members may read it; Platform Admin alone gains no access.
+      Refresh project detail after add/remove and on return to the project view.
+      A failed/loading count must not be displayed as zero; keep other details usable.
 - [ ] Place an Edit details control in that right-side column, opening one dialog for name (existing limits) and
       description. Only Project Admins can edit; all project members can read.
       Platform Admin without membership receives no substitute permission.
@@ -292,9 +302,12 @@ belongs to, and a Project Admin can correct those details without recreating it.
       where the name changed. A failed request leaves saved data unchanged.
 - [ ] Test legacy/empty descriptions, length limits, markup rendering, Developer/
       Auditor denial, non-member 404, archived project denial and audit rollback.
+      Test count accuracy across member pages, add/remove, deactivated members,
+      empty descriptions, loading/failure and permission loss.
 
-**Done:** projects have useful context on the screens people already use;
-Project Admins can edit it with clear save/error feedback. The three canonical
+**Done:** the project right-side panel shows description and an accurate total
+member count independent of member pagination. Project Admins can edit name and
+description with clear save/error feedback; member count remains read-only. The three canonical
 environments, project membership and encrypted secrets are unchanged.
 
 ## M2-09 — Find items and remove small daily obstacles

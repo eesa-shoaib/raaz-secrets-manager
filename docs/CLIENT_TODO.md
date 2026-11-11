@@ -16,7 +16,8 @@ The active acceptance checklist is [MVP_2_BOARD.md](./MVP_2_BOARD.md):
   reuse avatar styles with initials fallback and keep email-based login.
 - M2-04: Previous/Next navigation on projects, secrets, members, audit and admin
   users; cursor-aware query keys, scope reset and safe reveal cleanup on paging.
-- M2-08: description in the project page's right-side panel, plus Project Admin
+- M2-08: description and server-derived total member count in the project page's
+  right-side panel, plus Project Admin
   name/description edit dialog. Stack the same panel on mobile.
 - M2-09: server-side project/secret-key search, copy-key actions, useful empty
   states and permission explanations on existing screens.

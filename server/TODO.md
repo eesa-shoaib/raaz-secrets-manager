@@ -70,7 +70,9 @@ unchecked historical tasks above are not independent proof of missing behavior.
   collection, and audited password change with session invalidation.
 - M2-04: paginate projects, secrets, members, audit and admin users; server-side
   metadata search, bounded responses and preserved admin page/limit compatibility.
-- M2-08: optional project description and Project Admin name/description updates.
+- M2-08: optional project description, service-derived project memberCount in
+  project detail (all memberships, independent of pagination), and Project Admin
+  name/description updates.
 - M2-05/M2-06: deployment, recovery evidence, browser/CI verification and fixes.
 
 Finalize API.md, DATA_MODEL.md and ARCHITECTURE.md extensions before code. No

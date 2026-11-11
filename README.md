@@ -44,7 +44,8 @@ is carried forward, not claimed complete.
 organizes work by outcome and dependency, without weekly schedules:
 
 - Account settings: optional username and profile picture, plus password change.
-- Project name/description in the project page's right-side column, with an edit
+- Project name/description and total member count in the project page's
+  right-side column, with an edit
   dialog for Project Admins; the same panel stacks on mobile.
 - Server-side pagination for projects, secrets, members, audit and admin users;
   metadata search and copy-key actions on existing screens.

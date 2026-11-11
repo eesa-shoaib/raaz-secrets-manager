@@ -103,14 +103,15 @@ This table is the single source of truth for scope; other docs link here.
 The added features serve existing tasks: descriptions explain project purpose,
 usernames/pictures identify teammates, and metadata search/copy-key actions reduce
 manual work. Add one authenticated account settings page for Profile and Security;
-show project details in the project page’s right-side column and edit name/description
+show project description and total member count in the project page’s right-side
+column and edit name/description
 from that column in a dialog. No
 public profile, extra settings hub, theme customization or gamification is planned.
 
 | Capability                                                                                                                      | MVP 1                                         | Target                |
 | ------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | --------------------- |
 | Account settings, optional unique username, optional uploaded profile picture (MongoDB binary thumbnail) with initials fallback | Not included                                  | MVP 2                 |
-| Project descriptions on create/list/detail, Project Admin name/description editing                                              | Not included                                  | MVP 2                 |
+| Project descriptions, total member count in the right-side details panel, Project Admin name/description editing                | Not included                                  | MVP 2                 |
 | Project/secret metadata search, copy secret key, contextual empty/permission states                                             | Not included                                  | MVP 2                 |
 | Authenticated password change with current-password verification and session invalidation                                       | Not included                                  | MVP 2                 |
 | Server-side pagination for projects, secrets, members, project audit and Platform Admin user lists                              | Audit capped; admin users already page/limit  | MVP 2                 |
