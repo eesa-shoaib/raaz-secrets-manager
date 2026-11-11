@@ -117,30 +117,29 @@ export async function createProject(
     description = '',
 ): Promise<ProjectView> {
     const session = await mongoose.startSession();
-    session.startTransaction();
     try {
-        const project = new ProjectModel({
-            name,
-            description,
-            environments: ['development', 'staging', 'production'],
-            activeAdminCount: 1,
-            status: 'active',
-            createdBy: new Types.ObjectId(userId),
+        let createdView: ProjectView | null = null;
+        await session.withTransaction(async () => {
+            const project = new ProjectModel({
+                name,
+                description,
+                environments: ['development', 'staging', 'production'],
+                activeAdminCount: 1,
+                status: 'active',
+                createdBy: new Types.ObjectId(userId),
+            });
+            await project.save({ session });
+            await createMembership(userId, project._id.toString(), 'projectAdmin', session);
+            await writeAuditEntry({
+                session,
+                userId,
+                projectId: project._id.toString(),
+                action: 'project_created',
+                result: 'allowed',
+            });
+            createdView = { ...project.toObject(), memberCount: 1 };
         });
-        await project.save({ session });
-        await createMembership(userId, project._id.toString(), 'projectAdmin', session);
-        await writeAuditEntry({
-            session,
-            userId,
-            projectId: project._id.toString(),
-            action: 'project_created',
-            result: 'allowed',
-        });
-        await session.commitTransaction();
-        return { ...project.toObject(), memberCount: 1 };
-    } catch (error) {
-        await session.abortTransaction();
-        throw error;
+        return createdView!;
     } finally {
         await session.endSession();
     }
@@ -165,43 +164,55 @@ export async function updateProjectDetails(
     input: { name?: string; description?: string },
 ): Promise<ProjectView> {
     const session = await mongoose.startSession();
-    session.startTransaction();
     try {
-        const updates: Record<string, string> = {};
-        if (input.name !== undefined) updates.name = input.name;
-        if (input.description !== undefined) updates.description = input.description;
+        let updatedProject:
+            | (Record<string, unknown> & {
+                  _id: Types.ObjectId;
+                  name: string;
+                  description?: string;
+                  environments: ('development' | 'staging' | 'production')[];
+                  activeAdminCount: number;
+                  status: 'active' | 'archived';
+                  createdBy: Types.ObjectId;
+                  createdAt: Date;
+                  updatedAt: Date;
+              })
+            | null = null;
 
-        const project = await ProjectModel.findByIdAndUpdate(
-            projectId,
-            { $set: updates },
-            { new: true, runValidators: true, session },
-        ).lean();
-        if (!project) throw new AppError(404, 'NOT_FOUND', 'Project not found');
+        await session.withTransaction(async () => {
+            const updates: Record<string, string> = {};
+            if (input.name !== undefined) updates.name = input.name;
+            if (input.description !== undefined) updates.description = input.description;
 
-        const action =
-            input.description === undefined && input.name !== undefined
-                ? 'project_renamed'
-                : 'project_updated';
-        await writeAuditEntry({
-            session,
-            userId: actorUserId,
-            projectId,
-            action,
-            result: 'allowed',
+            const project = await ProjectModel.findByIdAndUpdate(
+                projectId,
+                { $set: updates },
+                { new: true, runValidators: true, session },
+            ).lean();
+            if (!project) throw new AppError(404, 'NOT_FOUND', 'Project not found');
+
+            const action =
+                input.description === undefined && input.name !== undefined
+                    ? 'project_renamed'
+                    : 'project_updated';
+            await writeAuditEntry({
+                session,
+                userId: actorUserId,
+                projectId,
+                action,
+                result: 'allowed',
+            });
+            updatedProject = project;
         });
 
-        await session.commitTransaction();
         const memberCount = await ProjectMembershipModel.countDocuments({
-            projectId: project._id,
+            projectId: updatedProject!._id,
         });
         return {
-            ...project,
-            description: project.description ?? '',
+            ...updatedProject!,
+            description: updatedProject!.description ?? '',
             memberCount,
         };
-    } catch (error) {
-        await session.abortTransaction();
-        throw error;
     } finally {
         await session.endSession();
     }
