@@ -4,6 +4,37 @@ tags: [api, mvp, contract, endpoints, permissions]
 
 # API
 
+## Release contract status
+
+The endpoint tables and Permissions Matrix below describe MVP 1, whose product
+milestone is closed. [MVP_2_BOARD.md](./MVP_2_BOARD.md) is the active implementation
+plan; [PRODUCT.md](./PRODUCT.md#cut-from-mvp) owns the approved scope. MVP 2
+extensions are **planned, not mounted endpoints or current response fields**.
+
+| Planned extension         | Required contract/permission work before implementation                                                                                                                                         |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Account profile           | Self-only username edits; current-user response may include username/avatar metadata, never image bytes; email-only login/member addition stays unchanged                                       |
+| Avatar upload/read/remove | Owner-only writes; owner/shared-project-member/authorized admin reads; bounded raster input and private image response; no global user directory                                                |
+| Password change           | Current-password verification, limits, explicit errors and audit action; invalidate all sessions on success                                                                                     |
+| Project name/description  | Project Admin writes, members read; no implicit Platform Admin access; 500-character plain-text description; unchanged environment policy                                                       |
+| All resource lists        | Projects, secrets, members, audit and admin users: default 25, maximum 100, stable cursor ordering and server-side search/filtering before pagination; retain existing admin page/limit callers |
+
+The planned project-detail response includes a read-only nonnegative integer
+`memberCount`: total ProjectMembership records for that project, including users
+who are deactivated but not removed. Compute it server-side after the existing
+membership/status gates. It is independent of member pagination, exposes no
+member identities, and grants no Platform Admin bypass. List mutation success
+must trigger refresh of the project's metadata. Do not treat an unavailable count
+as zero. This field is not yet in the implemented response schema.
+
+Finalize exact routes, shared request/response schemas, error mappings, audit
+semantics and compatibility behavior here before code. New cursor mode needs a
+bounded response envelope, next cursor and has-more flag; existing list envelopes
+must not change silently. Reset cursors on scope/filter/search changes. A cursor
+never substitutes for membership/role checks. Only the reveal endpoint may return
+a decrypted secret value. The existing no-page audit exception below remains
+accurate until M2-04 ships; it is not a ban on the approved follow-up.
+
 ## Conventions
 
 - **Base path:** all routes are under `/api` (unversioned for this build —

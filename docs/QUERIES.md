@@ -4,7 +4,8 @@ tags: [dataview, queries, reference]
 
 # Dataview Queries Reference
 
-Save these in `docs/QUERIES.md` and pin in Obsidian for quick access.
+Pin this note in Obsidian for quick access. MVP 1 is closed; active work lives
+in [MVP_2_BOARD.md](./MVP_2_BOARD.md), organized by outcomes and dependencies.
 
 ---
 
@@ -65,25 +66,25 @@ _Usage: Replace `this.tag` with any tag (e.g., `mvp`, `architecture`, `api`, `rb
 
 ## ✅ Task Tracking
 
-### All uncompleted tasks in docs
+### Active uncompleted MVP 2 tasks
 
 ```dataview
-TASK FROM "docs"
+TASK FROM "docs/MVP_2_BOARD.md"
 WHERE !completed
 GROUP BY file.link
 ```
 
-### Tasks by status
+### Active tasks by status
 
 ```dataview
-TASK FROM "docs"
+TASK FROM "docs/MVP_2_BOARD.md"
 GROUP BY completed
 ```
 
-### MVP Board tasks (from MVP_BOARD.md)
+### Active board tasks (from MVP_2_BOARD.md)
 
 ```dataview
-TASK FROM "docs/MVP_BOARD.md"
+TASK FROM "docs/MVP_2_BOARD.md"
 WHERE !completed
 GROUP BY section
 ```
@@ -138,9 +139,12 @@ WHERE !tags
 
 ---
 
-## 🎯 Phase Tracking (from FRONTEND.md)
+## 🎯 MVP 1 Phase Reference (historical)
 
-### Phase completion status
+### Original phase references
+
+These blueprint references do not determine current completion. See MVP_BOARD.md
+for closure and MVP_2_BOARD.md for carried verification and active work.
 
 ```dataview
 TASK FROM "docs/FRONTEND.md"

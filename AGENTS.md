@@ -29,7 +29,7 @@ able to retrieve its decrypted value**, enforced at the data layer, not the UI.
 | Folder layout, module boundaries, naming                            | `PROJECT_STRUCTURE.md`                                                |
 | Versions, testing priorities                                        | `TECH_STACK.md`                                                       |
 | Routes, widgets, reveal lifecycle, build phases, frontend DoD       | `FRONTEND.md` (authoritative; the widget list is a ceiling)           |
-| Task tracking                                                       | `MVP_BOARD.md`                                                        |
+| Task tracking                                                       | `MVP_BOARD.md` (closed MVP 1), `MVP_2_BOARD.md` (active plan)         |
 | Env vars                                                            | `README.md` (table) and `server/.env.example` / `client/.env.example` |
 
 Docs live in `docs/`. When you add a doc, add it to the index table in `docs/README.md`.
@@ -135,9 +135,12 @@ CSRF (Origin check) → authenticate → requireProjectRole | requireProjectRole
 - **Widget ceiling:** the inventory in FRONTEND.md §2 is complete (25 MVP widgets). Adding one means removing or replacing one. Buttons, inputs, and text compose inline; a "widget" is only a component two developers need a shared name for.
 - Don't add: per-type badges/skeletons, theme toggle, stacked-card mobile tables, reveal countdown UI, cross-tab auth sync. See FRONTEND.md §5.
 
-## Scope: what is and isn't in the MVP
+## Scope: MVP 1 baseline and approved MVP 2 plan
 
-MVP ships routes 1–10 (FRONTEND.md §1) and Phases 1–5. **Do not build** the following unless the user explicitly changes scope (and `PRODUCT.md`'s Cut table is updated first):
+MVP 1 shipped the baseline routes and is now closed. The bullets below record its
+original cuts. PRODUCT.md promotes only the listed MVP 2 features; follow
+MVP_2_BOARD.md and update the authoritative API/schema/frontend contracts before
+implementing them. All other cuts remain deferred:
 
 - Admin UI (`/admin/users`, `/admin/projects`, `/admin/audit-log`) and `RequirePlatformAdmin`. The `PATCH /api/admin/users/:userId` and `GET /api/admin/users` backend endpoints **do** exist.
 - Project archive/restore (`Project.status` and `requireProjectStatus` exist and are tested against a directly seeded archived project; nothing sets `archived`).
@@ -193,7 +196,7 @@ Errors always use the envelope `{ "error": { "code", "message" } }` with the cod
 5. Check the item against the §8 Definition of Done.
 
 **Picking up work**
-Use `MVP_BOARD.md` (phase order is Foundation → Auth/Projects → Secrets → Members + Audit → Hardening). Tick boxes only when the phase's Definition of Done is met.
+MVP 1 is closed at the owner’s direction; `MVP_BOARD.md` is its historical record. Use `MVP_2_BOARD.md` for the active follow-up. PRODUCT.md’s Cut table and follow-up scope are authoritative: admin users UI, account settings with username/profile picture and password change, project descriptions/name editing, metadata search/copy-key actions, pagination for all resource lists, and release hardening are planned for MVP 2; other cuts remain deferred. Update API.md / FRONTEND.md / DATA_MODEL.md before implementing new contracts. Existing security rules and dependency approvals still apply. Tick boxes only when their acceptance evidence is recorded.
 
 ## Definition of done (any change)
 
@@ -201,7 +204,7 @@ Use `MVP_BOARD.md` (phase order is Foundation → Auth/Projects → Secrets → 
 - No decrypted value, key, or password can reach a log, cache, response body (other than reveal), or test snapshot.
 - Authorization lives in middleware (plus the one documented service-layer exception), not in controllers or the UI.
 - Docs updated if behavior, contract, or scope changed.
-- Nothing from the post-MVP list was built along the way.
+- No deferred feature outside PRODUCT.md’s approved MVP 2 scope was built.
 
 ## Ask before you do these
 
@@ -211,7 +214,7 @@ Use `MVP_BOARD.md` (phase order is Foundation → Auth/Projects → Secrets → 
 - Anything that would make a Platform Admin see project or secret data without a `ProjectMembership`.
 - Blocking Platform Admin self-grant of `projectAdmin`: noted in API.md as a reasonable hardening step but **not** built in this scope.
 
-## Deployment notes (future, not required now)
+## Deployment notes (planned MVP 2 release gate)
 
 - Frontend on Vercel, backend on Render, DB on Atlas. Preferred topology is same-site (custom subdomains or a Vercel `/api/*` rewrite): set `COOKIE_SAMESITE=Lax`, `CLIENT_ORIGIN` (the origin the browser actually loads), and `COOKIE_DOMAIN` if using subdomains.
 - `trust proxy` must be the **exact** hop count (count Vercel when rewriting); too low or too high both break the per-IP limiter.

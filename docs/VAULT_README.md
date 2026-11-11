@@ -17,7 +17,7 @@ This repo root is the Obsidian vault. Open the folder in Obsidian to use.
     - `obsidian-kanban` — Kanban boards from markdown
 3. **Open key files**:
     - `Ctrl+O` → `architecture.canvas` — Visual architecture + code links
-    - `Ctrl+O` → `MVP_BOARD.md` → `Ctrl+P` → "Open as Kanban board"
+    - `Ctrl+O` → `MVP_2_BOARD.md` — active task checklist; `MVP_BOARD.md` is the closed MVP 1 record
     - `Ctrl+O` → `QUERIES.md` — Copy query blocks into any note
     - `Ctrl+N` → Select template (daily-note, adr, feature-spec, meeting-notes)
 
@@ -29,7 +29,8 @@ raaz-secrets-manager/          ← Vault root
 │   └── templates/             ← daily-note, adr, feature-spec, meeting-notes
 ├── docs/                      ← Project documentation (all tagged)
 │   ├── architecture.canvas    ← Visual MERN/RBAC/Crypto/Deployment diagram
-│   ├── MVP_BOARD.md           ← Kanban: stories → Phases 1–5
+│   ├── MVP_BOARD.md           ← Closed MVP 1 delivery/carryover record
+│   ├── MVP_2_BOARD.md         ← Active outcomes, dependencies and release gates
 │   ├── QUERIES.md             ← Dataview query reference
 │   └── *.md                   ← PRODUCT, ARCHITECTURE, API, DATA_MODEL, etc.
 ├── client/                    ← Frontend code (linkable via wiki-links)
@@ -44,7 +45,7 @@ raaz-secrets-manager/          ← Vault root
 | **Tagged docs**         | All `docs/*.md` have frontmatter tags (`#mvp`, `#architecture`, `#api`, etc.) |
 | **Code ↔ Doc links**    | Wiki-links work across: `[[../server/src/middleware/auth.ts]]`                |
 | **Visual architecture** | `architecture.canvas` — frames, legend, 15 nodes, code links                  |
-| **MVP tracking**        | `MVP_BOARD.md` — Kanban with all 12 stories across 5 phases                   |
+| **MVP tracking**        | `MVP_2_BOARD.md` — active checklist; `MVP_BOARD.md` — historical closure      |
 | **Query reference**     | `QUERIES.md` — Ready-to-paste Dataview queries                                |
 | **Templates**           | `.obsidian/templates/` — Consistent note structure                            |
 
@@ -67,4 +68,7 @@ raaz-secrets-manager/          ← Vault root
 
 ## For AI Agents
 
-Read `AGENTS.md` first, then `docs/README.md`. The vault structure mirrors the doc authority map in AGENTS.md.
+Read `AGENTS.md` first, then `docs/README.md` and the active `MVP_2_BOARD.md`.
+PRODUCT.md owns scope; API/schema/UI docs distinguish implemented MVP 1 from
+planned MVP 2. Never treat unchecked historical tasks or milestone closure as
+independent verification evidence. The vault structure mirrors the doc authority map in AGENTS.md.

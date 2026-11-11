@@ -1,86 +1,53 @@
 ---
-tags: [kanban, mvp, tracking]
+tags: [kanban, mvp, tracking, completed]
 ---
 
-# MVP Board
+# MVP 1 — Complete
 
-Source: [[PRODUCT.md#Cut from MVP]] | [[FRONTEND.md#Build Order]]
+**Status: complete; closed 2026-11-10 at the project owner's direction.**
 
-Status: Phases 1–4 are marked complete based on the project owner's verification. Local build, lint, formatting, and the current test suites have passed. Phase 5 hardening remains open, including database-backed security and transaction tests. Individual backlog stories remain unchecked until their specific outcomes are recorded.
+The core feature milestone is accepted. New work is tracked in
+[MVP 2 — Team Pilot](./MVP_2_BOARD.md). The original scope remains in
+[PRODUCT.md](./PRODUCT.md#cut-from-mvp).
 
-## Backlog
+## Delivered scope
 
-- [ ] Story 1: Developer views a dev secret (AC: no confirm, audit logged)
-- [ ] Story 2: Developer reveals a production secret (AC: confirm modal, audit logged)
-- [ ] Story 3: Developer attempts to edit a production secret (AC: 403, denied audit)
-- [ ] Story 4: Auditor reviews without seeing values (AC: list metadata only, reveal 403)
-- [ ] Story 5: Project Admin manages team (AC: add, change role, remove; last admin protected)
-- [ ] Story 6: Project Admin reviews project activity (AC: read-only log, 3 filters)
-- [ ] Story 7: Platform Admin deactivates malicious user (AC: backend endpoint only)
-- [ ] Story 8: Platform Admin archives project (AC: post-MVP, full cut)
-- [ ] Story 9: Platform Admin does not implicitly see decrypted secrets (AC: demonstrated by absence)
-- [ ] Story 10: New signup has no default project role (AC: empty dashboard)
-- [ ] Story 11: Bootstrapping first Platform Admin (AC: server-side only)
-- [ ] Story 12: Audit records survive action failures (AC: transaction or 500)
+| Phase                 | Outcome                                                                           | Acceptance record                                             |
+| --------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| 1 — Foundation        | Routing, shared UI, API errors, authentication guards, 401 handling               | Previously marked verified by the project owner               |
+| 2 — Auth and Projects | Signup/login/logout, project list/create/detail                                   | Previously marked verified by the project owner               |
+| 3 — Secrets           | Environment-scoped CRUD, masked metadata, confirmed production reveal and cleanup | Previously marked verified by the project owner               |
+| 4 — Members and Audit | Add/change/remove membership, last-admin handling, filtered read-only audit log   | Previously marked verified by the project owner               |
+| UI follow-up          | Branding, compact auth forms, notifications, route-specific tab titles            | Implemented; automated checks recorded in the working session |
 
-## Phase 1 — Foundation
+Platform Admin user list/update endpoints and first-admin bootstrap are part of
+the backend scope. No Platform Admin UI, archive/restore, project settings, or
+audit pagination is claimed as delivered in MVP 1.
 
-The project owner reports this phase verified. Automated auth tests cover bootstrap and the unauthenticated flow.
+## Closure and verification record
 
-- [x] Project setup, routing shell
-- [x] `AppShell` / `NavBar` / `TabNav`
-- [x] `StatusPage`, `FullPageState`, `Toaster`
-- [x] API client + interceptors, `ApiError` normalizers
-- [x] Guards (`RequireAuth`, `PublicOnly`)
-- [x] **Definition of Done**: Auth tests pass, 401 flow works
+MVP 1 is closed as a product milestone. Its former Phase 5 is **carried forward**,
+not marked as tested or security-approved. Latest checks recorded in this session:
+formatting, lint, production build, 39 client tests; the server suite previously
+passed 21 tests. These are historical local results, not a new CI run or a
+production-readiness certification. Lint has one existing server warning.
 
-## Phase 2 — Auth and Projects
+The old story checklist mixed delivered behavior, unverified acceptance cases,
+and explicitly deferred Story 8 (archive/restore). It is retired in favor of the
+delivered-scope table above and the explicit follow-up gates below. The original
+story definitions remain in PRODUCT.md; closing this board does not assert that
+every acceptance criterion has independent integration-test evidence.
 
-The project owner reports this phase verified.
+## Work transferred to MVP 2
 
-- [x] `LoginPage`, `SignupPage`
-- [x] `ProjectsPage`, `ProjectCard`, create-project dialog
-- [x] `ProjectLayout` with 404/403 branches
-- [x] **Definition of Done**: Project list renders, create works, detail renders
+- Replica-set tests for permissions, scoped lookups, encryption, transactional audit
+  rollback, bootstrap/session behavior, and last-admin invariants (M2-01).
+- Real browser smoke coverage, accessibility, error/empty states, security review,
+  and bug fixing (M2-05 / M2-06).
+- Admin user management UI and pagination across resource lists (M2-02 / M2-04).
+- Deployment, backup/restore proof, and operational handoff (M2-05).
 
-## Phase 3 — Secrets
-
-The project owner reports this phase verified. Additional database-backed security and transaction tests remain part of Phase 5.
-
-- [x] `SecretsPage`, `EnvironmentTabs`, `SecretsTable`
-- [x] `SecretRow`, `SecretValueCell` (reveal lifecycle)
-- [x] `RevealConfirmDialog`, create/edit/delete dialogs
-- [x] **Definition of Done**: CRUD works, reveal dev works, prod confirm works, value never in cache
-
-## Phase 4 — Members + Audit (Read-Only)
-
-The project owner reports this phase verified. Last-admin concurrency and audit behavior still need database-backed integration tests in Phase 5.
-
-- [x] `MembersPage` (list, add, change role, and remove)
-- [x] `ProjectAuditLogPage` (table + 3 filters, no pagination)
-- [x] **Definition of Done**: Membership controls work with last-admin errors; audit log renders with filters
-
-## Phase 5 — MVP Hardening & Ship
-
-Latest local checks: production build, lint, formatting, 23 client tests, and 21 server tests passed. Lint reported one existing warning; several tests use mocks. A real browser smoke suite, replica-set integration tests, accessibility pass, and security review remain outstanding.
-
-- [ ] P0 tests
-- [ ] Small browser smoke suite
-- [ ] Error and empty state pass
-- [ ] Accessibility pass
-- [ ] Security review
-- [ ] Bug fixing
-- [ ] **Definition of Done**: All DoD items in [[FRONTEND.md#Definition of Done — MVP]]
-
-## Post-MVP (Deferred)
-
-- [ ] Admin users UI (`/admin/users`) — backend endpoints exist and need integration testing
-- [ ] Admin projects UI (`/admin/projects`) — needs backend
-- [ ] Admin audit UI (`/admin/audit-log`) — needs backend
-- [ ] Project archive/restore — needs backend
-- [ ] Project rename / environment editing
-- [ ] Audit log pagination
-- [ ] Historical-environment filtering
-- [ ] Reveal countdown UI
-- [ ] Cross-tab auth sync
-- [ ] Visual regression testing
+Account settings with usernames/profile pictures, project descriptions/name
+editing, and metadata search/copy-key actions are also planned in MVP 2 (M2-07
+through M2-09). Archive/restore, editable environments, platform-wide project/audit
+views, reveal countdowns, and cross-tab auth sync remain deferred beyond MVP 2.

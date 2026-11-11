@@ -1,5 +1,13 @@
 # Server implementation and testing
 
+## Release status
+
+MVP 1 is closed by owner acceptance; database/browser/security proof is carried
+forward. [The active MVP 2 board](../docs/MVP_2_BOARD.md) plans profile/avatar and
+password changes, project descriptions/name editing, all-list pagination and
+hosted recovery validation. These extensions are not implemented merely because
+they appear in docs. The sections below describe the existing backend and setup.
+
 ## Implemented
 
 - Express bootstrap: Helmet, credentialed CORS, JSON/cookie parsing, Mongo sanitization, CSRF Origin check, redacted Pino logs, standard errors, graceful shutdown.
