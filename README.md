@@ -36,9 +36,28 @@ Client (React + Vite)  →  Server (Express)  →  MongoDB Atlas
 
 ## MVP Status
 
+**MVP 1 is closed at the owner's direction.** See the
+[closure record](./docs/MVP_BOARD.md); outstanding security/browser verification
+is carried forward, not claimed complete.
+
+**MVP 2 is planned, not implemented.** The [active board](./docs/MVP_2_BOARD.md)
+organizes work by outcome and dependency, without weekly schedules:
+
+- Account settings: optional username and profile picture, plus password change.
+- Project name/description in the project page's right-side column, with an edit
+  dialog for Project Admins; the same panel stacks on mobile.
+- Server-side pagination for projects, secrets, members, audit and admin users;
+  metadata search and copy-key actions on existing screens.
+- Platform Admin users UI, security proof, hosted deployment and recovery testing.
+
+Profile thumbnails are planned as binary documents in a private `userAvatars`
+collection in the existing Atlas database, served through authorized API reads.
+No upload endpoint, avatar collection, new settings page or storage service is
+claimed implemented. Do not put secret values in profile/project metadata.
+
 The server has authentication, project, membership, secret, project audit-log, and backend-only Platform Admin user routes. Security-sensitive behavior still needs replica-set integration tests. The client includes API modules, hooks, and MVP pages; see the frontend checklist for outstanding verification.
 
-The intended MVP includes:
+The accepted MVP 1 feature set includes:
 
 - Project-scoped secrets with environment isolation (dev/staging/prod)
 - Role-based access: Project Admin, Developer, Auditor

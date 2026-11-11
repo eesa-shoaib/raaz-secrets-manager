@@ -4,6 +4,21 @@ tags: [product, mvp, scope, stories, non-goals]
 
 # Product
 
+## Release status
+
+**MVP 1: complete and closed on 2026-11-10 at the project owner's direction.**
+[MVP_BOARD.md](./MVP_BOARD.md) records the delivered scope and verification carried forward.
+Closure is product acceptance, not a claim that outstanding security checks passed.
+
+**MVP 2: planned, not implemented.** The follow-up targets a small team's
+hosted pilot: hardening, Platform Admin user management UI, authenticated password
+changes, project descriptions/editable names, account settings with usernames
+and profile pictures, metadata search/copy-key actions, and pagination across project, secret, member, audit and admin user lists. See [MVP_2_BOARD.md](./MVP_2_BOARD.md) for
+acceptance criteria, dependencies, and release gates. The original MVP
+cuts below remain historical; only items explicitly assigned to MVP 2 are promoted.
+API.md and FRONTEND.md still describe implemented contracts. Update them before
+implementing each new feature; this plan alone does not create an endpoint.
+
 ## Problem
 
 Small teams commonly share API keys and environment variables through
@@ -73,14 +88,35 @@ about role-based access control.
 
 This table is the single source of truth for scope; other docs link here.
 
-| Story                                               | Cut     | Reason                                                                                                      | Target      |
-| --------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------- | ----------- |
-| 5 — Project Admin manages their team                | None    | Add, change role, and remove are included in the MVP                                                        | MVP         |
-| 6 — Project Admin reviews project activity          | Partial | Read-only log with 3 filters kept; pagination deferred (capped at 100 most recent)                          | Post-MVP    |
-| 7 — Platform Admin deactivates a malicious user     | UI only | `PATCH /api/admin/users/:userId` retained as a backend endpoint; no admin UI                                | UI post-MVP |
-| 8 — Platform Admin archives a project               | Full    | No archive/restore endpoint or UI. `Project.status` and the status check exist, but nothing sets `archived` | Post-MVP    |
-| — Project rename / environment editing              | Full    | No `PATCH /projects/:projectId`                                                                             | Post-MVP    |
-| — Platform project overview and platform audit view | Full    | `/admin/projects` and `/admin/audit-log` are not built                                                      | Post-MVP    |
+| Story                                               | Cut     | Reason                                                                                                      | Target   |
+| --------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------- | -------- |
+| 5 — Project Admin manages their team                | None    | Add, change role, and remove are included in the MVP                                                        | MVP      |
+| 6 — Project Admin reviews project activity          | Partial | Read-only log with 3 filters kept; MVP 1 capped at 100 most recent; add cursor pagination in MVP 2          | MVP 2    |
+| 7 — Platform Admin deactivates a malicious user     | UI only | `GET /api/admin/users` and `PATCH /api/admin/users/:userId` retained; add UI in MVP 2                       | MVP 2    |
+| 8 — Platform Admin archives a project               | Full    | No archive/restore endpoint or UI. `Project.status` and the status check exist, but nothing sets `archived` | Post-MVP |
+| — Project rename / description editing              | Full    | No project update endpoint in MVP 1; add member-scoped Project Admin editing in MVP 2                       | MVP 2    |
+| — Environment editing                               | Full    | Keep development, staging and production fixed                                                              | Post-MVP |
+| — Platform project overview and platform audit view | Full    | `/admin/projects` and `/admin/audit-log` are not built                                                      | Post-MVP |
+
+### Additional follow-up scope
+
+The added features serve existing tasks: descriptions explain project purpose,
+usernames/pictures identify teammates, and metadata search/copy-key actions reduce
+manual work. Add one authenticated account settings page for Profile and Security;
+show project details in the project page’s right-side column and edit name/description
+from that column in a dialog. No
+public profile, extra settings hub, theme customization or gamification is planned.
+
+| Capability                                                                                                                      | MVP 1                                         | Target                |
+| ------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | --------------------- |
+| Account settings, optional unique username, optional uploaded profile picture (MongoDB binary thumbnail) with initials fallback | Not included                                  | MVP 2                 |
+| Project descriptions on create/list/detail, Project Admin name/description editing                                              | Not included                                  | MVP 2                 |
+| Project/secret metadata search, copy secret key, contextual empty/permission states                                             | Not included                                  | MVP 2                 |
+| Authenticated password change with current-password verification and session invalidation                                       | Not included                                  | MVP 2                 |
+| Server-side pagination for projects, secrets, members, project audit and Platform Admin user lists                              | Audit capped; admin users already page/limit  | MVP 2                 |
+| Replica-set security tests, browser smoke evidence, hosted deployment and recovery rehearsal                                    | Unfinished verification / deployment deferred | MVP 2 release gates   |
+| Password reset by email, email verification, project archive/restore, editable environments                                     | Not included                                  | Deferred beyond MVP 2 |
+| Secret import/export, CLI/API tokens, secret versioning, master-key rotation, global project/audit views                        | Not included                                  | Deferred beyond MVP 2 |
 
 ## User Stories & Acceptance Criteria
 
