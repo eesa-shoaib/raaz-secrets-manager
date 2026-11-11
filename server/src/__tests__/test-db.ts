@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import dns from 'node:dns';
 import { config } from 'dotenv';
 import mongoose from 'mongoose';
+import '../models/index.js';
 
 config();
 
@@ -53,6 +54,9 @@ export async function connectDisposableTestDb(suitePrefix = 'suite'): Promise<Te
                 `Safety guard triggered: connected database "${activeDbName}" does not start with raaz_test_`,
             );
         }
+
+        // Pre-create collections and indexes before multi-document transactions execute.
+        await Promise.all(Object.values(mongoose.models).map((model) => model.init()));
 
         return {
             connected: true,
