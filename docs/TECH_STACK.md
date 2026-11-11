@@ -4,6 +4,25 @@ tags: [tech-stack, decisions, versions, rationale, testing, tooling]
 
 # Tech Stack
 
+## MVP 2 tooling scope — planned
+
+The existing stack is retained. [MVP_2_BOARD.md](./MVP_2_BOARD.md) adds account
+settings, project metadata, bounded list navigation and release proof; it does
+not install new dependencies or change runtime versions.
+
+- Avatar thumbnails use ordinary BSON binary documents in the existing Atlas
+  database, not GridFS, local server disk or another cloud storage provider.
+  Image-processing tooling must be selected and approved before implementation.
+- Atlas Free's documented storage allowance is shared by records, thumbnails
+  and indexes; see the board's linked official limits and capacity requirements.
+- Use existing MongoDB/Mongoose query facilities for cursor pagination and safe
+  server-side metadata search; no search-service dependency is planned.
+- Replica-set and browser automation tooling remain explicit setup/approval
+  tasks. The test database and browser suite described below are requirements,
+  not proof that their dependencies or CI jobs currently exist.
+- Deployment is an MVP 2 release gate. Validate the selected topology and
+  backup/restore support before claiming the hosted instance ready.
+
 ## Repository Structure
 
 Monorepo using npm workspaces. See PROJECT_STRUCTURE.md for the full
@@ -95,7 +114,7 @@ backend for this test). The last-Platform-Admin race is documented in API.md but
 | npm workspaces    | Manages client/server/shared-schemas as one repo without extra tooling like Turborepo, which would be overkill at this scope |
 | dotenv            | Environment variable loading (`MASTER_KEY`, `MONGO_URI`, `JWT_SECRET`)                                                       |
 
-## Deployment (future, not required for current milestone)
+## Deployment (planned MVP 2 release gate)
 
 | Layer    | Target        | Rationale                                                   |
 | -------- | ------------- | ----------------------------------------------------------- |

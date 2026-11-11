@@ -1,6 +1,6 @@
 # Server TODO
 
-Foundation, auth, project, membership, secret, project audit-log and Platform Admin user routes are present. Presence of a route does not establish MVP completion: database integration coverage and security review remain outstanding.
+Foundation, auth, project, membership, secret, project audit-log and Platform Admin user routes are present. MVP 1 is closed by owner acceptance, with verification carried forward: database integration coverage and security review remain outstanding.
 
 ## Foundation
 
@@ -58,3 +58,21 @@ Foundation, auth, project, membership, secret, project audit-log and Platform Ad
 - [ ] Test cross-project secret ID returns 404.
 - [ ] Test archived project status gate with directly seeded project.
 - [ ] Run `npm run lint`, `npm test -w server`, and `npm run build`.
+
+## MVP 2 backend handoff — planned
+
+Use [MVP_2_BOARD.md](../docs/MVP_2_BOARD.md) as the active acceptance checklist;
+unchecked historical tasks above are not independent proof of missing behavior.
+
+- M2-01: prove security and transaction behavior against an isolated replica set.
+- M2-02: support admin UI through existing user endpoints without access widening.
+- M2-03/M2-07: self-profile, optional unique username, private binary avatar
+  collection, and audited password change with session invalidation.
+- M2-04: paginate projects, secrets, members, audit and admin users; server-side
+  metadata search, bounded responses and preserved admin page/limit compatibility.
+- M2-08: optional project description and Project Admin name/description updates.
+- M2-05/M2-06: deployment, recovery evidence, browser/CI verification and fixes.
+
+Finalize API.md, DATA_MODEL.md and ARCHITECTURE.md extensions before code. No
+new endpoint, avatar collection, audit action, dependency or deployment is
+claimed by this handoff alone.

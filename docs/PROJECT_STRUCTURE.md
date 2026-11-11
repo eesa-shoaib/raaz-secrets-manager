@@ -4,6 +4,24 @@ tags: [structure, conventions, naming, boundaries, module-rules]
 
 # Project Structure
 
+## MVP 2 ownership — planned additions
+
+[MVP_2_BOARD.md](./MVP_2_BOARD.md) is the active plan; the tree below is the
+baseline, not a declaration that new files already exist.
+
+- Account settings and admin users belong in `client/src/pages/`; project details
+  extend `ProjectLayout`'s right-side panel and an existing-style edit dialog.
+- API calls stay in `client/src/api/`; query/mutation hooks and cursor-aware keys
+  follow the existing hooks/query-client ownership. Reuse list/table controls.
+- Optional username, project description and pagination envelopes belong in
+  client-safe shared schemas. Binary avatar storage fields remain server-only;
+  avatars are never serialized into public user or list JSON.
+- Avatar/profile/password/project updates follow the current server layers.
+  Only services access the proposed avatar model/collection and audit service.
+  Do not add a generic file-upload platform or a separate application package.
+- Track active work in `docs/MVP_2_BOARD.md`; `MVP_BOARD.md`, `CLIENT_TODO.md`
+  and the old phase lists remain historical records with verification carryover.
+
 ## Folder Layout
 
 ```

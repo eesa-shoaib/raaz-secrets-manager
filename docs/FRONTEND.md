@@ -16,6 +16,32 @@ underspecification anymore, it's scope creep against a fixed deadline.
 developers need a shared name for it. Buttons, inputs, and text compose
 inline.
 
+MVP 1 is closed. This document describes its implemented frontend contract.
+The approved follow-up scope is in PRODUCT.md and [MVP_2_BOARD.md](./MVP_2_BOARD.md).
+Update this document’s routes, widgets, query keys, and permissions before
+implementing each MVP 2 feature; unlisted follow-up work remains deferred.
+
+## MVP 2 surfaces — planned, not implemented
+
+| Surface                         | Planned behavior                                                                                                                           |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/settings`                     | RequireAuth; Profile (optional username, upload/replace/remove picture) and Security (password change); open from account menu             |
+| `/admin/users`                  | RequirePlatformAdmin; paginated users and existing activation/admin-role actions; no project/secret data                                   |
+| Project page right-side column  | Name, full description, role and status across all project tabs; Project Admin Edit details opens a dialog; stack the same panel on mobile |
+| Existing lists                  | Projects, secrets, members, audit and admin users get bounded Previous/Next navigation with boundary/loading/error states                  |
+| Existing project/secret headers | Server-side metadata search over all authorized results, resetting page state; secret search scoped to the selected environment            |
+| Existing secret row             | Explicit Copy key only, with success/failure feedback; reveal rules unchanged                                                              |
+
+Reuse one avatar treatment with initials/broken-image fallback; display usernames
+with email available for identity disambiguation. Do not add public profiles,
+extra settings dashboards, custom themes or gamification. The widget inventory
+below is the MVP 1 ceiling; revise it explicitly before adding planned components.
+
+Extend query keys with cursor/size/search/filter scope before implementing list
+navigation. Reset page state after scope changes, invalidate after mutations, and
+clear revealed row values when paging unmounts them. Profile/image bytes never
+belong in list data. API.md still owns final request/response contracts.
+
 ## 1. Route Map
 
 | \#  | Path                                        | Page                                | Guard                                  | API                                                                                                                                                              | Phase        |
@@ -452,7 +478,8 @@ Reintroduce only if a real need appears — not speculatively.
 
 ## 6. Build Order
 
-Six phases. **Phase 5 is the ship boundary** — Phases 1–5 are the MVP.
+Historical MVP 1 build order follows. Phase 5 verification gaps were carried
+into MVP 2; this phase outline is not the active task board.
 
 **Phase 1 — Foundation**
 Project setup, routing shell, `AppShell` / `NavBar` / `TabNav`,
@@ -478,7 +505,7 @@ accessibility pass, security review, bug fixing. **This is the release.**
 **Phase 6 — Platform Admin (post-MVP)**
 `AdminUsersPage` with `AdminUsersTable` (backend exists). The admin projects/audit pages and archive/restore need new backend endpoints first.
 
-## 7. The MVP Boundary
+## 7. The MVP 1 Boundary (historical)
 
 ```
              MVP ships here

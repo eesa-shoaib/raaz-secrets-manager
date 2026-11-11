@@ -1,6 +1,30 @@
-# Client MVP checklist
+# Client MVP 1 checklist
+
+**Historical handoff:** MVP 1 is closed at the owner’s direction. This checklist
+is retained as a record, not the active backlog. Outstanding validation belongs
+to [MVP_2_BOARD.md](./MVP_2_BOARD.md); unchecked entries are not proof of missing
+features, and checked browser coverage is not proof of a real-browser run.
 
 This is a handoff checklist for implementing client behavior against the Raaz API. [FRONTEND.md](./FRONTEND.md) defines the routes, behavior, widgets, query keys, and MVP definition of done. [API.md](./API.md) defines the endpoint contracts and permissions; [PRODUCT.md](./PRODUCT.md) defines the MVP boundary. If this checklist disagrees with those documents, the authoritative document wins.
+
+## MVP 2 frontend handoff — planned
+
+The active acceptance checklist is [MVP_2_BOARD.md](./MVP_2_BOARD.md):
+
+- M2-02: admin users UI with existing backend actions and last-admin errors.
+- M2-03/M2-07: one account settings page for username/photo and password change;
+  reuse avatar styles with initials fallback and keep email-based login.
+- M2-04: Previous/Next navigation on projects, secrets, members, audit and admin
+  users; cursor-aware query keys, scope reset and safe reveal cleanup on paging.
+- M2-08: description in the project page's right-side panel, plus Project Admin
+  name/description edit dialog. Stack the same panel on mobile.
+- M2-09: server-side project/secret-key search, copy-key actions, useful empty
+  states and permission explanations on existing screens.
+- M2-06: real browser, keyboard/mobile/accessibility and error-state proof.
+
+The old "do not add pagination/admin UI" entries below describe MVP 1. Only the
+explicit MVP 2 additions are promoted; update the authoritative frontend inventory
+and API contracts before implementation, keeping other scope cuts deferred.
 
 ## Starting point
 
@@ -59,4 +83,6 @@ This is a handoff checklist for implementing client behavior against the Raaz AP
 - `packages/shared-schemas/src/index.ts`: public schemas; import only from the package root in client code.
 - `server/src/routes/`: currently mounted server endpoints; see [server/TODO.md](../server/TODO.md) for outstanding backend work.
 
-Do not add post-MVP admin UI, project archive/rename, audit pagination, or extra widgets outside the inventory in FRONTEND.md.
+Archive/restore, editable environments and global admin project/audit views remain
+deferred. The MVP 2 additions above require corresponding FRONTEND.md inventory
+updates; they do not authorize unrelated widgets.
