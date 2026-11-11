@@ -6,7 +6,7 @@
     "scripts": {
         "dev": "npm run build -w @raaz/shared-schemas && tsx watch src/index.ts",
         "build": "tsc",
-        "test": "vitest run",
+        "test": "vitest run --no-file-parallelism",
         "test:watch": "vitest",
         "seed:mock": "node scripts/create-mock-data.mjs",
         "lint": "eslint src --ext .ts"
