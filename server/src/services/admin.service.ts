@@ -3,11 +3,15 @@ import mongoose from 'mongoose';
 import { PlatformConfigModel } from '../models/PlatformConfig.js';
 import { UserModel } from '../models/User.js';
 import { AppError } from '../utils/app-error.js';
+import { buildCursorCondition, decodeCursor, encodeCursor } from '../utils/pagination.js';
 import { writeAuditEntry } from './audit.service.js';
 
 function publicUser(user: {
     _id: mongoose.Types.ObjectId;
     email: string;
+    username?: string | null;
+    hasAvatar?: boolean;
+    avatarUpdatedAt?: Date | null;
     isPlatformAdmin: boolean;
     isActive: boolean;
     createdAt: Date;
@@ -16,6 +20,9 @@ function publicUser(user: {
     return publicUserSchema.parse({
         id: user._id.toString(),
         email: user.email,
+        username: user.username ?? null,
+        hasAvatar: Boolean(user.hasAvatar),
+        avatarUpdatedAt: user.avatarUpdatedAt ?? null,
         isPlatformAdmin: user.isPlatformAdmin,
         isActive: user.isActive,
         createdAt: user.createdAt,
@@ -33,6 +40,28 @@ export async function listUsers(page: number, limit: number) {
         UserModel.countDocuments(),
     ]);
     return { data: users.map(publicUser), page, limit, total };
+}
+
+export async function listUsersCursor(cursor?: string, limit = 25) {
+    const scope = 'admin:users';
+    const filter = cursor ? buildCursorCondition(decodeCursor(cursor, scope)) : {};
+    const rows = await UserModel.find(filter)
+        .sort({ createdAt: -1, _id: -1 })
+        .limit(limit + 1)
+        .lean();
+
+    const hasMore = rows.length > limit;
+    const pageRows = hasMore ? rows.slice(0, limit) : rows;
+    const last = pageRows.at(-1);
+    const nextCursor =
+        hasMore && last ? encodeCursor(scope, last.createdAt, last._id.toString()) : null;
+
+    return {
+        data: pageRows.map(publicUser),
+        nextCursor,
+        hasMore,
+        limit,
+    };
 }
 
 export async function updateUser(

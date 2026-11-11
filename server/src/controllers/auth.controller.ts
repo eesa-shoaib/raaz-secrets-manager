@@ -1,6 +1,12 @@
 import { publicUserSchema } from '@raaz/shared-schemas';
 import type { Request, Response } from 'express';
-import { clearAuthCookie, login, setAuthCookie, signup } from '../services/auth.service.js';
+import {
+    changePassword,
+    clearAuthCookie,
+    login,
+    setAuthCookie,
+    signup,
+} from '../services/auth.service.js';
 
 export async function signupController(req: Request, res: Response): Promise<void> {
     const user = await signup(req.body.email, req.body.password);
@@ -25,6 +31,12 @@ export function logoutController(_req: Request, res: Response): void {
     res.status(204).send();
 }
 
+export async function changePasswordController(req: Request, res: Response): Promise<void> {
+    await changePassword(req.user!.id, req.body.currentPassword, req.body.newPassword);
+    clearAuthCookie(res);
+    res.status(204).send();
+}
+
 export function currentUserController(req: Request, res: Response): void {
     res.json(publicUserSchema.parse(req.user));
 }
@@ -33,6 +45,9 @@ function toPublicUser(user: {
     _id?: { toString(): string };
     id?: string;
     email: string;
+    username?: string | null;
+    hasAvatar?: boolean;
+    avatarUpdatedAt?: Date | null;
     isPlatformAdmin: boolean;
     isActive: boolean;
     createdAt: Date;
@@ -41,6 +56,9 @@ function toPublicUser(user: {
     return publicUserSchema.parse({
         id: user._id?.toString() ?? user.id,
         email: user.email,
+        username: user.username ?? null,
+        hasAvatar: Boolean(user.hasAvatar),
+        avatarUpdatedAt: user.avatarUpdatedAt ?? null,
         isPlatformAdmin: user.isPlatformAdmin,
         isActive: user.isActive,
         createdAt: user.createdAt,

@@ -25,6 +25,14 @@ export function createApp(): Express {
             credentials: true,
         }),
     );
+    app.use(
+        '/api/account/avatar',
+        express.raw({
+            type: ['image/png', 'image/jpeg', 'image/webp', 'application/octet-stream'],
+            limit: '2mb',
+        }),
+        express.json({ limit: '3mb' }),
+    );
     app.use(express.json({ limit: '1mb' }));
     app.use(cookieParser());
     app.use(mongoSanitize());
