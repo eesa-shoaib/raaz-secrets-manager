@@ -3,6 +3,7 @@ import { createProjectSchema, type CreateProjectInput } from '@raaz/shared-schem
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
+import { PROJECTS_PAGE_SIZE } from '../api/projects';
 import { FormField } from '../components/FormField';
 import { EmptyState, ErrorState } from '../components/FullPageState';
 import { Skeleton } from '../components/LoadingSkeleton';
@@ -25,17 +26,19 @@ export function ProjectsPage() {
     const [cursorHistory, setCursorHistory] = useState<(string | null)[]>([]);
 
     useEffect(() => {
+        const trimmed = searchInput.trim();
+        if (trimmed === debouncedSearch) return;
         const timer = setTimeout(() => {
-            setDebouncedSearch(searchInput.trim());
+            setDebouncedSearch(trimmed);
             setCursor(null);
             setCursorHistory([]);
         }, 250);
         return () => clearTimeout(timer);
-    }, [searchInput]);
+    }, [searchInput, debouncedSearch]);
 
     const { data, isLoading, isFetching, isError, error, refetch } = useProjectsPage({
         cursor,
-        limit: 25,
+        limit: PROJECTS_PAGE_SIZE,
         search: debouncedSearch || undefined,
     });
     const projects = data?.data ?? [];
@@ -71,6 +74,12 @@ export function ProjectsPage() {
         const previousCursor = cursorHistory[cursorHistory.length - 1] ?? null;
         setCursorHistory((prev) => prev.slice(0, -1));
         setCursor(previousCursor);
+    };
+
+    const handleFirstPage = () => {
+        if (cursorHistory.length === 0 && cursor === null) return;
+        setCursor(null);
+        setCursorHistory([]);
     };
 
     const handleOpenModal = () => {
@@ -165,6 +174,7 @@ export function ProjectsPage() {
                     <PaginationControls
                         hasPrevious={cursorHistory.length > 0}
                         hasNext={Boolean(data?.hasMore && data?.nextCursor)}
+                        onFirstPage={handleFirstPage}
                         onPrevious={handlePrevious}
                         onNext={handleNext}
                         pageNumber={cursorHistory.length + 1}
@@ -209,7 +219,7 @@ export function ProjectsPage() {
                         <button
                             type="button"
                             onClick={handleOpenModal}
-                            className="btn btn-primary text-base-300 font-semibold rounded-xl"
+                            className="btn btn-primary btn-sm h-9 px-4 text-primary-content font-semibold rounded-xl"
                         >
                             New Project
                         </button>
@@ -223,7 +233,7 @@ export function ProjectsPage() {
                     {modalError && (
                         <div
                             role="alert"
-                            className="alert alert-error text-sm rounded-xl py-2 px-3 text-base-100 font-medium"
+                            className="alert alert-error text-sm rounded-xl py-2 px-3 text-error-content font-medium"
                         >
                             <span>{modalError}</span>
                         </div>
@@ -274,14 +284,14 @@ export function ProjectsPage() {
                             type="button"
                             onClick={handleCloseModal}
                             disabled={isCreating}
-                            className="btn btn-ghost rounded-xl text-sm"
+                            className="btn btn-ghost btn-sm h-9 rounded-xl text-sm"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={isCreating}
-                            className="btn btn-primary text-base-300 font-semibold rounded-xl text-sm"
+                            className="btn btn-primary btn-sm h-9 px-4 text-primary-content font-semibold rounded-xl text-sm"
                         >
                             {isCreating ? (
                                 <span className="loading loading-spinner loading-sm"></span>

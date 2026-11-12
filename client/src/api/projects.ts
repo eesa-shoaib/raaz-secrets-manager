@@ -6,6 +6,8 @@ import type {
 } from '@raaz/shared-schemas';
 import apiClient from './axios';
 
+export const PROJECTS_PAGE_SIZE = 9;
+
 export interface ProjectsPageParams {
     cursor?: string | null;
     limit?: number;
@@ -26,7 +28,7 @@ export async function getProjectsPage(
 ): Promise<CursorPaginatedResponse<ProjectResponse>> {
     const query: Record<string, unknown> = {
         mode: 'cursor',
-        limit: params.limit ?? 25,
+        limit: params.limit ?? PROJECTS_PAGE_SIZE,
     };
     if (params.cursor) query.cursor = params.cursor;
     if (params.search && params.search.trim()) query.search = params.search.trim();

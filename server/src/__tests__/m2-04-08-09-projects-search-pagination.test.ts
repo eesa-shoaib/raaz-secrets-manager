@@ -495,4 +495,54 @@ describe('M2-04, M2-08, M2-09: Project Details, Literal Search, and Cursor Pagin
             ).status,
         ).toBe(422);
     }, 25000);
+
+    it('supports 9-item cursor pagination for the Projects Dashboard grid', async () => {
+        if (!db.connected) return;
+        const app = createApp();
+
+        const [owner] = await UserModel.create([
+            {
+                email: 'grid9_owner@example.com',
+                passwordHash: DUMMY_HASH,
+                isActive: true,
+                isPlatformAdmin: false,
+            },
+        ]);
+        const cookie = signAuthCookie(owner._id.toString());
+
+        for (let i = 1; i <= 11; i += 1) {
+            await request(app)
+                .post('/api/projects')
+                .set('Origin', ORIGIN)
+                .set('Cookie', cookie)
+                .send({ name: `Grid Project ${i}` })
+                .expect(201);
+        }
+
+        const page1 = await request(app)
+            .get('/api/projects?mode=cursor&limit=9')
+            .set('Cookie', cookie);
+        expect(page1.status).toBe(200);
+        expect(page1.body.limit).toBe(9);
+        expect(page1.body.data).toHaveLength(9);
+        expect(page1.body.hasMore).toBe(true);
+        expect(typeof page1.body.nextCursor).toBe('string');
+
+        const page2 = await request(app)
+            .get(
+                `/api/projects?mode=cursor&limit=9&cursor=${encodeURIComponent(page1.body.nextCursor)}`,
+            )
+            .set('Cookie', cookie);
+        expect(page2.status).toBe(200);
+        expect(page2.body.limit).toBe(9);
+        expect(page2.body.data).toHaveLength(2);
+        expect(page2.body.hasMore).toBe(false);
+        expect(page2.body.nextCursor).toBeNull();
+
+        const allIds = [
+            ...page1.body.data.map((p: { id: string }) => p.id),
+            ...page2.body.data.map((p: { id: string }) => p.id),
+        ];
+        expect(new Set(allIds).size).toBe(11);
+    }, 25000);
 });
