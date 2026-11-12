@@ -1,6 +1,7 @@
 import type { CreateProjectInput, ProjectResponse, UpdateProjectInput } from '@raaz/shared-schemas';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+    PROJECTS_PAGE_SIZE,
     createProject,
     getProject,
     getProjects,
@@ -19,7 +20,7 @@ export function useProjects() {
 }
 
 export function useProjectsPage(params: ProjectsPageParams = {}) {
-    const limit = params.limit ?? 25;
+    const limit = params.limit ?? PROJECTS_PAGE_SIZE;
     const cursor = params.cursor ?? null;
     const search = params.search?.trim() || undefined;
 
