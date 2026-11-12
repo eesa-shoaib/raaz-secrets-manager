@@ -5,6 +5,7 @@ export interface PaginationControlsProps {
     hasNext: boolean;
     onPrevious: () => void;
     onNext: () => void;
+    onFirstPage?: () => void;
     pageNumber: number;
     itemCount: number;
     isFetching?: boolean;
@@ -16,6 +17,7 @@ export function PaginationControls({
     hasNext,
     onPrevious,
     onNext,
+    onFirstPage,
     pageNumber,
     itemCount,
     isFetching = false,
@@ -35,11 +37,21 @@ export function PaginationControls({
                 (Page <span className="font-semibold text-base-content">{pageNumber}</span>)
             </div>
             <div className="flex items-center gap-2">
+                {onFirstPage && (
+                    <button
+                        type="button"
+                        onClick={onFirstPage}
+                        disabled={!hasPrevious || isFetching}
+                        className="btn btn-sm h-9 btn-ghost border border-base-300 rounded-xl disabled:opacity-40"
+                    >
+                        First page
+                    </button>
+                )}
                 <button
                     type="button"
                     onClick={onPrevious}
                     disabled={!hasPrevious || isFetching}
-                    className="btn btn-sm btn-ghost border border-base-300 rounded-xl disabled:opacity-40"
+                    className="btn btn-sm h-9 btn-ghost border border-base-300 rounded-xl disabled:opacity-40"
                 >
                     Previous
                 </button>
@@ -47,7 +59,7 @@ export function PaginationControls({
                     type="button"
                     onClick={onNext}
                     disabled={!hasNext || isFetching}
-                    className="btn btn-sm btn-ghost border border-base-300 rounded-xl disabled:opacity-40"
+                    className="btn btn-sm h-9 btn-ghost border border-base-300 rounded-xl disabled:opacity-40"
                 >
                     Next
                 </button>
