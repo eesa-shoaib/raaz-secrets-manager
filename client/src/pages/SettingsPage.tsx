@@ -183,6 +183,7 @@ export function SettingsPage() {
     };
 
     const handleClosePasswordModal = () => {
+        if (changePasswordMutation.isPending || isChangingPassword) return;
         setIsPasswordModalOpen(false);
         setPasswordError(null);
         resetPassword({
@@ -209,6 +210,8 @@ export function SettingsPage() {
             if (isApiError(err)) {
                 if (err.status === 401) {
                     setPasswordError('Current password is incorrect.');
+                } else if (err.status === 429) {
+                    setPasswordError('Too many attempts, try again in 15 minutes.');
                 } else {
                     setPasswordError(err.message || 'Failed to update password');
                 }
@@ -450,6 +453,9 @@ export function SettingsPage() {
                                     type="password"
                                     autoComplete="current-password"
                                     autoFocus
+                                    disabled={
+                                        changePasswordMutation.isPending || isChangingPassword
+                                    }
                                     className={`input input-bordered w-full bg-base-300 rounded-xl focus:border-primary text-sm font-ui ${
                                         passwordErrors.currentPassword ? 'input-error' : ''
                                     }`}
@@ -470,6 +476,9 @@ export function SettingsPage() {
                                     id={id}
                                     type="password"
                                     autoComplete="new-password"
+                                    disabled={
+                                        changePasswordMutation.isPending || isChangingPassword
+                                    }
                                     className={`input input-bordered w-full bg-base-300 rounded-xl focus:border-primary text-sm font-ui ${
                                         passwordErrors.newPassword ? 'input-error' : ''
                                     }`}
@@ -489,6 +498,9 @@ export function SettingsPage() {
                                     id={id}
                                     type="password"
                                     autoComplete="new-password"
+                                    disabled={
+                                        changePasswordMutation.isPending || isChangingPassword
+                                    }
                                     className={`input input-bordered w-full bg-base-300 rounded-xl focus:border-primary text-sm font-ui ${
                                         passwordErrors.confirmNewPassword ? 'input-error' : ''
                                     }`}
@@ -512,9 +524,14 @@ export function SettingsPage() {
                                 disabled={changePasswordMutation.isPending || isChangingPassword}
                                 className="btn btn-primary btn-sm h-9 px-4 text-primary-content font-semibold rounded-xl text-sm"
                             >
-                                {changePasswordMutation.isPending || isChangingPassword
-                                    ? 'Updating...'
-                                    : 'Update Password'}
+                                {changePasswordMutation.isPending || isChangingPassword ? (
+                                    <span className="flex items-center gap-2">
+                                        <span className="loading loading-spinner loading-xs" />
+                                        Updating...
+                                    </span>
+                                ) : (
+                                    'Update Password'
+                                )}
                             </button>
                         </div>
                     </form>
