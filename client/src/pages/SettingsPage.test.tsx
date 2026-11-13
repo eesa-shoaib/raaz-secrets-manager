@@ -50,6 +50,12 @@ function LoginSentinel() {
 describe('SettingsPage', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        HTMLDialogElement.prototype.showModal = function () {
+            this.setAttribute('open', '');
+        };
+        HTMLDialogElement.prototype.close = function () {
+            this.removeAttribute('open');
+        };
         vi.mocked(authApi.getMe).mockResolvedValue(BASE_USER);
     });
 
@@ -139,19 +145,44 @@ describe('SettingsPage', () => {
         });
     });
 
-    it('keeps session on wrong current password 401 and redirects on 204 password change', async () => {
+    it('opens Password settings modal, validates confirm password, handles 401/429, resets on cancel, and redirects on 204', async () => {
         const { client } = renderSettings();
         await waitFor(() => {
-            expect(screen.getByLabelText('Current Password')).toBeTruthy();
+            expect(screen.getByRole('button', { name: /Password settings/i })).toBeTruthy();
         });
 
-        fireEvent.change(screen.getByLabelText('Current Password'), {
+        // Inline password form should not be mounted before opening modal
+        expect(screen.queryByLabelText(/Current password/i)).toBeNull();
+
+        fireEvent.click(screen.getByRole('button', { name: /Password settings/i }));
+
+        await waitFor(() => {
+            expect(screen.getByLabelText(/Current password/i)).toBeTruthy();
+            expect(screen.getByLabelText(/^New password/i)).toBeTruthy();
+            expect(screen.getByLabelText(/Confirm new password/i)).toBeTruthy();
+        });
+
+        // Client-side mismatch validation prevents submission
+        fireEvent.change(screen.getByLabelText(/Current password/i), {
             target: { value: 'wrong-pass-123' },
         });
-        fireEvent.change(screen.getByLabelText('New Password'), {
+        fireEvent.change(screen.getByLabelText(/^New password/i), {
             target: { value: 'NewValidPass123!' },
         });
+        fireEvent.change(screen.getByLabelText(/Confirm new password/i), {
+            target: { value: 'DifferentPass999!' },
+        });
+        fireEvent.click(screen.getByRole('button', { name: 'Update Password' }));
 
+        await waitFor(() => {
+            expect(screen.getByText('New passwords do not match')).toBeTruthy();
+        });
+        expect(authApi.changePassword).not.toHaveBeenCalled();
+
+        // Matching confirm password triggers API call -> 401 keeps session intact
+        fireEvent.change(screen.getByLabelText(/Confirm new password/i), {
+            target: { value: 'NewValidPass123!' },
+        });
         vi.mocked(authApi.changePassword).mockRejectedValueOnce({
             status: 401,
             code: 'UNAUTHENTICATED',
@@ -165,8 +196,49 @@ describe('SettingsPage', () => {
                 'Current password is incorrect.',
             );
         });
+        expect(authApi.changePassword).toHaveBeenCalledWith({
+            currentPassword: 'wrong-pass-123',
+            newPassword: 'NewValidPass123!',
+        });
         expect(screen.queryByTestId('login-reason')).toBeNull();
 
+        // Cancel resets fields and server error on reopen
+        fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+        await waitFor(() => {
+            expect(screen.queryByLabelText(/Current password/i)).toBeNull();
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: /Password settings/i }));
+        await waitFor(() => {
+            expect((screen.getByLabelText(/Current password/i) as HTMLInputElement).value).toBe('');
+        });
+        expect(screen.queryByText('Current password is incorrect.')).toBeNull();
+
+        // 429 rate-limit feedback
+        fireEvent.change(screen.getByLabelText(/Current password/i), {
+            target: { value: 'CurrentPass123!' },
+        });
+        fireEvent.change(screen.getByLabelText(/^New password/i), {
+            target: { value: 'FreshValidPass123!' },
+        });
+        fireEvent.change(screen.getByLabelText(/Confirm new password/i), {
+            target: { value: 'FreshValidPass123!' },
+        });
+        vi.mocked(authApi.changePassword).mockRejectedValueOnce({
+            status: 429,
+            code: 'RATE_LIMITED',
+            message: 'Too many requests',
+            name: 'ApiError',
+        } satisfies ApiError);
+
+        fireEvent.click(screen.getByRole('button', { name: 'Update Password' }));
+        await waitFor(() => {
+            expect(screen.getByRole('alert').textContent).toContain(
+                'Too many attempts, try again in 15 minutes.',
+            );
+        });
+
+        // 204 success clears cache and navigates to /login
         vi.mocked(authApi.changePassword).mockResolvedValueOnce(undefined);
         fireEvent.click(screen.getByRole('button', { name: 'Update Password' }));
         await waitFor(() => {

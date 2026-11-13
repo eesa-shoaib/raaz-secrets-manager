@@ -23,14 +23,14 @@ implementing each MVP 2 feature; unlisted follow-up work remains deferred.
 
 ## MVP 2 surfaces — active contract
 
-| Surface                        | Specification                                                                                                                                              |
-| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/settings`                    | `RequireAuth`; `SettingsPage` with Profile (optional username, upload/replace/remove picture) and Security (password change); accessible from account menu |
-| `/admin/users`                 | `RequireAuth` + `RequirePlatformAdmin`; `AdminUsersPage` with cursor-paginated users and activation/Platform-Admin role actions; no project/secret data    |
-| Project page right-side column | Name, full description, total `memberCount`, role, and status across all project tabs; Project Admin "Edit details" opens a dialog; stacks on mobile       |
-| Resource lists                 | Projects, secrets, members, audit log, and admin users render `PaginationControls` with Previous/Next navigation and boundary/loading/error states         |
-| Project & secret list headers  | Server-side metadata search over all authorized results, resetting cursor state; secret search is scoped to the selected environment                       |
-| Secret row                     | Explicit "Copy key" button on every row (all roles including Auditor) with toast/button feedback; reveal rules unchanged                                   |
+| Surface                        | Specification                                                                                                                                                        |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/settings`                    | `RequireAuth`; `SettingsPage` with Profile (optional username, upload/replace/remove picture) and Security (`Password settings` modal); accessible from account menu |
+| `/admin/users`                 | `RequireAuth` + `RequirePlatformAdmin`; `AdminUsersPage` with cursor-paginated users and activation/Platform-Admin role actions; no project/secret data              |
+| Project page right-side column | Name, full description, total `memberCount`, role, and status across all project tabs; Project Admin "Edit details" opens a dialog; stacks on mobile                 |
+| Resource lists                 | Projects, secrets, members, audit log, and admin users render `PaginationControls` with Previous/Next navigation and boundary/loading/error states                   |
+| Project & secret list headers  | Server-side metadata search over all authorized results, resetting cursor state; secret search is scoped to the selected environment                                 |
+| Secret row                     | Explicit "Copy key" button on every row (all roles including Auditor) with toast/button feedback; reveal rules unchanged                                             |
 
 Show the read-only Members count beside the description in the right-side project
 panel, including when no description is set. Use the project detail's server
@@ -442,7 +442,7 @@ promise.
 - **Guard:** `RequireAuth`.
 - **Sections:**
     1. **Profile:** read-only email (`me.email`), optional `username` input (`3–30` lowercase `[a-z0-9_-]`, or clear to unset) saving via `PATCH /api/account/profile`, and profile picture controls (`UserAvatar` preview, Upload/Replace PNG/JPEG/WebP ≤ 2 MiB via `PUT /api/account/avatar`, Remove via `DELETE /api/account/avatar`).
-    2. **Security:** change password form (`currentPassword`, `newPassword` with `8–72` chars) submitting to `POST /api/auth/change-password`. Wrong current password (`401`) surfaces an inline alert without logging out; success clears `queryClient` and redirects to `/login` with `state.reason = 'password-changed'`.
+    2. **Security:** `Password settings` button opening a Change / Update Password `Modal` with `Current password`, `New password` (`8–72` chars), and `Confirm new password` fields submitting `{ currentPassword, newPassword }` to `POST /api/auth/change-password`. Handles client-side mismatch/length validation, `401` wrong current password inline without logging out, `429` rate-limit errors, loading/pending lock, and clean form/error reset on close or cancel; `204` clears `queryClient` and redirects to `/login` with `state.reason = 'password-changed'`.
     3. **Danger Zone (Deactivate Account):** `Deactivate Account` opens a password-confirmed modal submitting `POST /api/account/deactivate`. Wrong password returns `401`, last active Platform Admin returns `409 CONFLICT`, and `204` clears `queryClient` and redirects to `/login` with `state.reason = 'account-deactivated'`.
 
 ## 4. Per-Role UI Map

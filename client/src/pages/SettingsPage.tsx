@@ -1,14 +1,15 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-    changePasswordInputSchema,
     deactivateAccountInputSchema,
+    passwordSchema,
     profileUpdateInputSchema,
-    type ChangePasswordInput,
     type DeactivateAccountInput,
     type ProfileUpdateInput,
 } from '@raaz/shared-schemas';
 import React, { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { FormField } from '../components/FormField';
 import { Modal } from '../components/Modal';
 import { PageHeader } from '../components/PageHeader';
 import { useToast } from '../components/Toaster';
@@ -27,6 +28,23 @@ import { isApiError } from '../lib/errorHandling';
 const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
 
+const passwordModalFormSchema = z
+    .object({
+        currentPassword: z.string().min(1, 'Current password is required').max(72),
+        newPassword: passwordSchema,
+        confirmNewPassword: z.string().min(1, 'Please confirm your new password').max(72),
+    })
+    .refine((data) => data.currentPassword !== data.newPassword, {
+        message: 'New password must be different from current password',
+        path: ['newPassword'],
+    })
+    .refine((data) => data.newPassword === data.confirmNewPassword, {
+        message: 'New passwords do not match',
+        path: ['confirmNewPassword'],
+    });
+
+type PasswordModalFormValues = z.infer<typeof passwordModalFormSchema>;
+
 export function SettingsPage() {
     useDocumentTitle('Account Settings');
     const { user } = useAuth();
@@ -41,6 +59,7 @@ export function SettingsPage() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [avatarError, setAvatarError] = useState<string | null>(null);
     const [profileError, setProfileError] = useState<string | null>(null);
+    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
     const [passwordError, setPasswordError] = useState<string | null>(null);
     const [isDeactivateOpen, setIsDeactivateOpen] = useState(false);
     const [deactivateError, setDeactivateError] = useState<string | null>(null);
@@ -67,11 +86,12 @@ export function SettingsPage() {
         handleSubmit: handleSubmitPassword,
         reset: resetPassword,
         formState: { errors: passwordErrors, isSubmitting: isChangingPassword },
-    } = useForm<ChangePasswordInput>({
-        resolver: zodResolver(changePasswordInputSchema),
+    } = useForm<PasswordModalFormValues>({
+        resolver: zodResolver(passwordModalFormSchema),
         defaultValues: {
             currentPassword: '',
             newPassword: '',
+            confirmNewPassword: '',
         },
     });
 
@@ -152,15 +172,46 @@ export function SettingsPage() {
         }
     };
 
-    const onPasswordSubmit = async (data: ChangePasswordInput) => {
+    const handleOpenPasswordModal = () => {
+        setPasswordError(null);
+        resetPassword({
+            currentPassword: '',
+            newPassword: '',
+            confirmNewPassword: '',
+        });
+        setIsPasswordModalOpen(true);
+    };
+
+    const handleClosePasswordModal = () => {
+        if (changePasswordMutation.isPending || isChangingPassword) return;
+        setIsPasswordModalOpen(false);
+        setPasswordError(null);
+        resetPassword({
+            currentPassword: '',
+            newPassword: '',
+            confirmNewPassword: '',
+        });
+    };
+
+    const onPasswordSubmit = async (data: PasswordModalFormValues) => {
         setPasswordError(null);
         try {
-            await changePasswordMutation.mutateAsync(data);
-            resetPassword();
+            await changePasswordMutation.mutateAsync({
+                currentPassword: data.currentPassword,
+                newPassword: data.newPassword,
+            });
+            setIsPasswordModalOpen(false);
+            resetPassword({
+                currentPassword: '',
+                newPassword: '',
+                confirmNewPassword: '',
+            });
         } catch (err: unknown) {
             if (isApiError(err)) {
                 if (err.status === 401) {
                     setPasswordError('Current password is incorrect.');
+                } else if (err.status === 429) {
+                    setPasswordError('Too many attempts, try again in 15 minutes.');
                 } else {
                     setPasswordError(err.message || 'Failed to update password');
                 }
@@ -331,82 +382,161 @@ export function SettingsPage() {
                 </form>
             </section>
 
-            {/* Change Password */}
-            <section className="card bg-base-200 border border-base-300 rounded-3xl p-6 shadow-sm space-y-5">
-                <div className="text-center">
-                    <h2 className="font-heading text-lg font-bold text-base-content">
-                        Change Password
-                    </h2>
-                    <p className="text-xs font-ui text-base-content/60 mt-1">
-                        Changing your password invalidates all existing sessions and requires
-                        signing in again.
+            {/* Security */}
+            <section className="card bg-base-200 border border-base-300 rounded-3xl p-6 shadow-sm space-y-4 text-center">
+                <div>
+                    <h2 className="font-heading text-lg font-bold text-base-content">Security</h2>
+                    <p className="text-xs font-ui text-base-content/60 mt-1 max-w-md mx-auto">
+                        Update your account password. Changing your password invalidates all
+                        existing sessions and requires signing in again.
                     </p>
                 </div>
 
-                {passwordError && (
-                    <div
-                        role="alert"
-                        className="alert alert-error text-sm rounded-xl py-2 px-3 text-error-content font-medium"
+                <div className="flex justify-center">
+                    <button
+                        type="button"
+                        onClick={handleOpenPasswordModal}
+                        className="btn btn-primary btn-sm h-9 px-4 text-primary-content font-semibold rounded-xl flex items-center gap-2"
                     >
-                        <span>{passwordError}</span>
-                    </div>
-                )}
-
-                <form
-                    onSubmit={handleSubmitPassword(onPasswordSubmit)}
-                    className="mx-auto w-full max-w-sm space-y-4"
-                >
-                    <div className="form-control">
-                        <label htmlFor="settings-current-password" className="label">
-                            <span className="label-text font-medium">Current Password</span>
-                        </label>
-                        <input
-                            id="settings-current-password"
-                            type="password"
-                            autoComplete="current-password"
-                            {...registerPassword('currentPassword')}
-                            className="input input-bordered w-full rounded-xl bg-base-100"
-                        />
-                        {passwordErrors.currentPassword && (
-                            <span className="mt-1 text-xs text-error" role="alert">
-                                {passwordErrors.currentPassword.message}
-                            </span>
-                        )}
-                    </div>
-
-                    <div className="form-control">
-                        <label htmlFor="settings-new-password" className="label">
-                            <span className="label-text font-medium">New Password</span>
-                        </label>
-                        <input
-                            id="settings-new-password"
-                            type="password"
-                            autoComplete="new-password"
-                            {...registerPassword('newPassword')}
-                            className="input input-bordered w-full rounded-xl bg-base-100"
-                        />
-                        {passwordErrors.newPassword ? (
-                            <span className="mt-1 text-xs text-error" role="alert">
-                                {passwordErrors.newPassword.message}
-                            </span>
-                        ) : (
-                            <span className="mt-1 text-xs text-base-content/60">
-                                Must be 8–72 characters and differ from your current password.
-                            </span>
-                        )}
-                    </div>
-
-                    <div className="flex justify-center">
-                        <button
-                            type="submit"
-                            disabled={isChangingPassword}
-                            className="btn btn-primary btn-sm h-9 text-primary-content font-semibold rounded-xl px-5"
+                        <svg
+                            aria-hidden="true"
+                            className="h-4 w-4"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
                         >
-                            {isChangingPassword ? 'Updating...' : 'Update Password'}
-                        </button>
-                    </div>
-                </form>
+                            <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                        Password settings
+                    </button>
+                </div>
             </section>
+
+            {isPasswordModalOpen && (
+                <Modal
+                    isOpen={isPasswordModalOpen}
+                    onClose={handleClosePasswordModal}
+                    title="Change Password"
+                    maxWidth="md"
+                >
+                    <form
+                        onSubmit={handleSubmitPassword(onPasswordSubmit)}
+                        className="space-y-4"
+                        noValidate
+                    >
+                        <p className="text-sm font-ui text-base-content/75 leading-relaxed">
+                            Changing your password immediately signs out all active sessions and
+                            requires signing in with your new password.
+                        </p>
+
+                        {passwordError && (
+                            <div
+                                role="alert"
+                                className="alert alert-error text-sm rounded-xl py-2 px-3 text-error-content font-medium"
+                            >
+                                <span>{passwordError}</span>
+                            </div>
+                        )}
+
+                        <FormField
+                            label="Current password"
+                            error={passwordErrors.currentPassword?.message}
+                            required
+                        >
+                            {({ id, ...props }) => (
+                                <input
+                                    id={id}
+                                    type="password"
+                                    autoComplete="current-password"
+                                    autoFocus
+                                    disabled={
+                                        changePasswordMutation.isPending || isChangingPassword
+                                    }
+                                    className={`input input-bordered w-full bg-base-300 rounded-xl focus:border-primary text-sm font-ui ${
+                                        passwordErrors.currentPassword ? 'input-error' : ''
+                                    }`}
+                                    {...registerPassword('currentPassword')}
+                                    {...props}
+                                />
+                            )}
+                        </FormField>
+
+                        <FormField
+                            label="New password"
+                            hint="Must be 8–72 characters and differ from your current password."
+                            error={passwordErrors.newPassword?.message}
+                            required
+                        >
+                            {({ id, ...props }) => (
+                                <input
+                                    id={id}
+                                    type="password"
+                                    autoComplete="new-password"
+                                    disabled={
+                                        changePasswordMutation.isPending || isChangingPassword
+                                    }
+                                    className={`input input-bordered w-full bg-base-300 rounded-xl focus:border-primary text-sm font-ui ${
+                                        passwordErrors.newPassword ? 'input-error' : ''
+                                    }`}
+                                    {...registerPassword('newPassword')}
+                                    {...props}
+                                />
+                            )}
+                        </FormField>
+
+                        <FormField
+                            label="Confirm new password"
+                            error={passwordErrors.confirmNewPassword?.message}
+                            required
+                        >
+                            {({ id, ...props }) => (
+                                <input
+                                    id={id}
+                                    type="password"
+                                    autoComplete="new-password"
+                                    disabled={
+                                        changePasswordMutation.isPending || isChangingPassword
+                                    }
+                                    className={`input input-bordered w-full bg-base-300 rounded-xl focus:border-primary text-sm font-ui ${
+                                        passwordErrors.confirmNewPassword ? 'input-error' : ''
+                                    }`}
+                                    {...registerPassword('confirmNewPassword')}
+                                    {...props}
+                                />
+                            )}
+                        </FormField>
+
+                        <div className="flex items-center justify-end gap-3 pt-4 border-t border-base-300">
+                            <button
+                                type="button"
+                                onClick={handleClosePasswordModal}
+                                disabled={changePasswordMutation.isPending || isChangingPassword}
+                                className="btn btn-ghost btn-sm h-9 rounded-xl text-sm"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={changePasswordMutation.isPending || isChangingPassword}
+                                className="btn btn-primary btn-sm h-9 px-4 text-primary-content font-semibold rounded-xl text-sm"
+                            >
+                                {changePasswordMutation.isPending || isChangingPassword ? (
+                                    <span className="flex items-center gap-2">
+                                        <span className="loading loading-spinner loading-xs" />
+                                        Updating...
+                                    </span>
+                                ) : (
+                                    'Update Password'
+                                )}
+                            </button>
+                        </div>
+                    </form>
+                </Modal>
+            )}
 
             {/* Danger Zone: Deactivate Account */}
             <section className="card bg-base-200 border border-error/40 rounded-3xl p-6 shadow-sm space-y-4 text-center">
