@@ -1,6 +1,6 @@
 # Raaz
 
-Raaz (Hindi/Urdu for "secret") is a secrets and environment-variable manager for small teams. It keeps a project's config values encrypted in MongoDB and decides who may read them, so a compliance reviewer can confirm that a production key exists and see who touched it without ever being able to read the value.
+Raaz is a secrets and environment-variable manager for small teams. It keeps a project's config values encrypted in MongoDB and decides who may read them, so a compliance reviewer can confirm that a production key exists and see who touched it without ever being able to read the value.
 
 ## What it does
 
