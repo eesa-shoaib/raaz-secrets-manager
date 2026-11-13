@@ -1,63 +1,91 @@
-# Raaz — Secrets & Config Manager
+# Raaz
 
-A MERN + TypeScript secrets and environment-variable manager for teams, with role-based access control enforced at the data layer.
+Raaz (Hindi/Urdu for "secret") is a secrets and environment-variable manager for small teams. It keeps a project's config values encrypted in MongoDB and decides who may read them, so a compliance reviewer can confirm that a production key exists and see who touched it without ever being able to read the value.
 
-## Quick Start
+## What it does
 
-```bash
-git clone git@github.com:eesa-shoaib/raaz-secrets-manager.git
-cd raaz-secrets-manager
-npm install          # installs client, server, and shared-schemas via workspaces
+A team creates a project and stores its secrets in it: database URLs, API keys, signing tokens, whatever usually ends up pasted into Slack or passed around as a plaintext `.env`. Each secret belongs to one environment (`development`, `staging`, or `production`), and every environment is fixed at project creation, so there is no chance of an "almost production" environment drifting out of policy.
 
-# copy and fill in environment variables
-cp server/.env.example server/.env
-# fill in server/.env, then run these in separate terminals:
-npm run dev -w server
-npm run dev -w client
-```
+The secret list is masked. Nothing decrypts until someone asks for a reveal, and production reveals require an explicit confirmation in a dialog. Every create, edit, reveal, delete, and denied attempt is written to the project's audit log in the same transaction as the action itself, so a successful response always comes with a matching log entry.
 
-- Client: `http://localhost:5173`
-- Server: `http://localhost:5000`
+Access combines one global flag with three per-project roles:
 
-## Documentation
+- **Platform Admin** (`isPlatformAdmin`) manages user accounts across the whole instance. The admin endpoints exist and the `/admin/users` page covers promotion, demotion, and deactivation. Platform Admins get no shortcut into project or secret data.
+- **Project Admin** has full control of one project: its secrets, its members, and their roles.
+- **Developer** has free rein in `development`. In `staging` and `production` they can reveal a value, and that reveal is logged.
+- **Auditor** sees secret metadata and the audit history but never a decrypted value.
 
-See [docs/README.md](./docs/README.md) for the full documentation index. What is in or out of the MVP is defined by the _Cut from MVP_ table in [docs/PRODUCT.md](./docs/PRODUCT.md).
+Membership is checked before project status, and a non-member gets a `404` rather than a `403` so an archived project's existence doesn't leak.
 
-## Architecture Overview
+## How it works
+
+Values are encrypted with AES-256-GCM before they reach the database. Every write gets a fresh random IV, and the ciphertext is bound to its project, secret id, environment, and key version through additional authenticated data, which means a copied ciphertext can't be replayed under a different secret. The master key comes from the `MASTER_KEY` environment variable and is never stored in the database. The server refuses to boot if the key, the JWT secret, or the allowed origins are misconfigured.
+
+Authentication uses a JWT in an httpOnly cookie, verified on every request against the user's current `tokenVersion`, so deactivating an account or changing a password ends its sessions. State-changing requests must carry an `Origin` matching `CLIENT_ORIGIN`. Rate limits apply per IP to login and signup, and per user to reveal.
+
+Request and response bodies are validated with Zod schemas from `packages/shared-schemas`, shared by both apps. Responses are parsed through those schemas before they leave the server, so an undeclared field can't slip into a payload.
 
 ```
 Client (React + Vite)  →  Server (Express)  →  MongoDB Atlas
 ```
 
-- **Frontend**: React 18, TypeScript, Vite, Tailwind + DaisyUI, TanStack Query
-- **Backend**: Node 22, Express, TypeScript, Mongoose, JWT in httpOnly cookies
-- **Database**: MongoDB Atlas (free tier)
-- **Shared**: Zod schemas in `packages/shared-schemas`
+- Frontend: React 18, TypeScript, Vite, Tailwind + DaisyUI, TanStack Query, React Router
+- Backend: Node 22, Express, TypeScript, Mongoose, Zod, pino
+- Database: MongoDB Atlas, or any MongoDB deployment that supports transactions
+- Shared: Zod schemas in `packages/shared-schemas`
 
-## MVP Status
+## Running it locally
 
-**MVP 1 is closed at the owner's direction.** See the
-[closure record](./docs/MVP_BOARD.md).
+You need Node 22 or newer and a MongoDB connection string pointing at a replica set. Atlas works out of the box; a local `mongod` needs to be started as a replica set because the audit log and its action commit in one transaction.
 
-**MVP 2 (Team Pilot) features are implemented and verified locally.** See the
-[MVP 2 board](./docs/MVP_2_BOARD.md) and [operations runbook](./docs/RUNBOOK.md):
+```bash
+git clone git@github.com:eesa-shoaib/raaz-secrets-manager.git
+cd raaz-secrets-manager
+npm install
 
-- **Account settings (`/settings`)**: optional unique username, 256x256 JPEG/PNG/WebP profile picture stored as bounded BSON binary in private `userAvatars` (transactional with audit log), and authenticated password change invalidating active sessions via `tokenVersion`.
-- **Platform Admin user management (`/admin/users`)**: cursor-paginated user directory, promote/demote and activate/deactivate with atomic last-active-admin protection (`409 CONFLICT`) and zero substitute access to project data.
-- **Project descriptions & editable details**: optional 500-char plain-text description, server-computed read-only `memberCount`, and Project-Admin-only edit modal (`PATCH /api/projects/:projectId`).
-- **Cursor pagination & metadata search**: bounded cursor pagination (default 25, max 100) across projects, secrets, members, audit logs, and admin users, plus server-side literal metadata search, `Copy` key action, and accessible permission explanations.
-- **Deployment & recovery readiness**: SPA CSP/no-store headers in `client/vercel.json`, `TRUST_PROXY` hop validation, `/api` `no-store` cache headers, mock-seed safety guard, `server/scripts/rehearse-recovery.mjs`, and `docs/RUNBOOK.md`. Live hosted pilot smoke verification requires target Render/Vercel/Atlas credentials.
+cp server/.env.example server/.env
+cp client/.env.example client/.env
 
-## Environment Variables
+npm run dev
+```
 
-See `server/.env.example` for the full list (including optional `TRUST_PROXY`, `CLIENT_ORIGIN`, `COOKIE_DOMAIN`, `COOKIE_SAMESITE`). Required for local dev:
+`npm run dev` starts both apps. The client is at `http://localhost:5173` and the API at `http://localhost:5000`.
 
-- `MONGO_URI` — MongoDB Atlas connection string
-- `JWT_SECRET` — 32+ char random string
-- `MASTER_KEY` — 32-byte base64 AES-256-GCM key
-- `MASTER_KEY_VERSION` — Positive integer (e.g., `1`)
+Four variables in `server/.env` are required before the server will start:
 
-MongoDB must support transactions (Atlas or a replica set). Use only a disposable development database. The database named in `MONGO_URI` is the one the server will use.
+| Variable             | Value                                                         |
+| -------------------- | ------------------------------------------------------------- |
+| `MONGO_URI`          | Connection string for the database the server should use      |
+| `JWT_SECRET`         | Random string of at least 32 characters                       |
+| `MASTER_KEY`         | 32 random bytes, base64-encoded, used for AES-256-GCM         |
+| `MASTER_KEY_VERSION` | Positive integer identifying the active key (for example `1`) |
+
+To create the first Platform Admin, also set `PLATFORM_ADMIN_EMAIL` and `PLATFORM_ADMIN_PASSWORD` and boot the server once. Unset them afterwards. Every other variable, including the server port, cookie settings, proxy hop count, log level, and the signup domain allowlist, is listed with defaults in `server/.env.example`.
+
+Point this at a disposable database. There are no migrations, and the dev database is expected to be dropped and recreated at will.
+
+Other commands, all run from the repo root:
+
+```bash
+npm test             # Vitest + Supertest on the server, Vitest + Testing Library on the client
+npm run lint         # ESLint, including the module boundary rules
+npm run build        # production build for shared-schemas, server, and client
+npm run format       # Prettier
+npm run seed:mock -w server   # sample projects, users, and secrets for local poking
+```
+
+The server tests create their own `raaz_test_*` database on the cluster named in `TEST_MONGO_URI` (falling back to `MONGO_URI`) and drop it when they finish, so they never touch the dev data.
+
+## Documentation
+
+`docs/` holds the detail this README only summarizes. Start at [docs/README.md](./docs/README.md) for the index, which links each doc with a one-line description. The ones most people want first:
+
+- [docs/API.md](./docs/API.md): every endpoint, its request and response shape, error codes, and the permissions matrix
+- [docs/DATA_MODEL.md](./docs/DATA_MODEL.md): collections, indexes, field-level rules, and the audit action enum
+- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md): middleware order, encryption and AAD format, cookie and CSRF policy, caching
+- [docs/FRONTEND.md](./docs/FRONTEND.md): routes, pages, widgets, the reveal lifecycle, and the frontend definition of done
+- [docs/PRODUCT.md](./docs/PRODUCT.md): the problem, the personas, and the scope table that says what is in and out
+- [docs/RUNBOOK.md](./docs/RUNBOOK.md): deploying to Vercel, Render, and Atlas, plus backup and recovery
 
 ## License
 
