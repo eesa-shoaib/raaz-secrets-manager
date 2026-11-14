@@ -37,6 +37,10 @@ vi.mock('../services/secrets.service.js', () => ({
     listSecretsForUser: vi.fn(),
     editSecret: vi.fn(),
     deleteSecret: vi.fn(),
+    generateEnvExample: vi.fn(async () => ({
+        filename: '.env.development.example',
+        content: '# .env.example — Demo (development)\nAPI_KEY=\n',
+    })),
     getSecretMetadata: vi.fn(),
     revealSecret: vi.fn(),
 }));

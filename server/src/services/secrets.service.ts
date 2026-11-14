@@ -308,6 +308,35 @@ export async function getSecretAuditMetadata(projectId: string, secretId: string
     return SecretModel.findOne({ _id: secretId, projectId }, { environment: 1, key: 1 }).lean();
 }
 
+export async function generateEnvExample(
+    projectId: string,
+    environment: SecretDoc['environment'],
+): Promise<{ filename: string; content: string }> {
+    const project = await ProjectModel.findById(projectId).select('name environments').lean();
+    if (!project) {
+        throw new AppError(404, 'NOT_FOUND', 'Project not found');
+    }
+    if (!project.environments.includes(environment)) {
+        throw new AppError(422, 'VALIDATION_ERROR', 'Invalid environment');
+    }
+
+    const secrets = await SecretModel.find(
+        { projectId: new Types.ObjectId(projectId), environment },
+        { key: 1, _id: 0 },
+    )
+        .sort({ key: 1 })
+        .lean();
+
+    const safeProjectName = project.name.replace(/[\r\n]+/g, ' ').trim();
+    const header = `# .env.example — ${safeProjectName} (${environment})`;
+    const lines = [header, ...secrets.map((secret) => `${secret.key}=`)];
+
+    return {
+        filename: `.env.${environment}.example`,
+        content: `${lines.join('\n')}\n`,
+    };
+}
+
 export async function revealSecret(
     userId: string,
     projectId: string,

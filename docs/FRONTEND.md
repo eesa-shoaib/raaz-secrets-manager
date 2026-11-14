@@ -44,23 +44,23 @@ fallback; display usernames with email available for identity disambiguation.
 
 ## 1. Route Map
 
-| \#  | Path                                        | Page                                | Guard                                  | API                                                                                                                                                              | Phase        |
-| --- | ------------------------------------------- | ----------------------------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
-| 1   | `/`                                         | redirect → `/projects`              | —                                      | —                                                                                                                                                                | 1            |
-| 2   | `/login`                                    | `LoginPage`                         | `PublicOnly`                           | `POST /api/auth/login`, `GET /api/auth/me`                                                                                                                       | 2            |
-| 3   | `/signup`                                   | `SignupPage`                        | `PublicOnly`                           | `POST /api/auth/signup`                                                                                                                                          | 2            |
-| 4   | `/projects`                                 | `ProjectsPage`                      | `RequireAuth`                          | `GET /api/projects`, `POST /api/projects`                                                                                                                        | 2            |
-| 5   | `/projects/:projectId`                      | `ProjectLayout`                     | `RequireAuth` + member                 | `GET/PATCH /api/projects/:projectId` (includes `role` and `memberCount`)                                                                                         | 2            |
-| 6   | `/projects/:projectId/secrets?environment=` | `SecretsPage`                       | as #5                                  | `GET/POST /api/projects/:projectId/secrets`; `PATCH/DELETE /api/projects/:projectId/secrets/:secretId`; `POST /api/projects/:projectId/secrets/:secretId/reveal` | 3            |
-| 7   | `/projects/:projectId/members`              | `MembersPage`                       | as #5                                  | `GET/POST /api/projects/:projectId/members`; `PATCH/DELETE /api/projects/:projectId/members/:userId`                                                             | 4            |
-| 8   | `/projects/:projectId/audit-log`            | `ProjectAuditLogPage`               | as #5                                  | `GET /api/projects/:projectId/audit-log` (cursor-paginated)                                                                                                      | 4            |
-| 9   | `/unauthorized`                             | `StatusPage variant="unauthorized"` | none                                   | —                                                                                                                                                                | 1            |
-| 10  | `*`                                         | `StatusPage variant="not-found"`    | none                                   | —                                                                                                                                                                | 1            |
-| 11  | `/admin`                                    | redirect → `/admin/users`           | `RequireAuth` + `RequirePlatformAdmin` | —                                                                                                                                                                | MVP 2        |
-| 12  | `/admin/users`                              | `AdminUsersPage`                    | as #11                                 | `GET/PATCH /api/admin/users/:userId`                                                                                                                             | MVP 2        |
-| 13  | `/settings`                                 | `SettingsPage`                      | `RequireAuth`                          | `PATCH /api/account/profile`, `PUT/DELETE /api/account/avatar`, `POST /api/auth/change-password`                                                                 | MVP 2        |
-| 14  | `/admin/projects`                           | `AdminProjectsPage`                 | as #11                                 | endpoints not built (post-MVP)                                                                                                                                   | **post-MVP** |
-| 15  | `/admin/audit-log`                          | `AdminAuditLogPage`                 | as #11                                 | endpoint not built (post-MVP)                                                                                                                                    | **post-MVP** |
+| \#  | Path                                        | Page                                | Guard                                  | API                                                                                                                                                                                                                  | Phase        |
+| --- | ------------------------------------------- | ----------------------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| 1   | `/`                                         | redirect → `/projects`              | —                                      | —                                                                                                                                                                                                                    | 1            |
+| 2   | `/login`                                    | `LoginPage`                         | `PublicOnly`                           | `POST /api/auth/login`, `GET /api/auth/me`                                                                                                                                                                           | 2            |
+| 3   | `/signup`                                   | `SignupPage`                        | `PublicOnly`                           | `POST /api/auth/signup`                                                                                                                                                                                              | 2            |
+| 4   | `/projects`                                 | `ProjectsPage`                      | `RequireAuth`                          | `GET /api/projects`, `POST /api/projects`                                                                                                                                                                            | 2            |
+| 5   | `/projects/:projectId`                      | `ProjectLayout`                     | `RequireAuth` + member                 | `GET/PATCH /api/projects/:projectId` (includes `role` and `memberCount`)                                                                                                                                             | 2            |
+| 6   | `/projects/:projectId/secrets?environment=` | `SecretsPage`                       | as #5                                  | `GET/POST /api/projects/:projectId/secrets`; `GET /api/projects/:projectId/secrets/env-example`; `PATCH/DELETE /api/projects/:projectId/secrets/:secretId`; `POST /api/projects/:projectId/secrets/:secretId/reveal` | 3            |
+| 7   | `/projects/:projectId/members`              | `MembersPage`                       | as #5                                  | `GET/POST /api/projects/:projectId/members`; `PATCH/DELETE /api/projects/:projectId/members/:userId`                                                                                                                 | 4            |
+| 8   | `/projects/:projectId/audit-log`            | `ProjectAuditLogPage`               | as #5                                  | `GET /api/projects/:projectId/audit-log` (cursor-paginated)                                                                                                                                                          | 4            |
+| 9   | `/unauthorized`                             | `StatusPage variant="unauthorized"` | none                                   | —                                                                                                                                                                                                                    | 1            |
+| 10  | `*`                                         | `StatusPage variant="not-found"`    | none                                   | —                                                                                                                                                                                                                    | 1            |
+| 11  | `/admin`                                    | redirect → `/admin/users`           | `RequireAuth` + `RequirePlatformAdmin` | —                                                                                                                                                                                                                    | MVP 2        |
+| 12  | `/admin/users`                              | `AdminUsersPage`                    | as #11                                 | `GET/PATCH /api/admin/users/:userId`                                                                                                                                                                                 | MVP 2        |
+| 13  | `/settings`                                 | `SettingsPage`                      | `RequireAuth`                          | `PATCH /api/account/profile`, `PUT/DELETE /api/account/avatar`, `POST /api/auth/change-password`                                                                                                                     | MVP 2        |
+| 14  | `/admin/projects`                           | `AdminProjectsPage`                 | as #11                                 | endpoints not built (post-MVP)                                                                                                                                                                                       | **post-MVP** |
+| 15  | `/admin/audit-log`                          | `AdminAuditLogPage`                 | as #11                                 | endpoint not built (post-MVP)                                                                                                                                                                                        | **post-MVP** |
 
 **Active routes: 1–13.** Routes 14–15 remain deferred post-MVP.
 
@@ -304,13 +304,14 @@ noted, not omitted.
 
 - **Controls by role:**
 
-| Control    | Admin | Dev (dev) | Dev (other)     | Auditor |
-| ---------- | ----- | --------- | --------------- | ------- |
-| View list  | ✓     | ✓         | ✓               | ✓       |
-| New secret | ✓     | ✓         | disabled        | hidden  |
-| Reveal     | ✓     | ✓         | ✓ (prod: modal) | hidden  |
-| Edit       | ✓     | ✓         | disabled        | hidden  |
-| Delete     | ✓     | hidden    | hidden          | hidden  |
+| Control                 | Admin | Dev (dev) | Dev (other)     | Auditor |
+| ----------------------- | ----- | --------- | --------------- | ------- |
+| View list               | ✓     | ✓         | ✓               | ✓       |
+| Generate `.env.example` | ✓     | ✓         | ✓               | ✓       |
+| New secret              | ✓     | ✓         | disabled        | hidden  |
+| Reveal                  | ✓     | ✓         | ✓ (prod: modal) | hidden  |
+| Edit                    | ✓     | ✓         | disabled        | hidden  |
+| Delete                  | ✓     | hidden    | hidden          | hidden  |
 
 Disabled controls carry a visible reason: "Developers can create and
 edit secrets only in the development environment."
@@ -455,6 +456,7 @@ disabled with reason, `H` = hidden, `—` = route unreachable.
 | View project & `memberCount` | E             | E               | E                 | E       | — (404)¹       |
 | Edit project details         | E             | H               | H                 | H       | — (404)¹       |
 | View secrets list & search   | E             | E               | E                 | E       | — (404)¹       |
+| Generate `.env.example`      | E             | E               | E                 | E       | — (404)¹       |
 | Copy secret key              | E             | E               | E                 | E       | —              |
 | New secret                   | E             | E               | D                 | H       | —              |
 | Reveal                       | E             | E               | E (prod: modal)   | H       | —              |

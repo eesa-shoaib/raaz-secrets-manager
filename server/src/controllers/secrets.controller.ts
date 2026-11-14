@@ -1,6 +1,8 @@
 import {
     createCursorPaginatedResponseSchema,
+    envExampleResponseSchema,
     secretResponseSchema,
+    type EnvExampleQuery,
     type SecretsListQuery,
 } from '@raaz/shared-schemas';
 import type { Request, Response } from 'express';
@@ -10,6 +12,7 @@ import {
     createSecret,
     editSecret,
     deleteSecret,
+    generateEnvExample,
     getSecretMetadata,
     revealSecret,
 } from '../services/secrets.service.js';
@@ -102,6 +105,12 @@ export async function getSecretMetadataController(req: Request, res: Response): 
             updatedAt: secret.updatedAt,
         }),
     );
+}
+
+export async function generateEnvExampleController(req: Request, res: Response): Promise<void> {
+    const query = req.query as unknown as EnvExampleQuery;
+    const result = await generateEnvExample(req.params.projectId, query.environment);
+    res.json(envExampleResponseSchema.parse(result));
 }
 
 export async function revealSecretController(req: Request, res: Response): Promise<void> {

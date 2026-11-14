@@ -1,6 +1,7 @@
 import {
     createSecretSchema,
     editSecretSchema,
+    envExampleQuerySchema,
     revealSecretSchema,
     secretsListQuerySchema,
 } from '@raaz/shared-schemas';
@@ -11,6 +12,7 @@ import {
     createSecretController,
     editSecretController,
     deleteSecretController,
+    generateEnvExampleController,
     getSecretMetadataController,
     revealSecretController,
 } from '../controllers/secrets.controller.js';
@@ -26,6 +28,11 @@ const router = Router();
 const listSchema = z.object({
     params: z.object({ projectId: z.string().regex(/^[a-f\d]{24}$/i, 'Invalid ObjectId') }),
     query: secretsListQuerySchema,
+});
+
+const envExampleSchema = z.object({
+    params: listSchema.shape.params,
+    query: envExampleQuerySchema,
 });
 
 const createSchema = z.object({
@@ -60,6 +67,15 @@ router.get(
     requireProjectRole('projectAdmin', 'developer', 'auditor'),
     requireProjectStatus,
     asyncHandler(listSecretsController),
+);
+
+router.get(
+    '/:projectId/secrets/env-example',
+    authenticate,
+    validate(envExampleSchema),
+    requireProjectRole('projectAdmin', 'developer', 'auditor'),
+    requireProjectStatus,
+    asyncHandler(generateEnvExampleController),
 );
 
 router.post(

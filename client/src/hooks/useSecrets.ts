@@ -4,6 +4,7 @@ import {
     createSecret,
     deleteSecret,
     editSecret,
+    getEnvExample,
     getSecrets,
     getSecretsPage,
     revealSecret,
@@ -105,6 +106,13 @@ export function useDeleteSecret(projectId: string, environment: Environment) {
                 });
             }
         },
+    });
+}
+
+export function useGenerateEnvExample(projectId: string) {
+    return useMutation({
+        mutationFn: (environment: Environment) => getEnvExample(projectId, environment),
+        retry: 0,
     });
 }
 

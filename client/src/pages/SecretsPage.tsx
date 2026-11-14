@@ -4,6 +4,7 @@ import {
     editSecretSchema,
     type CreateSecretInput,
     type EditSecretInput,
+    type EnvExampleResponse,
     type SecretResponse,
 } from '@raaz/shared-schemas';
 import React, { useState, useEffect } from 'react';
@@ -25,7 +26,9 @@ import {
     useCreateSecret,
     useEditSecret,
     useDeleteSecret,
+    useGenerateEnvExample,
 } from '../hooks/useSecrets';
+import { downloadTextFile } from '../lib/download';
 import { isApiError } from '../lib/errorHandling';
 import type { Environment } from '../lib/permissions';
 
@@ -115,11 +118,13 @@ export function SecretsPage() {
     const canEdit = can('secrets.edit', currentEnv);
     const canDelete = can('secrets.delete', currentEnv);
     const canReveal = can('secrets.reveal', currentEnv) === 'enabled';
+    const canEnvExample = can('secrets.env-example', currentEnv) === 'enabled';
 
     // Mutations
     const createMutation = useCreateSecret(projectId!, currentEnv);
     const editMutation = useEditSecret(projectId!, currentEnv);
     const deleteMutation = useDeleteSecret(projectId!, currentEnv);
+    const envExampleMutation = useGenerateEnvExample(projectId!);
 
     // Modals state
     const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -130,6 +135,11 @@ export function SecretsPage() {
 
     const [deletingSecret, setDeletingSecret] = useState<SecretResponse | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
+
+    const [isEnvExampleOpen, setIsEnvExampleOpen] = useState(false);
+    const [envExampleData, setEnvExampleData] = useState<EnvExampleResponse | null>(null);
+    const [envExampleError, setEnvExampleError] = useState<string | null>(null);
+    const [copiedEnvExample, setCopiedEnvExample] = useState(false);
 
     // Create Form
     const {
@@ -269,6 +279,51 @@ export function SecretsPage() {
         }
     };
 
+    const handleOpenEnvExample = async () => {
+        setIsEnvExampleOpen(true);
+        setEnvExampleData(null);
+        setEnvExampleError(null);
+        setCopiedEnvExample(false);
+        try {
+            const generated = await envExampleMutation.mutateAsync(currentEnv);
+            setEnvExampleData(generated);
+        } catch (err: unknown) {
+            if (isApiError(err)) {
+                setEnvExampleError(err.message || 'Failed to generate .env.example');
+            } else {
+                setEnvExampleError('Something went wrong — could not generate .env.example');
+            }
+        }
+    };
+
+    const handleCloseEnvExample = () => {
+        setIsEnvExampleOpen(false);
+        setEnvExampleData(null);
+        setEnvExampleError(null);
+        setCopiedEnvExample(false);
+    };
+
+    const handleCopyEnvExample = async () => {
+        if (!envExampleData) return;
+        try {
+            if (!navigator.clipboard?.writeText) {
+                throw new Error('Clipboard unavailable');
+            }
+            await navigator.clipboard.writeText(envExampleData.content);
+            setCopiedEnvExample(true);
+            toast.success(`Copied ${envExampleData.filename} to clipboard`);
+            setTimeout(() => setCopiedEnvExample(false), 1500);
+        } catch {
+            toast.error('Unable to copy .env.example to clipboard');
+        }
+    };
+
+    const handleDownloadEnvExample = () => {
+        if (!envExampleData) return;
+        downloadTextFile(envExampleData.filename, envExampleData.content);
+        toast.success(`Downloaded ${envExampleData.filename}`);
+    };
+
     const disabledReason =
         'Developers can create and edit secrets only in the development environment.';
 
@@ -281,7 +336,7 @@ export function SecretsPage() {
                     onSelect={(env) => setSearchParams({ environment: env })}
                 />
 
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-wrap items-center gap-2.5">
                     <SearchInput
                         value={searchInput}
                         onChange={setSearchInput}
@@ -289,6 +344,30 @@ export function SecretsPage() {
                         ariaLabel="Search secret keys"
                         className="w-full sm:w-52"
                     />
+                    {canEnvExample && (
+                        <button
+                            type="button"
+                            onClick={handleOpenEnvExample}
+                            className="btn btn-ghost btn-sm h-9 px-3 border border-base-300 rounded-xl font-semibold flex items-center gap-1.5 text-xs"
+                        >
+                            <svg
+                                aria-hidden="true"
+                                className="h-4 w-4"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            >
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                <polyline points="14 2 14 8 20 8" />
+                                <line x1="16" y1="13" x2="8" y2="13" />
+                                <line x1="16" y1="17" x2="8" y2="17" />
+                            </svg>
+                            Generate .env.example
+                        </button>
+                    )}
                     {canCreate !== 'hidden' && (
                         <div
                             className={canCreate === 'disabled' ? 'tooltip tooltip-left' : ''}
@@ -756,6 +835,77 @@ export function SecretsPage() {
                 isLoading={deleteMutation.isPending}
                 error={deleteError}
             />
+
+            {/* Generate .env.example Modal */}
+            <Modal
+                isOpen={isEnvExampleOpen}
+                onClose={handleCloseEnvExample}
+                title="Generate .env.example"
+                maxWidth="lg"
+            >
+                <div className="space-y-4">
+                    <p className="text-sm font-ui text-base-content/75">
+                        Metadata-only template for{' '}
+                        <span className="font-mono font-semibold text-base-content">
+                            {currentEnv}
+                        </span>
+                        . Secret values are never included.
+                    </p>
+
+                    {envExampleMutation.isPending ? (
+                        <div className="flex items-center justify-center py-8 gap-2 text-sm text-base-content/70">
+                            <span className="loading loading-spinner loading-sm" />
+                            <span>Generating template...</span>
+                        </div>
+                    ) : envExampleError ? (
+                        <div
+                            role="alert"
+                            className="alert alert-error text-sm rounded-xl py-2 px-3 text-error-content font-medium"
+                        >
+                            <span>{envExampleError}</span>
+                        </div>
+                    ) : envExampleData ? (
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between text-xs font-mono text-base-content/70">
+                                <span>{envExampleData.filename}</span>
+                                <span>Keys only (empty values)</span>
+                            </div>
+                            <pre
+                                data-testid="env-example-preview"
+                                className="max-h-72 overflow-y-auto rounded-2xl border border-base-300 bg-base-300/70 p-4 font-mono text-xs text-base-content whitespace-pre-wrap break-all"
+                            >
+                                {envExampleData.content}
+                            </pre>
+                        </div>
+                    ) : null}
+
+                    <div className="flex flex-wrap items-center justify-end gap-2 pt-4 border-t border-base-300">
+                        <button
+                            type="button"
+                            onClick={handleCloseEnvExample}
+                            className="btn btn-ghost btn-sm h-9 rounded-xl text-sm"
+                        >
+                            Close
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleCopyEnvExample}
+                            disabled={!envExampleData || envExampleMutation.isPending}
+                            className="btn btn-ghost btn-sm h-9 px-3 border border-base-300 rounded-xl font-semibold text-sm disabled:opacity-40"
+                        >
+                            {copiedEnvExample ? 'Copied!' : 'Copy .env.example'}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleDownloadEnvExample}
+                            disabled={!envExampleData || envExampleMutation.isPending}
+                            className="btn btn-primary btn-sm h-9 px-4 text-primary-content font-semibold rounded-xl text-sm disabled:opacity-40"
+                        >
+                            Download .env.example
+                        </button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 }
