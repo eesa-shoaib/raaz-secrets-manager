@@ -38,3 +38,16 @@ export const secretsListQuerySchema = z.object({
     page: z.never({ message: 'Offset page parameter is not supported' }).optional(),
 });
 export type SecretsListQuery = z.infer<typeof secretsListQuerySchema>;
+
+export const envExampleQuerySchema = z
+    .object({
+        environment: projectEnvironmentEnum,
+    })
+    .strict();
+export type EnvExampleQuery = z.infer<typeof envExampleQuerySchema>;
+
+export const envExampleResponseSchema = z.object({
+    filename: z.string().min(1),
+    content: z.string(),
+});
+export type EnvExampleResponse = z.infer<typeof envExampleResponseSchema>;
