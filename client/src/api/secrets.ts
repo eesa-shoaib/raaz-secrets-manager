@@ -2,6 +2,7 @@ import type {
     CreateSecretInput,
     CursorPaginatedResponse,
     EditSecretInput,
+    EnvExampleResponse,
     RevealSecretResponse,
     SecretResponse,
 } from '@raaz/shared-schemas';
@@ -86,6 +87,17 @@ export async function revealSecret(
     const res = await apiClient.post<RevealSecretResponse>(
         `/projects/${projectId}/secrets/${secretId}/reveal`,
         { confirm },
+    );
+    return res.data;
+}
+
+export async function getEnvExample(
+    projectId: string,
+    environment: Environment,
+): Promise<EnvExampleResponse> {
+    const res = await apiClient.get<EnvExampleResponse>(
+        `/projects/${projectId}/secrets/env-example`,
+        { params: { environment } },
     );
     return res.data;
 }

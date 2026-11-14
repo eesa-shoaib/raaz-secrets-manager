@@ -5,6 +5,7 @@ export type Environment = 'development' | 'staging' | 'production';
 export type Action =
     | 'project.edit'
     | 'secrets.list'
+    | 'secrets.env-example'
     | 'secrets.create'
     | 'secrets.reveal'
     | 'secrets.edit'
@@ -19,6 +20,7 @@ const permissionMatrix: Record<Exclude<Role, null>, Record<Action, Permission>> 
     projectAdmin: {
         'project.edit': 'enabled',
         'secrets.list': 'enabled',
+        'secrets.env-example': 'enabled',
         'secrets.create': 'enabled',
         'secrets.reveal': 'enabled',
         'secrets.edit': 'enabled',
@@ -32,6 +34,7 @@ const permissionMatrix: Record<Exclude<Role, null>, Record<Action, Permission>> 
     developer: {
         'project.edit': 'hidden',
         'secrets.list': 'enabled',
+        'secrets.env-example': 'enabled',
         'secrets.create': 'disabled',
         'secrets.reveal': 'enabled',
         'secrets.edit': 'disabled',
@@ -45,6 +48,7 @@ const permissionMatrix: Record<Exclude<Role, null>, Record<Action, Permission>> 
     auditor: {
         'project.edit': 'hidden',
         'secrets.list': 'enabled',
+        'secrets.env-example': 'enabled',
         'secrets.create': 'hidden',
         'secrets.reveal': 'hidden',
         'secrets.edit': 'hidden',
@@ -82,6 +86,7 @@ export function getRolePermissions(
     const actions: Action[] = [
         'project.edit',
         'secrets.list',
+        'secrets.env-example',
         'secrets.create',
         'secrets.reveal',
         'secrets.edit',
@@ -121,6 +126,7 @@ export function canViewAuditLog(role: Role): boolean {
 export const PERMISSION_ACTIONS: { value: Action; label: string; category: string }[] = [
     { value: 'project.edit', label: 'Edit project details', category: 'Project' },
     { value: 'secrets.list', label: 'List secrets', category: 'Secrets' },
+    { value: 'secrets.env-example', label: 'Generate .env.example', category: 'Secrets' },
     { value: 'secrets.create', label: 'Create secrets', category: 'Secrets' },
     { value: 'secrets.reveal', label: 'Reveal secrets', category: 'Secrets' },
     { value: 'secrets.edit', label: 'Edit secrets', category: 'Secrets' },
