@@ -10,6 +10,7 @@ describe('Permissions matrix conformance', () => {
         it('can perform all secret actions in all environments', () => {
             const secretActions: Action[] = [
                 'secrets.list',
+                'secrets.env-example',
                 'secrets.create',
                 'secrets.reveal',
                 'secrets.edit',
@@ -46,9 +47,10 @@ describe('Permissions matrix conformance', () => {
             expect(can(role, 'secrets.edit', 'production')).toBe('disabled');
         });
 
-        it('can reveal secrets in all environments', () => {
+        it('can reveal secrets and generate .env.example in all environments', () => {
             for (const env of environments) {
                 expect(can(role, 'secrets.reveal', env)).toBe('enabled');
+                expect(can(role, 'secrets.env-example', env)).toBe('enabled');
             }
         });
 
@@ -72,9 +74,10 @@ describe('Permissions matrix conformance', () => {
     describe('Auditor', () => {
         const role: Role = 'auditor';
 
-        it('can list secrets but can NEVER reveal, create, edit, or delete (all hidden)', () => {
+        it('can list secrets and generate .env.example but can NEVER reveal, create, edit, or delete (all hidden)', () => {
             for (const env of environments) {
                 expect(can(role, 'secrets.list', env)).toBe('enabled');
+                expect(can(role, 'secrets.env-example', env)).toBe('enabled');
                 expect(can(role, 'secrets.reveal', env)).toBe('hidden');
                 expect(can(role, 'secrets.create', env)).toBe('hidden');
                 expect(can(role, 'secrets.edit', env)).toBe('hidden');
@@ -98,6 +101,7 @@ describe('Permissions matrix conformance', () => {
             const actions: Action[] = [
                 'project.edit',
                 'secrets.list',
+                'secrets.env-example',
                 'secrets.create',
                 'secrets.reveal',
                 'secrets.edit',

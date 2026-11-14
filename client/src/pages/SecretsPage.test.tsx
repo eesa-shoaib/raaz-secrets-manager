@@ -1,11 +1,19 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ToastProvider } from '../components/Toaster';
+import * as downloadLib from '../lib/download';
 import SecretsPage from './SecretsPage';
 
 const mockUseSecretsPage = vi.fn();
 const mockWriteText = vi.fn();
+const mockGenerateEnvExample = vi.fn();
+const mockPermissions = {
+    role: 'projectAdmin' as 'projectAdmin' | 'developer' | 'auditor',
+    isAdmin: true,
+    isDeveloper: false,
+    can: vi.fn(() => 'enabled' as 'enabled' | 'disabled' | 'hidden'),
+};
 
 vi.mock('../hooks/useSecrets', () => ({
     useSecretsPage: (projectId: string, env: string, params: unknown) =>
@@ -13,15 +21,11 @@ vi.mock('../hooks/useSecrets', () => ({
     useCreateSecret: () => ({ mutateAsync: vi.fn(), isPending: false }),
     useEditSecret: () => ({ mutateAsync: vi.fn(), isPending: false }),
     useDeleteSecret: () => ({ mutateAsync: vi.fn(), isPending: false }),
+    useGenerateEnvExample: () => ({ mutateAsync: mockGenerateEnvExample, isPending: false }),
 }));
 
 vi.mock('../hooks/usePermissions', () => ({
-    usePermissions: () => ({
-        role: 'projectAdmin',
-        isAdmin: true,
-        isDeveloper: false,
-        can: () => 'enabled',
-    }),
+    usePermissions: () => mockPermissions,
 }));
 
 vi.mock('../components/SecretValueCell', () => ({
@@ -44,10 +48,22 @@ const renderSecretsPage = (initialEntry = '/projects/proj-1/secrets?environment=
 describe('SecretsPage', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        HTMLDialogElement.prototype.showModal = vi.fn();
-        HTMLDialogElement.prototype.close = vi.fn();
+        mockPermissions.role = 'projectAdmin';
+        mockPermissions.isAdmin = true;
+        mockPermissions.isDeveloper = false;
+        mockPermissions.can = vi.fn(() => 'enabled');
+        HTMLDialogElement.prototype.showModal = function () {
+            this.setAttribute('open', '');
+        };
+        HTMLDialogElement.prototype.close = function () {
+            this.removeAttribute('open');
+        };
 
         mockWriteText.mockResolvedValue(undefined);
+        mockGenerateEnvExample.mockResolvedValue({
+            filename: '.env.development.example',
+            content: '# .env.example — Demo (development)\nDATABASE_URL=\n',
+        });
         Object.defineProperty(navigator, 'clipboard', {
             configurable: true,
             value: { writeText: mockWriteText },
@@ -80,6 +96,7 @@ describe('SecretsPage', () => {
 
     afterEach(() => {
         vi.useRealTimers();
+        cleanup();
     });
 
     it('copies only the secret key to the clipboard when Copy is clicked', async () => {
@@ -168,5 +185,33 @@ describe('SecretsPage', () => {
         expect(screen.getByRole('button', { name: 'Copy key DATABASE_URL' })).toBeTruthy();
         expect(screen.getByRole('button', { name: 'Edit DATABASE_URL' })).toBeTruthy();
         expect(screen.getByRole('button', { name: 'Delete DATABASE_URL' })).toBeTruthy();
+    });
+
+    it('generates, copies, and downloads .env.example for the active environment', async () => {
+        const downloadSpy = vi.spyOn(downloadLib, 'downloadTextFile').mockImplementation(() => {});
+        renderSecretsPage();
+
+        fireEvent.click(screen.getByRole('button', { name: /Generate \.env\.example/i }));
+
+        await waitFor(() => {
+            expect(mockGenerateEnvExample).toHaveBeenCalledWith('development');
+            expect(screen.getByTestId('env-example-preview').textContent).toContain(
+                'DATABASE_URL=',
+            );
+        });
+
+        await act(async () => {
+            fireEvent.click(screen.getByRole('button', { name: /Copy \.env\.example/i }));
+        });
+        expect(mockWriteText).toHaveBeenCalledWith(
+            '# .env.example — Demo (development)\nDATABASE_URL=\n',
+        );
+
+        fireEvent.click(screen.getByRole('button', { name: /Download \.env\.example/i }));
+        expect(downloadSpy).toHaveBeenCalledWith(
+            '.env.development.example',
+            '# .env.example — Demo (development)\nDATABASE_URL=\n',
+        );
+        downloadSpy.mockRestore();
     });
 });
