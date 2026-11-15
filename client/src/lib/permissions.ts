@@ -6,6 +6,8 @@ export type Action =
     | 'project.edit'
     | 'secrets.list'
     | 'secrets.env-example'
+    | 'secrets.import'
+    | 'secrets.export'
     | 'secrets.create'
     | 'secrets.reveal'
     | 'secrets.edit'
@@ -21,6 +23,8 @@ const permissionMatrix: Record<Exclude<Role, null>, Record<Action, Permission>> 
         'project.edit': 'enabled',
         'secrets.list': 'enabled',
         'secrets.env-example': 'enabled',
+        'secrets.import': 'enabled',
+        'secrets.export': 'enabled',
         'secrets.create': 'enabled',
         'secrets.reveal': 'enabled',
         'secrets.edit': 'enabled',
@@ -35,6 +39,8 @@ const permissionMatrix: Record<Exclude<Role, null>, Record<Action, Permission>> 
         'project.edit': 'hidden',
         'secrets.list': 'enabled',
         'secrets.env-example': 'enabled',
+        'secrets.import': 'disabled',
+        'secrets.export': 'enabled',
         'secrets.create': 'disabled',
         'secrets.reveal': 'enabled',
         'secrets.edit': 'disabled',
@@ -49,6 +55,8 @@ const permissionMatrix: Record<Exclude<Role, null>, Record<Action, Permission>> 
         'project.edit': 'hidden',
         'secrets.list': 'enabled',
         'secrets.env-example': 'enabled',
+        'secrets.import': 'hidden',
+        'secrets.export': 'hidden',
         'secrets.create': 'hidden',
         'secrets.reveal': 'hidden',
         'secrets.edit': 'hidden',
@@ -71,7 +79,11 @@ export function can(role: Role, action: Action, environment?: Environment): Perm
     const basePermission = getBasePermission(role, action);
 
     if (role === 'developer') {
-        if (action === 'secrets.create' || action === 'secrets.edit') {
+        if (
+            action === 'secrets.create' ||
+            action === 'secrets.edit' ||
+            action === 'secrets.import'
+        ) {
             return environment === 'development' ? 'enabled' : 'disabled';
         }
     }
@@ -87,6 +99,8 @@ export function getRolePermissions(
         'project.edit',
         'secrets.list',
         'secrets.env-example',
+        'secrets.import',
+        'secrets.export',
         'secrets.create',
         'secrets.reveal',
         'secrets.edit',
@@ -127,6 +141,8 @@ export const PERMISSION_ACTIONS: { value: Action; label: string; category: strin
     { value: 'project.edit', label: 'Edit project details', category: 'Project' },
     { value: 'secrets.list', label: 'List secrets', category: 'Secrets' },
     { value: 'secrets.env-example', label: 'Generate .env.example', category: 'Secrets' },
+    { value: 'secrets.import', label: 'Import .env secrets', category: 'Secrets' },
+    { value: 'secrets.export', label: 'Export decrypted .env', category: 'Secrets' },
     { value: 'secrets.create', label: 'Create secrets', category: 'Secrets' },
     { value: 'secrets.reveal', label: 'Reveal secrets', category: 'Secrets' },
     { value: 'secrets.edit', label: 'Edit secrets', category: 'Secrets' },
