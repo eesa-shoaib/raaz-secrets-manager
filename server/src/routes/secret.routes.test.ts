@@ -41,6 +41,12 @@ vi.mock('../services/secrets.service.js', () => ({
         filename: '.env.development.example',
         content: '# .env.example — Demo (development)\nAPI_KEY=\n',
     })),
+    importSecrets: vi.fn(async () => ({ created: 1, updated: 0, skipped: 0, total: 1 })),
+    exportSecretsEnv: vi.fn(async () => ({
+        filename: '.env.development',
+        content: '# Demo (development)\nAPI_KEY=example\n',
+        count: 1,
+    })),
     getSecretMetadata: vi.fn(),
     revealSecret: vi.fn(),
 }));

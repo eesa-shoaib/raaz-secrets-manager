@@ -107,16 +107,16 @@ column and edit name/description
 from that column in a dialog. No
 public profile, extra settings hub, theme customization or gamification is planned.
 
-| Capability                                                                                                                                         | MVP 1                                         | Target                |
-| -------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | --------------------- |
-| Account settings, optional unique username, optional uploaded profile picture (MongoDB binary thumbnail) with initials fallback, self-deactivation | Not included                                  | MVP 2                 |
-| Project descriptions, total member count in the right-side details panel, Project Admin name/description editing                                   | Not included                                  | MVP 2                 |
-| Project/secret metadata search, copy secret key, metadata-only `.env.example` generator, contextual empty/permission states                        | Not included                                  | MVP 2                 |
-| Authenticated password change with current-password verification and session invalidation                                                          | Not included                                  | MVP 2                 |
-| Server-side pagination for projects, secrets, members, project audit and Platform Admin user lists                                                 | Audit capped; admin users already page/limit  | MVP 2                 |
-| Replica-set security tests, browser smoke evidence, hosted deployment and recovery rehearsal                                                       | Unfinished verification / deployment deferred | MVP 2 release gates   |
-| Password reset by email, email verification, project archive/restore, editable environments                                                        | Not included                                  | Deferred beyond MVP 2 |
-| Secret import/export, CLI/API tokens, secret versioning, master-key rotation, global project/audit views                                           | Not included                                  | Deferred beyond MVP 2 |
+| Capability                                                                                                                                                                   | MVP 1                                         | Target                |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | --------------------- |
+| Account settings, optional unique username, optional uploaded profile picture (MongoDB binary thumbnail) with initials fallback, self-deactivation                           | Not included                                  | MVP 2                 |
+| Project descriptions, total member count in the right-side details panel, Project Admin name/description editing                                                             | Not included                                  | MVP 2                 |
+| Project/secret metadata search, copy secret key, metadata-only `.env.example` generator, audited `.env` import & decrypted `.env` export, contextual empty/permission states | Not included                                  | MVP 2                 |
+| Authenticated password change with current-password verification and session invalidation                                                                                    | Not included                                  | MVP 2                 |
+| Server-side pagination for projects, secrets, members, project audit and Platform Admin user lists                                                                           | Audit capped; admin users already page/limit  | MVP 2                 |
+| Replica-set security tests, browser smoke evidence, hosted deployment and recovery rehearsal                                                                                 | Unfinished verification / deployment deferred | MVP 2 release gates   |
+| Password reset by email, email verification, project archive/restore, editable environments                                                                                  | Not included                                  | Deferred beyond MVP 2 |
+| CLI/API tokens, secret versioning, master-key rotation, global project/audit views                                                                                           | Not included                                  | Deferred beyond MVP 2 |
 
 ## User Stories & Acceptance Criteria
 

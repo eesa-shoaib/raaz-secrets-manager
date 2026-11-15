@@ -3,6 +3,10 @@ import type {
     CursorPaginatedResponse,
     EditSecretInput,
     EnvExampleResponse,
+    ExportSecretsInput,
+    ExportSecretsResponse,
+    ImportSecretsInput,
+    ImportSecretsResponse,
     RevealSecretResponse,
     SecretResponse,
 } from '@raaz/shared-schemas';
@@ -98,6 +102,28 @@ export async function getEnvExample(
     const res = await apiClient.get<EnvExampleResponse>(
         `/projects/${projectId}/secrets/env-example`,
         { params: { environment } },
+    );
+    return res.data;
+}
+
+export async function importSecrets(
+    projectId: string,
+    data: ImportSecretsInput,
+): Promise<ImportSecretsResponse> {
+    const res = await apiClient.post<ImportSecretsResponse>(
+        `/projects/${projectId}/secrets/import`,
+        data,
+    );
+    return res.data;
+}
+
+export async function exportSecrets(
+    projectId: string,
+    data: ExportSecretsInput,
+): Promise<ExportSecretsResponse> {
+    const res = await apiClient.post<ExportSecretsResponse>(
+        `/projects/${projectId}/secrets/export`,
+        data,
     );
     return res.data;
 }

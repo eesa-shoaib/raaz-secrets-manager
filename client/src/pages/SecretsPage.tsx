@@ -1,13 +1,15 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
+    MASKED_SECRET_VALUE,
     createSecretSchema,
     editSecretSchema,
     type CreateSecretInput,
     type EditSecretInput,
     type EnvExampleResponse,
+    type ImportSecretsMode,
     type SecretResponse,
 } from '@raaz/shared-schemas';
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { ConfirmDialog } from '../components/ConfirmDialog';
@@ -26,9 +28,12 @@ import {
     useCreateSecret,
     useEditSecret,
     useDeleteSecret,
+    useExportSecrets,
     useGenerateEnvExample,
+    useImportSecrets,
 } from '../hooks/useSecrets';
 import { downloadTextFile } from '../lib/download';
+import { parseEnvContent } from '../lib/envParser';
 import { isApiError } from '../lib/errorHandling';
 import type { Environment } from '../lib/permissions';
 
@@ -119,12 +124,16 @@ export function SecretsPage() {
     const canDelete = can('secrets.delete', currentEnv);
     const canReveal = can('secrets.reveal', currentEnv) === 'enabled';
     const canEnvExample = can('secrets.env-example', currentEnv) === 'enabled';
+    const canImport = can('secrets.import', currentEnv);
+    const canExport = can('secrets.export', currentEnv) === 'enabled';
 
     // Mutations
     const createMutation = useCreateSecret(projectId!, currentEnv);
     const editMutation = useEditSecret(projectId!, currentEnv);
     const deleteMutation = useDeleteSecret(projectId!, currentEnv);
     const envExampleMutation = useGenerateEnvExample(projectId!);
+    const importMutation = useImportSecrets(projectId!, currentEnv);
+    const exportMutation = useExportSecrets(projectId!, currentEnv);
 
     // Modals state
     const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -140,6 +149,24 @@ export function SecretsPage() {
     const [envExampleData, setEnvExampleData] = useState<EnvExampleResponse | null>(null);
     const [envExampleError, setEnvExampleError] = useState<string | null>(null);
     const [copiedEnvExample, setCopiedEnvExample] = useState(false);
+
+    const [isImportOpen, setIsImportOpen] = useState(false);
+    const [importText, setImportText] = useState('');
+    const [importMode, setImportMode] = useState<ImportSecretsMode>('skip_existing');
+    const [importError, setImportError] = useState<string | null>(null);
+    const importFileRef = useRef<HTMLInputElement>(null);
+
+    const [isExportConfirmOpen, setIsExportConfirmOpen] = useState(false);
+    const [exportError, setExportError] = useState<string | null>(null);
+
+    const parsedImport = useMemo(() => parseEnvContent(importText), [importText]);
+
+    const { reset: resetExportMutation } = exportMutation;
+    useEffect(() => {
+        return () => {
+            resetExportMutation();
+        };
+    }, [currentEnv, resetExportMutation]);
 
     // Create Form
     const {
@@ -324,6 +351,110 @@ export function SecretsPage() {
         toast.success(`Downloaded ${envExampleData.filename}`);
     };
 
+    const handleOpenImport = () => {
+        setImportText('');
+        setImportMode('skip_existing');
+        setImportError(null);
+        if (importFileRef.current) importFileRef.current.value = '';
+        setIsImportOpen(true);
+    };
+
+    const handleCloseImport = () => {
+        if (importMutation.isPending) return;
+        setIsImportOpen(false);
+        setImportText('');
+        setImportMode('skip_existing');
+        setImportError(null);
+        if (importFileRef.current) importFileRef.current.value = '';
+    };
+
+    const handleImportFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        setImportError(null);
+        const file = event.target.files?.[0];
+        if (!file) return;
+        if (file.size > 512 * 1024) {
+            setImportError('File is too large. Maximum supported .env file size is 512 KB.');
+            if (importFileRef.current) importFileRef.current.value = '';
+            return;
+        }
+        try {
+            const text = await file.text();
+            setImportText(text);
+        } catch {
+            setImportError('Unable to read the selected file.');
+        } finally {
+            if (importFileRef.current) importFileRef.current.value = '';
+        }
+    };
+
+    const onSubmitImport = async (event: React.FormEvent) => {
+        event.preventDefault();
+        setImportError(null);
+        if (parsedImport.errors.length > 0 || parsedImport.entries.length === 0) return;
+        try {
+            const summary = await importMutation.mutateAsync({
+                environment: currentEnv,
+                mode: importMode,
+                entries: parsedImport.entries,
+            });
+            toast.success(
+                `Imported into ${currentEnv}: ${summary.created} created, ${summary.updated} updated, ${summary.skipped} skipped`,
+            );
+            setIsImportOpen(false);
+            setImportText('');
+            setImportMode('skip_existing');
+            setImportError(null);
+        } catch (err: unknown) {
+            if (isApiError(err)) {
+                setImportError(err.message || 'Failed to import secrets');
+            } else {
+                setImportError('Something went wrong — the import was not applied');
+            }
+        }
+    };
+
+    const runExport = async (confirm: boolean) => {
+        setExportError(null);
+        try {
+            const result = await exportMutation.mutateAsync({ confirm });
+            toast.success(
+                result.count === 0
+                    ? `Downloaded empty ${result.filename}`
+                    : `Exported ${result.count} secret${result.count === 1 ? '' : 's'} to ${result.filename}`,
+            );
+            setIsExportConfirmOpen(false);
+        } catch (err: unknown) {
+            const message = isApiError(err)
+                ? err.status === 429
+                    ? 'Too many reveals, try again in 15 minutes'
+                    : err.message || 'Failed to export secrets'
+                : 'Something went wrong — could not export secrets';
+            if (confirm) {
+                setExportError(message);
+            } else {
+                toast.error(message);
+            }
+        } finally {
+            exportMutation.reset();
+        }
+    };
+
+    const handleClickExport = () => {
+        if (exportMutation.isPending) return;
+        if (currentEnv === 'production') {
+            setExportError(null);
+            setIsExportConfirmOpen(true);
+            return;
+        }
+        void runExport(false);
+    };
+
+    const handleCloseExportConfirm = () => {
+        if (exportMutation.isPending) return;
+        setIsExportConfirmOpen(false);
+        setExportError(null);
+    };
+
     const disabledReason =
         'Developers can create and edit secrets only in the development environment.';
 
@@ -366,6 +497,63 @@ export function SecretsPage() {
                                 <line x1="16" y1="17" x2="8" y2="17" />
                             </svg>
                             Generate .env.example
+                        </button>
+                    )}
+                    {canImport !== 'hidden' && (
+                        <div
+                            className={canImport === 'disabled' ? 'tooltip tooltip-left' : ''}
+                            data-tip={canImport === 'disabled' ? disabledReason : undefined}
+                        >
+                            <button
+                                type="button"
+                                disabled={canImport === 'disabled'}
+                                onClick={handleOpenImport}
+                                className="btn btn-ghost btn-sm h-9 px-3 border border-base-300 rounded-xl font-semibold flex items-center gap-1.5 text-xs disabled:opacity-40"
+                            >
+                                <svg
+                                    aria-hidden="true"
+                                    className="h-4 w-4"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                >
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                    <polyline points="17 8 12 3 7 8" />
+                                    <line x1="12" y1="3" x2="12" y2="15" />
+                                </svg>
+                                Import .env
+                            </button>
+                        </div>
+                    )}
+                    {canExport && (
+                        <button
+                            type="button"
+                            disabled={exportMutation.isPending}
+                            onClick={handleClickExport}
+                            className="btn btn-ghost btn-sm h-9 px-3 border border-base-300 rounded-xl font-semibold flex items-center gap-1.5 text-xs disabled:opacity-40"
+                        >
+                            {exportMutation.isPending ? (
+                                <span className="loading loading-spinner loading-xs" />
+                            ) : (
+                                <svg
+                                    aria-hidden="true"
+                                    className="h-4 w-4"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                >
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                    <polyline points="7 10 12 15 17 10" />
+                                    <line x1="12" y1="15" x2="12" y2="3" />
+                                </svg>
+                            )}
+                            Export .env
                         </button>
                     )}
                     {canCreate !== 'hidden' && (
@@ -906,6 +1094,211 @@ export function SecretsPage() {
                     </div>
                 </div>
             </Modal>
+
+            {/* Import .env Modal */}
+            <Modal
+                isOpen={isImportOpen}
+                onClose={handleCloseImport}
+                title={`Import .env (${currentEnv})`}
+                maxWidth="lg"
+            >
+                <form onSubmit={onSubmitImport} className="space-y-4" noValidate>
+                    <p className="text-sm font-ui text-base-content/75">
+                        Upload a <code className="font-mono">.env</code> file or paste{' '}
+                        <code className="font-mono">KEY=value</code> lines to encrypt and import
+                        into{' '}
+                        <span className="font-mono font-semibold text-base-content">
+                            {currentEnv}
+                        </span>
+                        . All entries and audit records commit atomically.
+                    </p>
+
+                    {importError && (
+                        <div
+                            role="alert"
+                            className="alert alert-error text-sm rounded-xl py-2 px-3 text-error-content font-medium"
+                        >
+                            <span>{importError}</span>
+                        </div>
+                    )}
+
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                        <label className="btn btn-ghost btn-sm h-9 px-3 border border-base-300 rounded-xl font-semibold text-xs cursor-pointer">
+                            Upload .env file
+                            <input
+                                ref={importFileRef}
+                                type="file"
+                                accept=".env,.txt,text/plain"
+                                onChange={handleImportFileChange}
+                                disabled={importMutation.isPending}
+                                aria-label="Upload .env file"
+                                className="sr-only"
+                            />
+                        </label>
+
+                        <div className="flex items-center gap-4 text-xs font-ui">
+                            <span className="text-base-content/70 font-medium">Conflict mode:</span>
+                            <label className="flex items-center gap-1.5 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    name="importMode"
+                                    value="skip_existing"
+                                    checked={importMode === 'skip_existing'}
+                                    onChange={() => setImportMode('skip_existing')}
+                                    disabled={importMutation.isPending}
+                                    className="radio radio-primary radio-xs"
+                                />
+                                <span>Skip existing</span>
+                            </label>
+                            <label className="flex items-center gap-1.5 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    name="importMode"
+                                    value="overwrite"
+                                    checked={importMode === 'overwrite'}
+                                    onChange={() => setImportMode('overwrite')}
+                                    disabled={importMutation.isPending}
+                                    className="radio radio-primary radio-xs"
+                                />
+                                <span>Overwrite</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <FormField
+                        label="Paste .env content"
+                        hint="Up to 100 entries. Comments (#) and blank lines are ignored."
+                    >
+                        {({ id, ...props }) => (
+                            <textarea
+                                id={id}
+                                rows={5}
+                                value={importText}
+                                onChange={(e) => setImportText(e.target.value)}
+                                disabled={importMutation.isPending}
+                                placeholder={'DATABASE_URL=postgres://...\nAPI_KEY=your-key'}
+                                className="textarea textarea-bordered w-full bg-base-300 rounded-xl focus:border-primary text-xs font-mono"
+                                {...props}
+                            />
+                        )}
+                    </FormField>
+
+                    {parsedImport.errors.length > 0 && (
+                        <div
+                            role="alert"
+                            className="rounded-2xl border border-error/40 bg-error/10 p-3 text-xs text-error space-y-1"
+                        >
+                            <p className="font-semibold">Fix these lines before importing:</p>
+                            <ul className="list-disc pl-4 space-y-0.5">
+                                {parsedImport.errors.slice(0, 5).map((errMsg, idx) => (
+                                    <li key={idx}>{errMsg}</li>
+                                ))}
+                                {parsedImport.errors.length > 5 && (
+                                    <li>
+                                        ...and {parsedImport.errors.length - 5} more validation
+                                        issue(s)
+                                    </li>
+                                )}
+                            </ul>
+                        </div>
+                    )}
+
+                    {parsedImport.duplicateKeys.length > 0 && (
+                        <div className="rounded-2xl border border-warning/40 bg-warning/10 p-2.5 text-xs text-warning">
+                            Duplicate keys detected ({parsedImport.duplicateKeys.join(', ')}) — the
+                            last occurrence will be used.
+                        </div>
+                    )}
+
+                    {parsedImport.entries.length > 0 && (
+                        <div className="space-y-1.5">
+                            <div className="flex items-center justify-between text-xs text-base-content/70">
+                                <span className="font-semibold">
+                                    Preview ({parsedImport.entries.length}{' '}
+                                    {parsedImport.entries.length === 1 ? 'key' : 'keys'})
+                                </span>
+                                <span>Values masked</span>
+                            </div>
+                            <div className="max-h-40 overflow-y-auto rounded-2xl border border-base-300 bg-base-300/50">
+                                <table
+                                    data-testid="import-preview-table"
+                                    className="table table-xs w-full font-mono"
+                                >
+                                    <thead>
+                                        <tr className="border-b border-base-300 text-base-content/60">
+                                            <th>Key</th>
+                                            <th className="text-right">Value</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {parsedImport.entries.map((entry) => (
+                                            <tr key={entry.key}>
+                                                <td className="font-semibold text-base-content">
+                                                    {entry.key}
+                                                </td>
+                                                <td className="text-right text-base-content/60">
+                                                    {MASKED_SECRET_VALUE}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="flex items-center justify-end gap-3 pt-4 border-t border-base-300">
+                        <button
+                            type="button"
+                            onClick={handleCloseImport}
+                            disabled={importMutation.isPending}
+                            className="btn btn-ghost btn-sm h-9 rounded-xl text-sm"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={
+                                importMutation.isPending ||
+                                parsedImport.entries.length === 0 ||
+                                parsedImport.errors.length > 0
+                            }
+                            className="btn btn-primary btn-sm h-9 px-4 text-primary-content font-semibold rounded-xl text-sm disabled:opacity-40"
+                        >
+                            {importMutation.isPending ? (
+                                <span className="flex items-center gap-2">
+                                    <span className="loading loading-spinner loading-xs" />
+                                    Importing...
+                                </span>
+                            ) : (
+                                `Import ${parsedImport.entries.length || ''} ${
+                                    parsedImport.entries.length === 1 ? 'Secret' : 'Secrets'
+                                }`.trim()
+                            )}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
+
+            {/* Production Export Confirmation Dialog */}
+            <ConfirmDialog
+                isOpen={isExportConfirmOpen}
+                onClose={handleCloseExportConfirm}
+                onConfirm={() => void runExport(true)}
+                title="Export Production Secrets"
+                body={
+                    <span>
+                        You are about to decrypt and download all secrets in{' '}
+                        <strong className="font-mono font-bold text-error">production</strong> as{' '}
+                        <code className="font-mono">.env.production</code>. Every exported secret
+                        will be recorded in the project audit log.
+                    </span>
+                }
+                confirmLabel="Confirm Export"
+                tone="danger"
+                isLoading={exportMutation.isPending}
+                error={exportError}
+            />
         </div>
     );
 }

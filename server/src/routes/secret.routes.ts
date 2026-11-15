@@ -2,6 +2,8 @@ import {
     createSecretSchema,
     editSecretSchema,
     envExampleQuerySchema,
+    exportSecretsSchema,
+    importSecretsSchema,
     revealSecretSchema,
     secretsListQuerySchema,
 } from '@raaz/shared-schemas';
@@ -12,8 +14,10 @@ import {
     createSecretController,
     editSecretController,
     deleteSecretController,
+    exportSecretsController,
     generateEnvExampleController,
     getSecretMetadataController,
+    importSecretsController,
     revealSecretController,
 } from '../controllers/secrets.controller.js';
 import { authenticate } from '../middleware/authenticate.middleware.js';
@@ -33,6 +37,16 @@ const listSchema = z.object({
 const envExampleSchema = z.object({
     params: listSchema.shape.params,
     query: envExampleQuerySchema,
+});
+
+const importSchema = z.object({
+    params: listSchema.shape.params,
+    body: importSecretsSchema,
+});
+
+const exportSchema = z.object({
+    params: listSchema.shape.params,
+    body: exportSecretsSchema,
 });
 
 const createSchema = z.object({
@@ -76,6 +90,25 @@ router.get(
     requireProjectRole('projectAdmin', 'developer', 'auditor'),
     requireProjectStatus,
     asyncHandler(generateEnvExampleController),
+);
+
+router.post(
+    '/:projectId/secrets/import',
+    authenticate,
+    validate(importSchema),
+    requireProjectRole('projectAdmin', 'developer'),
+    requireProjectStatus,
+    asyncHandler(importSecretsController),
+);
+
+router.post(
+    '/:projectId/secrets/export',
+    authenticate,
+    revealLimiter,
+    validate(exportSchema),
+    requireProjectRole('projectAdmin', 'developer'),
+    requireProjectStatus,
+    asyncHandler(exportSecretsController),
 );
 
 router.post(

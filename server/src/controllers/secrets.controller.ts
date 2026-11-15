@@ -1,8 +1,12 @@
 import {
     createCursorPaginatedResponseSchema,
     envExampleResponseSchema,
+    exportSecretsResponseSchema,
+    importSecretsResponseSchema,
     secretResponseSchema,
     type EnvExampleQuery,
+    type ExportSecretsInput,
+    type ImportSecretsInput,
     type SecretsListQuery,
 } from '@raaz/shared-schemas';
 import type { Request, Response } from 'express';
@@ -12,8 +16,10 @@ import {
     createSecret,
     editSecret,
     deleteSecret,
+    exportSecretsEnv,
     generateEnvExample,
     getSecretMetadata,
+    importSecrets,
     revealSecret,
 } from '../services/secrets.service.js';
 
@@ -111,6 +117,29 @@ export async function generateEnvExampleController(req: Request, res: Response):
     const query = req.query as unknown as EnvExampleQuery;
     const result = await generateEnvExample(req.params.projectId, query.environment);
     res.json(envExampleResponseSchema.parse(result));
+}
+
+export async function importSecretsController(req: Request, res: Response): Promise<void> {
+    const { environment, mode, entries } = req.body as ImportSecretsInput;
+    const result = await importSecrets(
+        req.user!.id,
+        req.params.projectId,
+        environment,
+        mode,
+        entries,
+    );
+    res.status(200).json(importSecretsResponseSchema.parse(result));
+}
+
+export async function exportSecretsController(req: Request, res: Response): Promise<void> {
+    const { environment, confirm } = req.body as ExportSecretsInput;
+    const result = await exportSecretsEnv(
+        req.user!.id,
+        req.params.projectId,
+        environment,
+        confirm === true,
+    );
+    res.set('Cache-Control', 'no-store').json(exportSecretsResponseSchema.parse(result));
 }
 
 export async function revealSecretController(req: Request, res: Response): Promise<void> {

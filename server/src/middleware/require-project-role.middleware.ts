@@ -43,12 +43,19 @@ export function requireProjectRole(...allowedRoles: ('projectAdmin' | 'developer
                     action: hasNameOnly ? 'project_renamed' : 'project_updated',
                 });
             } else if (req.method === 'POST') {
+                const isSecretExport = req.path.endsWith('/export');
+                const env =
+                    req.body?.environment === 'development' ||
+                    req.body?.environment === 'staging' ||
+                    req.body?.environment === 'production'
+                        ? req.body.environment
+                        : null;
                 await writeDeniedAuditEntry({
                     userId,
                     projectId,
-                    secretKey: req.body?.key,
-                    environment: req.body?.environment,
-                    action: 'create',
+                    secretKey: typeof req.body?.key === 'string' ? req.body.key : null,
+                    environment: env,
+                    action: isSecretExport ? 'reveal' : 'create',
                 });
             }
 

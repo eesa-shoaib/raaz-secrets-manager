@@ -1,15 +1,18 @@
-import type { CreateSecretInput, EditSecretInput } from '@raaz/shared-schemas';
+import type { CreateSecretInput, EditSecretInput, ImportSecretsInput } from '@raaz/shared-schemas';
 import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query';
 import {
     createSecret,
     deleteSecret,
     editSecret,
+    exportSecrets,
     getEnvExample,
     getSecrets,
     getSecretsPage,
+    importSecrets,
     revealSecret,
     type SecretsPageParams,
 } from '../api/secrets';
+import { downloadTextFile } from '../lib/download';
 import { isApiError } from '../lib/errorHandling';
 import type { Environment } from '../lib/permissions';
 import { queryClient, queryKeys } from '../lib/queryClient';
@@ -113,6 +116,57 @@ export function useGenerateEnvExample(projectId: string) {
     return useMutation({
         mutationFn: (environment: Environment) => getEnvExample(projectId, environment),
         retry: 0,
+    });
+}
+
+export function useImportSecrets(projectId: string, environment: Environment) {
+    return useMutation({
+        mutationFn: (data: ImportSecretsInput) => importSecrets(projectId, data),
+        retry: 0,
+        onSuccess: (_result, variables) => {
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.secrets(projectId, variables.environment),
+            });
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.auditPrefix(projectId),
+            });
+        },
+        onError: (err) => {
+            if (isApiError(err) && err.status === 403) {
+                queryClient.invalidateQueries({ queryKey: queryKeys.project(projectId) });
+                queryClient.invalidateQueries({ queryKey: queryKeys.projects });
+                queryClient.invalidateQueries({
+                    queryKey: queryKeys.secrets(projectId, environment),
+                });
+            }
+        },
+    });
+}
+
+export function useExportSecrets(projectId: string, environment: Environment) {
+    return useMutation({
+        mutationFn: async ({ confirm }: { confirm: boolean }) => {
+            const exported = await exportSecrets(projectId, { environment, confirm });
+            downloadTextFile(exported.filename, exported.content);
+            // Return metadata only so decrypted content never sits in mutation cache
+            return { filename: exported.filename, count: exported.count };
+        },
+        retry: 0,
+        gcTime: 0,
+        onSettled: () => {
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.secrets(projectId, environment),
+            });
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.auditPrefix(projectId),
+            });
+        },
+        onError: (err) => {
+            if (isApiError(err) && err.status === 403) {
+                queryClient.invalidateQueries({ queryKey: queryKeys.project(projectId) });
+                queryClient.invalidateQueries({ queryKey: queryKeys.projects });
+            }
+        },
     });
 }
 

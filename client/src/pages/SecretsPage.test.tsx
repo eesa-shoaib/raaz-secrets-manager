@@ -8,6 +8,9 @@ import SecretsPage from './SecretsPage';
 const mockUseSecretsPage = vi.fn();
 const mockWriteText = vi.fn();
 const mockGenerateEnvExample = vi.fn();
+const mockImportSecrets = vi.fn();
+const mockExportSecrets = vi.fn();
+const mockExportReset = vi.fn();
 const mockPermissions = {
     role: 'projectAdmin' as 'projectAdmin' | 'developer' | 'auditor',
     isAdmin: true,
@@ -22,6 +25,12 @@ vi.mock('../hooks/useSecrets', () => ({
     useEditSecret: () => ({ mutateAsync: vi.fn(), isPending: false }),
     useDeleteSecret: () => ({ mutateAsync: vi.fn(), isPending: false }),
     useGenerateEnvExample: () => ({ mutateAsync: mockGenerateEnvExample, isPending: false }),
+    useImportSecrets: () => ({ mutateAsync: mockImportSecrets, isPending: false }),
+    useExportSecrets: () => ({
+        mutateAsync: mockExportSecrets,
+        reset: mockExportReset,
+        isPending: false,
+    }),
 }));
 
 vi.mock('../hooks/usePermissions', () => ({
@@ -63,6 +72,16 @@ describe('SecretsPage', () => {
         mockGenerateEnvExample.mockResolvedValue({
             filename: '.env.development.example',
             content: '# .env.example — Demo (development)\nDATABASE_URL=\n',
+        });
+        mockImportSecrets.mockResolvedValue({
+            created: 2,
+            updated: 0,
+            skipped: 0,
+            total: 2,
+        });
+        mockExportSecrets.mockResolvedValue({
+            filename: '.env.development',
+            count: 1,
         });
         Object.defineProperty(navigator, 'clipboard', {
             configurable: true,
@@ -213,5 +232,69 @@ describe('SecretsPage', () => {
             '# .env.example — Demo (development)\nDATABASE_URL=\n',
         );
         downloadSpy.mockRestore();
+    });
+
+    it('opens Import .env modal, masks preview values, and submits chosen conflict mode', async () => {
+        renderSecretsPage();
+
+        fireEvent.click(screen.getByRole('button', { name: /Import \.env/i }));
+
+        const textarea = screen.getByLabelText(/Paste \.env content/i);
+        fireEvent.change(textarea, {
+            target: { value: 'API_KEY=super-secret-plaintext\nDB_HOST=localhost' },
+        });
+
+        const previewTable = screen.getByTestId('import-preview-table');
+        expect(previewTable.textContent).toContain('API_KEY');
+        expect(previewTable.textContent).toContain('DB_HOST');
+        expect(previewTable.textContent).toContain('••••••••');
+        expect(previewTable.textContent).not.toContain('super-secret-plaintext');
+
+        fireEvent.click(screen.getByLabelText('Overwrite'));
+        fireEvent.click(screen.getByRole('button', { name: /Import 2 Secrets/i }));
+
+        await waitFor(() => {
+            expect(mockImportSecrets).toHaveBeenCalledWith({
+                environment: 'development',
+                mode: 'overwrite',
+                entries: [
+                    { key: 'API_KEY', value: 'super-secret-plaintext' },
+                    { key: 'DB_HOST', value: 'localhost' },
+                ],
+            });
+        });
+    });
+
+    it('exports immediately outside production and requires confirmation modal for production export', async () => {
+        renderSecretsPage('/projects/proj-1/secrets?environment=development');
+
+        fireEvent.click(screen.getByRole('button', { name: /Export \.env/i }));
+        await waitFor(() => {
+            expect(mockExportSecrets).toHaveBeenCalledWith({ confirm: false });
+            expect(mockExportReset).toHaveBeenCalled();
+        });
+
+        cleanup();
+        vi.clearAllMocks();
+        mockExportSecrets.mockResolvedValue({ filename: '.env.production', count: 1 });
+
+        renderSecretsPage('/projects/proj-1/secrets?environment=production');
+        fireEvent.click(screen.getByRole('button', { name: /Export \.env/i }));
+
+        // No export request sent before confirmation
+        expect(mockExportSecrets).not.toHaveBeenCalled();
+        expect(screen.getByText('Export Production Secrets')).toBeTruthy();
+
+        // Cancel sends nothing
+        fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+        expect(mockExportSecrets).not.toHaveBeenCalled();
+
+        // Confirm sends confirm: true and resets mutation state
+        fireEvent.click(screen.getByRole('button', { name: /Export \.env/i }));
+        fireEvent.click(screen.getByRole('button', { name: 'Confirm Export' }));
+        await waitFor(() => {
+            expect(mockExportSecrets).toHaveBeenCalledWith({ confirm: true });
+            expect(mockExportReset).toHaveBeenCalled();
+        });
     });
 });
