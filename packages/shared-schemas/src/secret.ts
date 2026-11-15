@@ -51,3 +51,53 @@ export const envExampleResponseSchema = z.object({
     content: z.string(),
 });
 export type EnvExampleResponse = z.infer<typeof envExampleResponseSchema>;
+
+export const importSecretsModeEnum = z.enum(['skip_existing', 'overwrite']);
+export type ImportSecretsMode = z.infer<typeof importSecretsModeEnum>;
+
+export const importSecretEntrySchema = z
+    .object({
+        key: z.string().regex(secretKeyRegex),
+        value: z.string().max(4096),
+    })
+    .strict();
+export type ImportSecretEntry = z.infer<typeof importSecretEntrySchema>;
+
+export const importSecretsSchema = z
+    .object({
+        environment: projectEnvironmentEnum,
+        mode: importSecretsModeEnum,
+        entries: z.array(importSecretEntrySchema).min(1).max(100),
+    })
+    .strict()
+    .refine(
+        (data) => new Set(data.entries.map((entry) => entry.key)).size === data.entries.length,
+        {
+            message: 'Duplicate secret keys are not allowed in the same import batch',
+            path: ['entries'],
+        },
+    );
+export type ImportSecretsInput = z.infer<typeof importSecretsSchema>;
+
+export const importSecretsResponseSchema = z.object({
+    created: z.number().int().min(0),
+    updated: z.number().int().min(0),
+    skipped: z.number().int().min(0),
+    total: z.number().int().min(0),
+});
+export type ImportSecretsResponse = z.infer<typeof importSecretsResponseSchema>;
+
+export const exportSecretsSchema = z
+    .object({
+        environment: projectEnvironmentEnum,
+        confirm: z.boolean().optional().default(false),
+    })
+    .strict();
+export type ExportSecretsInput = z.infer<typeof exportSecretsSchema>;
+
+export const exportSecretsResponseSchema = z.object({
+    filename: z.string().min(1),
+    content: z.string(),
+    count: z.number().int().min(0),
+});
+export type ExportSecretsResponse = z.infer<typeof exportSecretsResponseSchema>;
