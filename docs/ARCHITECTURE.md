@@ -37,8 +37,8 @@ MVP 1 is closed; the following design extensions from
   before pagination; client cache keys include cursor/search/filter scope; paging away
   from a revealed row unmounts it and clears its local value and mutation state.
 - Pino redaction explicitly redacts `password`, `currentPassword`, `newPassword`,
-  `value`, `description`, and `data` (plus nested `body.*` and `req.body.*` paths) so
-  secrets, credentials, project descriptions, and base64 avatar uploads never enter logs.
+  `value`, `entries`, `entries[*].value`, `content`, `description`, and `data` (plus nested `body.*` and `req.body.*` paths) so
+  secrets, `.env` import/export payloads, credentials, project descriptions, and base64 avatar uploads never enter logs.
 
 ## System Overview
 
@@ -469,9 +469,11 @@ never contain a decrypted value.
 
 ## Non-Functional Boundaries
 
-- A decrypted secret value is returned by exactly one endpoint
-  (`/secrets/:id/reveal`) and is never embedded in any list, dashboard, or
-  metadata response.
+- A decrypted secret value is returned only by explicit audited reveal/export
+  endpoints (`POST /secrets/:id/reveal` and `POST /secrets/export`, both gated by
+  `revealLimiter`, `requireProjectRole('projectAdmin', 'developer')`, production
+  `confirm: true`, transactional `reveal` audit entries, and `Cache-Control: no-store`)
+  and is never embedded in any list, dashboard, `.env.example`, or metadata response.
 - Platform Admin authorization is entirely separate from project-level
   decrypted-secret access — being Platform Admin does not implicitly grant
   a `ProjectMembership`, matching least-privilege design.
