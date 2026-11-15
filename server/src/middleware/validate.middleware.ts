@@ -20,6 +20,11 @@ const fieldGuidance: Record<string, string> = {
     'body.newPassword': 'newPassword must be 8–72 characters and different from currentPassword',
     'body.role': 'role must be projectAdmin, developer, or auditor',
     'body.confirm': 'confirm must be a boolean',
+    'body.mode': 'mode must be skip_existing or overwrite',
+    'body.entries': 'entries must contain 1–100 unique secret key/value pairs',
+    'body.entries.*.key':
+        'each entry key must contain 1–100 uppercase letters, numbers, or underscores',
+    'body.entries.*.value': 'each entry value must be a string no longer than 4096 characters',
 };
 
 export function validate(schema: AnyZodObject) {
@@ -38,11 +43,19 @@ export function validate(schema: AnyZodObject) {
             if (err instanceof ZodError) {
                 const messages = [
                     ...new Set(
-                        err.issues.map(
-                            (issue) =>
-                                fieldGuidance[issue.path.join('.')] ??
-                                'Request contains an invalid field',
-                        ),
+                        err.issues.map((issue) => {
+                            const exactPath = issue.path.join('.');
+                            const wildcardPath = issue.path
+                                .map((segment) =>
+                                    typeof segment === 'number' ? '*' : String(segment),
+                                )
+                                .join('.');
+                            return (
+                                fieldGuidance[exactPath] ??
+                                fieldGuidance[wildcardPath] ??
+                                'Request contains an invalid field'
+                            );
+                        }),
                     ),
                 ];
                 next(new AppError(422, 'VALIDATION_ERROR', messages.join('; ')));
