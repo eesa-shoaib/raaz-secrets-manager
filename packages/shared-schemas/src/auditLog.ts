@@ -72,6 +72,19 @@ export const auditLogQuerySchema = z.object({
 });
 export type AuditLogQuery = z.infer<typeof auditLogQuerySchema>;
 
+export const auditExportFormatEnum = z.enum(['csv', 'json']);
+export type AuditExportFormat = z.infer<typeof auditExportFormatEnum>;
+
+export const auditLogExportQuerySchema = z
+    .object({
+        format: auditExportFormatEnum,
+        action: auditActionEnum.optional(),
+        result: auditResultEnum.optional(),
+        environment: projectEnvironmentEnum.optional(),
+    })
+    .strict();
+export type AuditLogExportQuery = z.infer<typeof auditLogExportQuerySchema>;
+
 export const adminAuditLogQuerySchema = z.object({
     action: platformAuditActionEnum.optional(),
     result: auditResultEnum.optional(),

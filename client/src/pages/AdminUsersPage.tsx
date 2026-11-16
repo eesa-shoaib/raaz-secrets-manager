@@ -133,6 +133,12 @@ export function AdminUsersPage() {
         setCursor(previousCursor);
     };
 
+    const handleFirstPage = () => {
+        if (cursorHistory.length === 0 && cursor === null) return;
+        setCursor(null);
+        setCursorHistory([]);
+    };
+
     const handleAuditNext = () => {
         if (!auditQuery.data?.nextCursor) return;
         setAuditHistory((prev) => [...prev, auditCursor]);
@@ -144,6 +150,12 @@ export function AdminUsersPage() {
         const prevCursor = auditHistory[auditHistory.length - 1] ?? null;
         setAuditHistory((prev) => prev.slice(0, -1));
         setAuditCursor(prevCursor);
+    };
+
+    const handleAuditFirstPage = () => {
+        if (auditHistory.length === 0 && auditCursor === null) return;
+        setAuditCursor(null);
+        setAuditHistory([]);
     };
 
     const handleCloseModal = () => {
@@ -268,6 +280,7 @@ export function AdminUsersPage() {
                         <PaginationControls
                             hasPrevious={cursorHistory.length > 0}
                             hasNext={Boolean(data?.hasMore && data?.nextCursor)}
+                            onFirstPage={handleFirstPage}
                             onPrevious={handlePrevious}
                             onNext={handleNext}
                             pageNumber={cursorHistory.length + 1}
@@ -479,6 +492,7 @@ export function AdminUsersPage() {
                                 hasNext={Boolean(
                                     auditQuery.data?.hasMore && auditQuery.data?.nextCursor,
                                 )}
+                                onFirstPage={handleAuditFirstPage}
                                 onPrevious={handleAuditPrevious}
                                 onNext={handleAuditNext}
                                 pageNumber={auditHistory.length + 1}

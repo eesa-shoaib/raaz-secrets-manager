@@ -1,5 +1,6 @@
 import type {
     AuditAction,
+    AuditExportFormat,
     AuditLogEntryResponse,
     AuditResult,
     ProjectEnvironment,
@@ -10,8 +11,10 @@ import { Badge } from '../components/Badge';
 import { EmptyState, ErrorState } from '../components/FullPageState';
 import { Skeleton } from '../components/LoadingSkeleton';
 import { PaginationControls } from '../components/PaginationControls';
+import { useToast } from '../components/Toaster';
 import { UserAvatar } from '../components/UserAvatar';
-import { useProjectAuditLogPage } from '../hooks/useAuditLog';
+import { useExportProjectAuditLog, useProjectAuditLogPage } from '../hooks/useAuditLog';
+import { usePermissions } from '../hooks/usePermissions';
 import { isApiError } from '../lib/errorHandling';
 
 const PROJECT_ACTIONS: { value: AuditAction; label: string }[] = [
@@ -80,6 +83,11 @@ function formatTimestamp(isoString: string | Date): { local: string; iso: string
 export function ProjectAuditLogPage() {
     const { projectId } = useParams<{ projectId: string }>();
     const [searchParams, setSearchParams] = useSearchParams();
+    const { toast } = useToast();
+    const { can } = usePermissions(projectId);
+    const canExport = can('audit.export') === 'enabled';
+    const exportMutation = useExportProjectAuditLog(projectId!);
+    const [exportingFormat, setExportingFormat] = useState<AuditExportFormat | null>(null);
 
     const actionFilter = (searchParams.get('action') as AuditAction) || undefined;
     const resultFilter = (searchParams.get('result') as AuditResult) || undefined;
@@ -121,6 +129,34 @@ export function ProjectAuditLogPage() {
         const previousCursor = cursorHistory[cursorHistory.length - 1] ?? null;
         setCursorHistory((prev) => prev.slice(0, -1));
         setCursor(previousCursor);
+    };
+
+    const handleFirstPage = () => {
+        if (cursorHistory.length === 0 && cursor === null) return;
+        setCursor(null);
+        setCursorHistory([]);
+    };
+
+    const handleExport = async (format: AuditExportFormat) => {
+        if (exportMutation.isPending) return;
+        setExportingFormat(format);
+        try {
+            const filename = await exportMutation.mutateAsync({
+                format,
+                action: actionFilter,
+                result: resultFilter,
+                environment: environmentFilter,
+            });
+            toast.success(`Exported ${filename}`);
+        } catch (err: unknown) {
+            toast.error(
+                isApiError(err)
+                    ? err.message || 'Failed to export audit log'
+                    : 'Something went wrong — could not export audit log',
+            );
+        } finally {
+            setExportingFormat(null);
+        }
     };
 
     const hasActiveFilters = Boolean(actionFilter || resultFilter || environmentFilter);
@@ -205,13 +241,72 @@ export function ProjectAuditLogPage() {
 
     return (
         <div className="space-y-6">
-            {/* Header & Description */}
-            <div>
-                <h2 className="text-xl font-heading font-bold text-base-content">Audit Log</h2>
-                <p className="text-sm font-ui text-base-content/70 mt-0.5">
-                    Immutable, team-visible trail of all secret accesses, modifications, and
-                    membership changes
-                </p>
+            {/* Header & Export Actions */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h2 className="text-xl font-heading font-bold text-base-content">Audit Log</h2>
+                    <p className="text-sm font-ui text-base-content/70 mt-0.5">
+                        Immutable, team-visible trail of all secret accesses, modifications, and
+                        membership changes
+                    </p>
+                </div>
+
+                {canExport && (
+                    <div className="flex flex-wrap items-center gap-2.5">
+                        <button
+                            type="button"
+                            disabled={exportMutation.isPending}
+                            onClick={() => void handleExport('csv')}
+                            className="btn btn-ghost btn-sm h-9 px-3 border border-base-300 rounded-xl font-semibold text-xs flex items-center gap-1.5 disabled:opacity-40"
+                        >
+                            {exportingFormat === 'csv' ? (
+                                <span className="loading loading-spinner loading-xs" />
+                            ) : (
+                                <svg
+                                    aria-hidden="true"
+                                    className="h-4 w-4"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                >
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                    <polyline points="7 10 12 15 17 10" />
+                                    <line x1="12" y1="15" x2="12" y2="3" />
+                                </svg>
+                            )}
+                            Export CSV
+                        </button>
+                        <button
+                            type="button"
+                            disabled={exportMutation.isPending}
+                            onClick={() => void handleExport('json')}
+                            className="btn btn-ghost btn-sm h-9 px-3 border border-base-300 rounded-xl font-semibold text-xs flex items-center gap-1.5 disabled:opacity-40"
+                        >
+                            {exportingFormat === 'json' ? (
+                                <span className="loading loading-spinner loading-xs" />
+                            ) : (
+                                <svg
+                                    aria-hidden="true"
+                                    className="h-4 w-4"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                >
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                    <polyline points="7 10 12 15 17 10" />
+                                    <line x1="12" y1="15" x2="12" y2="3" />
+                                </svg>
+                            )}
+                            Export JSON
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* 3 Filters (Action, Result, Environment) per FRONTEND.md §3.7 */}
@@ -405,6 +500,7 @@ export function ProjectAuditLogPage() {
                     <PaginationControls
                         hasPrevious={cursorHistory.length > 0}
                         hasNext={Boolean(data?.hasMore && data?.nextCursor)}
+                        onFirstPage={handleFirstPage}
                         onPrevious={handlePrevious}
                         onNext={handleNext}
                         pageNumber={cursorHistory.length + 1}
