@@ -1,27 +1,47 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { ToastProvider } from '../components/Toaster';
+import { can as realCan, type Role } from '../lib/permissions';
 import ProjectAuditLogPage from './ProjectAuditLogPage';
 
 const mockUseProjectAuditLogPage = vi.fn();
+const mockExportAuditLog = vi.fn();
+let currentMockRole: Role = 'projectAdmin';
 
 vi.mock('../hooks/useAuditLog', () => ({
     useProjectAuditLogPage: (projectId: string, filters: unknown) =>
         mockUseProjectAuditLogPage(projectId, filters),
+    useExportProjectAuditLog: () => ({
+        mutateAsync: mockExportAuditLog,
+        isPending: false,
+    }),
 }));
 
-const renderAuditPage = () =>
+vi.mock('../hooks/usePermissions', () => ({
+    usePermissions: () => ({
+        role: currentMockRole,
+        can: (action: Parameters<typeof realCan>[1], env?: Parameters<typeof realCan>[2]) =>
+            realCan(currentMockRole, action, env),
+    }),
+}));
+
+const renderAuditPage = (initialEntry = '/projects/proj-1/audit') =>
     render(
-        <MemoryRouter initialEntries={['/projects/proj-1/audit']}>
-            <Routes>
-                <Route path="/projects/:projectId/audit" element={<ProjectAuditLogPage />} />
-            </Routes>
-        </MemoryRouter>,
+        <ToastProvider>
+            <MemoryRouter initialEntries={[initialEntry]}>
+                <Routes>
+                    <Route path="/projects/:projectId/audit" element={<ProjectAuditLogPage />} />
+                </Routes>
+            </MemoryRouter>
+        </ToastProvider>,
     );
 
 describe('ProjectAuditLogPage', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        currentMockRole = 'projectAdmin';
+        mockExportAuditLog.mockResolvedValue('audit-log-proj-1.csv');
         mockUseProjectAuditLogPage.mockReturnValue({
             data: {
                 data: [
@@ -91,5 +111,47 @@ describe('ProjectAuditLogPage', () => {
             cursor: null,
             limit: 25,
         });
+    });
+
+    afterEach(() => {
+        cleanup();
+    });
+
+    it('renders Export CSV and Export JSON for projectAdmin and auditor passing active filters, and hides them for developer', async () => {
+        renderAuditPage(
+            '/projects/proj-1/audit?action=reveal&result=denied&environment=production',
+        );
+
+        fireEvent.click(screen.getByRole('button', { name: /Export CSV/i }));
+        await waitFor(() => {
+            expect(mockExportAuditLog).toHaveBeenCalledWith({
+                format: 'csv',
+                action: 'reveal',
+                result: 'denied',
+                environment: 'production',
+            });
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: /Export JSON/i }));
+        await waitFor(() => {
+            expect(mockExportAuditLog).toHaveBeenCalledWith({
+                format: 'json',
+                action: 'reveal',
+                result: 'denied',
+                environment: 'production',
+            });
+        });
+
+        cleanup();
+        currentMockRole = 'auditor';
+        renderAuditPage();
+        expect(screen.getByRole('button', { name: /Export CSV/i })).toBeTruthy();
+        expect(screen.getByRole('button', { name: /Export JSON/i })).toBeTruthy();
+
+        cleanup();
+        currentMockRole = 'developer';
+        renderAuditPage();
+        expect(screen.queryByRole('button', { name: /Export CSV/i })).toBeNull();
+        expect(screen.queryByRole('button', { name: /Export JSON/i })).toBeNull();
     });
 });

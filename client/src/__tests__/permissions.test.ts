@@ -26,13 +26,14 @@ describe('Permissions matrix conformance', () => {
             }
         });
 
-        it('can perform member management, project editing, and view audit log', () => {
+        it('can perform member management, project editing, and view/export audit log', () => {
             expect(can(role, 'project.edit')).toBe('enabled');
             expect(can(role, 'members.list')).toBe('enabled');
             expect(can(role, 'members.add')).toBe('enabled');
             expect(can(role, 'members.change-role')).toBe('enabled');
             expect(can(role, 'members.remove')).toBe('enabled');
             expect(can(role, 'audit.list')).toBe('enabled');
+            expect(can(role, 'audit.export')).toBe('enabled');
         });
     });
 
@@ -67,10 +68,11 @@ describe('Permissions matrix conformance', () => {
             }
         });
 
-        it('can view members and audit log, but cannot add/modify members or edit project details (hidden)', () => {
+        it('can view members and audit log, but cannot export audit log, manage members, or edit project details (hidden)', () => {
             expect(can(role, 'project.edit')).toBe('hidden');
             expect(can(role, 'members.list')).toBe('enabled');
             expect(can(role, 'audit.list')).toBe('enabled');
+            expect(can(role, 'audit.export')).toBe('hidden');
 
             expect(can(role, 'members.add')).toBe('hidden');
             expect(can(role, 'members.change-role')).toBe('hidden');
@@ -94,10 +96,11 @@ describe('Permissions matrix conformance', () => {
             }
         });
 
-        it('can view members and audit log, but cannot manage members or edit project details', () => {
+        it('can view members and view/export audit log, but cannot manage members or edit project details', () => {
             expect(can(role, 'project.edit')).toBe('hidden');
             expect(can(role, 'members.list')).toBe('enabled');
             expect(can(role, 'audit.list')).toBe('enabled');
+            expect(can(role, 'audit.export')).toBe('enabled');
 
             expect(can(role, 'members.add')).toBe('hidden');
             expect(can(role, 'members.change-role')).toBe('hidden');
@@ -120,6 +123,7 @@ describe('Permissions matrix conformance', () => {
                 'members.list',
                 'members.add',
                 'audit.list',
+                'audit.export',
             ];
 
             for (const action of actions) {
