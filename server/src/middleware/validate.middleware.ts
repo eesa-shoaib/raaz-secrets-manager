@@ -10,6 +10,7 @@ const fieldGuidance: Record<string, string> = {
     'body.key': 'key must contain 1–100 uppercase letters, numbers, or underscores',
     'body.environment': 'environment must be development, staging, or production',
     'query.environment': 'environment must be development, staging, or production',
+    'query.format': 'format must be csv or json',
     'body.value': 'value must be a string no longer than 4096 characters',
     'body.email': 'email must be a valid email address',
     'body.password': 'password does not meet the requirements for this request',

@@ -1,6 +1,7 @@
 import {
     auditLogEntrySchema,
     type AdminAuditLogQuery,
+    type AuditLogExportQuery,
     type AuditLogQuery,
 } from '@raaz/shared-schemas';
 import { Types, type ClientSession } from 'mongoose';
@@ -108,6 +109,22 @@ export async function listProjectAuditEntriesCursor(projectId: string, filters: 
         hasMore,
         limit,
     };
+}
+
+export const MAX_AUDIT_EXPORT_ROWS = 5000;
+
+export async function exportProjectAuditEntries(
+    projectId: string,
+    filters: Pick<AuditLogExportQuery, 'action' | 'result' | 'environment'>,
+) {
+    const entries = await AuditLogEntryModel.find({
+        projectId: new Types.ObjectId(projectId),
+        ...buildAuditCriteria(filters),
+    })
+        .sort({ createdAt: -1, _id: -1 })
+        .limit(MAX_AUDIT_EXPORT_ROWS)
+        .lean();
+    return hydrateAuditEntries(entries);
 }
 
 export async function listPlatformAuditEntriesCursor(filters: AdminAuditLogQuery) {
