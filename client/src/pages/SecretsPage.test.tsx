@@ -60,7 +60,7 @@ describe('SecretsPage', () => {
         mockPermissions.role = 'projectAdmin';
         mockPermissions.isAdmin = true;
         mockPermissions.isDeveloper = false;
-        mockPermissions.can = vi.fn(() => 'enabled');
+        mockPermissions.can = vi.fn(() => 'enabled' as 'enabled' | 'disabled' | 'hidden');
         HTMLDialogElement.prototype.showModal = function () {
             this.setAttribute('open', '');
         };

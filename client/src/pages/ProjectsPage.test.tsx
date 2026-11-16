@@ -1,3 +1,4 @@
+import type { ProjectResponse } from '@raaz/shared-schemas';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react';
 import React from 'react';
@@ -32,15 +33,15 @@ vi.mock('../hooks/useAuth', () => ({
     }),
 }));
 
-function makeProjects(count: number, offset = 0) {
+function makeProjects(count: number, offset = 0): ProjectResponse[] {
     return Array.from({ length: count }, (_, idx) => ({
         id: `proj-${offset + idx + 1}`,
         name: `Project ${offset + idx + 1}`,
         description: '',
-        environments: ['development', 'staging', 'production'] as const,
-        status: 'active' as const,
+        environments: ['development', 'staging', 'production'],
+        status: 'active',
         createdBy: 'user-1',
-        role: 'projectAdmin' as const,
+        role: 'projectAdmin',
         createdAt: '2026-11-12T10:00:00.000Z',
         updatedAt: '2026-11-12T10:00:00.000Z',
     }));
