@@ -53,7 +53,7 @@ fallback; display usernames with email available for identity disambiguation.
 | 5   | `/projects/:projectId`                      | `ProjectLayout`                     | `RequireAuth` + member                 | `GET/PATCH /api/projects/:projectId` (includes `role` and `memberCount`)                                                                                                                                                                                                                                             | 2            |
 | 6   | `/projects/:projectId/secrets?environment=` | `SecretsPage`                       | as #5                                  | `GET/POST /api/projects/:projectId/secrets`; `GET /api/projects/:projectId/secrets/env-example`; `POST /api/projects/:projectId/secrets/import`; `POST /api/projects/:projectId/secrets/export`; `PATCH/DELETE /api/projects/:projectId/secrets/:secretId`; `POST /api/projects/:projectId/secrets/:secretId/reveal` | 3            |
 | 7   | `/projects/:projectId/members`              | `MembersPage`                       | as #5                                  | `GET/POST /api/projects/:projectId/members`; `PATCH/DELETE /api/projects/:projectId/members/:userId`                                                                                                                                                                                                                 | 4            |
-| 8   | `/projects/:projectId/audit-log`            | `ProjectAuditLogPage`               | as #5                                  | `GET /api/projects/:projectId/audit-log` (cursor-paginated)                                                                                                                                                                                                                                                          | 4            |
+| 8   | `/projects/:projectId/audit-log`            | `ProjectAuditLogPage`               | as #5                                  | `GET /api/projects/:projectId/audit-log` (cursor-paginated); `GET /api/projects/:projectId/audit-log/export`                                                                                                                                                                                                         | 4            |
 | 9   | `/unauthorized`                             | `StatusPage variant="unauthorized"` | none                                   | —                                                                                                                                                                                                                                                                                                                    | 1            |
 | 10  | `*`                                         | `StatusPage variant="not-found"`    | none                                   | —                                                                                                                                                                                                                                                                                                                    | 1            |
 | 11  | `/admin`                                    | redirect → `/admin/users`           | `RequireAuth` + `RequirePlatformAdmin` | —                                                                                                                                                                                                                                                                                                                    | MVP 2        |
@@ -380,9 +380,9 @@ Invariants (correctness properties, not features — see §9):
 
 ### 3.7 `ProjectAuditLogPage` — `/projects/:projectId/audit-log`
 
-**Team-visible transparency. Stories 3, 4, 6 (read-only; no pagination).**
+**Team-visible transparency & compliance export. Stories 3, 4, 6.**
 
-- **Data:** `useProjectAuditLog` — `{ action, result, environment }` from the URL. No pagination — single request with `limit=100` cap. Newest first.
+- **Data:** `useProjectAuditLogPage` — `{ action, result, environment, cursor, limit: 25 }` from the URL and cursor pagination. Newest first. Header includes **Export CSV** and **Export JSON** controls (gated via `usePermissions` for `projectAdmin` and `auditor`, hidden for `developer`) passing the currently selected filters to `GET /api/projects/:projectId/audit-log/export`.
 
 - **Widgets:** `AuditLogTable`, `Skeleton`, `ErrorState`, `EmptyState`.
 
@@ -470,6 +470,7 @@ disabled with reason, `H` = hidden, `—` = route unreachable.
 | Add member                   | E             | H               | H                 | H       | API-only       |
 | Change role / remove member  | E             | H               | H                 | H       | API-only       |
 | View project audit log       | E             | E               | E                 | E       | —              |
+| Export project audit log     | E             | H               | H                 | E       | —              |
 | `/admin/users`               | H             | H               | H                 | H       | E              |
 | `/settings` (own account)    | E             | E               | E                 | E       | E              |
 

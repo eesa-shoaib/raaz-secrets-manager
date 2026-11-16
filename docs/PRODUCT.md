@@ -90,7 +90,7 @@ This table is the single source of truth for scope; other docs link here.
 | Story                                               | Cut     | Reason                                                                                                                    | Target           |
 | --------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------- | ---------------- |
 | 5 — Project Admin manages their team                | None    | Add, change role, and remove are included in the MVP                                                                      | MVP              |
-| 6 — Project Admin reviews project activity          | Partial | Read-only log with 3 filters kept; MVP 1 capped at 100 most recent; add cursor pagination in MVP 2                        | MVP 2            |
+| 6 — Project Admin reviews project activity          | Partial | Read-only log with 3 filters kept; MVP 1 capped at 100 most recent; add cursor pagination and CSV/JSON export in MVP 2    | MVP 2            |
 | 7 — Platform Admin deactivates a malicious user     | UI only | `GET /api/admin/users` and `PATCH /api/admin/users/:userId` retained; add UI in MVP 2                                     | MVP 2            |
 | 8 — Platform Admin archives a project               | Full    | No archive/restore endpoint or UI. `Project.status` and the status check exist, but nothing sets `archived`               | Post-MVP         |
 | — Project rename / description editing              | Full    | No project update endpoint in MVP 1; add member-scoped Project Admin editing in MVP 2                                     | MVP 2            |
