@@ -11,7 +11,16 @@ vi.mock('../middleware/require-project-role.middleware.js', () => ({
 vi.mock('../middleware/require-project-status.middleware.js', () => ({
     requireProjectStatus: (_req: Request, _res: Response, next: NextFunction) => next(),
 }));
-vi.mock('../services/audit.service.js', () => ({ listProjectAuditEntries: vi.fn(async () => []) }));
+vi.mock('../services/audit.service.js', () => ({
+    listProjectAuditEntries: vi.fn(async () => []),
+    listProjectAuditEntriesCursor: vi.fn(async () => ({
+        data: [],
+        nextCursor: null,
+        hasMore: false,
+        limit: 25,
+    })),
+    exportProjectAuditEntries: vi.fn(async () => []),
+}));
 import { errorHandler } from '../middleware/error.middleware.js';
 import { listProjectAuditEntries } from '../services/audit.service.js';
 import { auditRoutes } from './audit.routes.js';
