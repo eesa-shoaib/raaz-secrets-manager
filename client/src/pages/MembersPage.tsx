@@ -53,6 +53,12 @@ export function MembersPage() {
         setCursorHistory((prev) => prev.slice(0, -1));
         setCursor(previousCursor);
     };
+
+    const handleFirstPage = () => {
+        if (cursorHistory.length === 0 && cursor === null) return;
+        setCursor(null);
+        setCursorHistory([]);
+    };
     const { can } = usePermissions(projectId);
     const { mutateAsync: addMemberMutation, isPending: isAdding } = useAddMember(projectId!);
     const changeRole = useChangeMemberRole(projectId!);
@@ -338,6 +344,7 @@ export function MembersPage() {
                     <PaginationControls
                         hasPrevious={cursorHistory.length > 0}
                         hasNext={Boolean(data?.hasMore && data?.nextCursor)}
+                        onFirstPage={handleFirstPage}
                         onPrevious={handlePrevious}
                         onNext={handleNext}
                         pageNumber={cursorHistory.length + 1}
@@ -354,7 +361,7 @@ export function MembersPage() {
                     {modalError && (
                         <div
                             role="alert"
-                            className="alert alert-error text-sm rounded-xl py-2 px-3 text-base-100 font-medium"
+                            className="alert alert-error text-sm rounded-xl py-2 px-3 text-error-content font-medium"
                         >
                             <span>{modalError}</span>
                         </div>

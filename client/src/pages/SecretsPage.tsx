@@ -102,6 +102,12 @@ export function SecretsPage() {
         setCursor(previousCursor);
     };
 
+    const handleFirstPage = () => {
+        if (cursorHistory.length === 0 && cursor === null) return;
+        setCursor(null);
+        setCursorHistory([]);
+    };
+
     const handleCopyKey = async (secret: SecretResponse) => {
         try {
             if (!navigator.clipboard?.writeText) {
@@ -767,6 +773,7 @@ export function SecretsPage() {
                         <PaginationControls
                             hasPrevious={cursorHistory.length > 0}
                             hasNext={Boolean(data?.hasMore && data?.nextCursor)}
+                            onFirstPage={handleFirstPage}
                             onPrevious={handlePrevious}
                             onNext={handleNext}
                             pageNumber={cursorHistory.length + 1}
@@ -827,7 +834,7 @@ export function SecretsPage() {
                     {createError && (
                         <div
                             role="alert"
-                            className="alert alert-error text-sm rounded-xl py-2 px-3 text-base-100 font-medium"
+                            className="alert alert-error text-sm rounded-xl py-2 px-3 text-error-content font-medium"
                         >
                             <span>{createError}</span>
                         </div>
@@ -937,7 +944,7 @@ export function SecretsPage() {
                     {editError && (
                         <div
                             role="alert"
-                            className="alert alert-error text-sm rounded-xl py-2 px-3 text-base-100 font-medium"
+                            className="alert alert-error text-sm rounded-xl py-2 px-3 text-error-content font-medium"
                         >
                             <span>{editError}</span>
                         </div>
