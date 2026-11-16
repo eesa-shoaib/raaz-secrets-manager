@@ -1,5 +1,6 @@
 import type {
     AuditAction,
+    AuditExportFormat,
     AuditLogEntryResponse,
     AuditResult,
     CursorPaginatedResponse,
@@ -13,6 +14,19 @@ export interface AuditLogFilters {
     environment?: ProjectEnvironment;
     limit?: number;
     cursor?: string | null;
+}
+
+export interface AuditExportParams {
+    format: AuditExportFormat;
+    action?: AuditAction;
+    result?: AuditResult;
+    environment?: ProjectEnvironment;
+}
+
+export interface AuditExportResult {
+    filename: string;
+    content: string;
+    mimeType: string;
 }
 
 export async function getProjectAuditLog(
@@ -56,4 +70,34 @@ export async function getProjectAuditLogPage(
         { params },
     );
     return res.data;
+}
+
+export async function exportProjectAuditLog(
+    projectId: string,
+    exportParams: AuditExportParams,
+): Promise<AuditExportResult> {
+    const params: Record<string, unknown> = {
+        format: exportParams.format,
+    };
+    if (exportParams.action) params.action = exportParams.action;
+    if (exportParams.result) params.result = exportParams.result;
+    if (exportParams.environment) params.environment = exportParams.environment;
+
+    const res = await apiClient.get<string>(`/projects/${projectId}/audit-log/export`, {
+        params,
+        responseType: 'text',
+        transformResponse: [(data: string) => data],
+    });
+
+    const disposition = String(res.headers['content-disposition'] ?? '');
+    const match = disposition.match(/filename="?([^";]+)"?/i);
+    const filename = match?.[1] ?? `audit-log-${projectId}.${exportParams.format}`;
+    const mimeType =
+        exportParams.format === 'csv' ? 'text/csv;charset=utf-8' : 'application/json;charset=utf-8';
+
+    return {
+        filename,
+        content: typeof res.data === 'string' ? res.data : JSON.stringify(res.data, null, 2),
+        mimeType,
+    };
 }

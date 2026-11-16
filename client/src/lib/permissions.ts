@@ -16,7 +16,8 @@ export type Action =
     | 'members.add'
     | 'members.change-role'
     | 'members.remove'
-    | 'audit.list';
+    | 'audit.list'
+    | 'audit.export';
 
 const permissionMatrix: Record<Exclude<Role, null>, Record<Action, Permission>> = {
     projectAdmin: {
@@ -34,6 +35,7 @@ const permissionMatrix: Record<Exclude<Role, null>, Record<Action, Permission>> 
         'members.change-role': 'enabled',
         'members.remove': 'enabled',
         'audit.list': 'enabled',
+        'audit.export': 'enabled',
     },
     developer: {
         'project.edit': 'hidden',
@@ -50,6 +52,7 @@ const permissionMatrix: Record<Exclude<Role, null>, Record<Action, Permission>> 
         'members.change-role': 'hidden',
         'members.remove': 'hidden',
         'audit.list': 'enabled',
+        'audit.export': 'hidden',
     },
     auditor: {
         'project.edit': 'hidden',
@@ -66,6 +69,7 @@ const permissionMatrix: Record<Exclude<Role, null>, Record<Action, Permission>> 
         'members.change-role': 'hidden',
         'members.remove': 'hidden',
         'audit.list': 'enabled',
+        'audit.export': 'enabled',
     },
 };
 
@@ -110,6 +114,7 @@ export function getRolePermissions(
         'members.change-role',
         'members.remove',
         'audit.list',
+        'audit.export',
     ];
 
     const result: Record<Action, Permission> = {} as Record<Action, Permission>;
@@ -152,4 +157,5 @@ export const PERMISSION_ACTIONS: { value: Action; label: string; category: strin
     { value: 'members.change-role', label: 'Change member role', category: 'Members' },
     { value: 'members.remove', label: 'Remove members', category: 'Members' },
     { value: 'audit.list', label: 'View audit log', category: 'Audit' },
+    { value: 'audit.export', label: 'Export audit log', category: 'Audit' },
 ];
