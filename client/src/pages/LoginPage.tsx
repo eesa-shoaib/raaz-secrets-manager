@@ -3,8 +3,8 @@ import { loginInputSchema, type LoginInput } from '@raaz/shared-schemas';
 import React, { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useLocation } from 'react-router-dom';
-import logo from '../assets/short-logo.svg';
 import { FormField } from '../components/FormField';
+import { ShortLogo } from '../components/ShortLogo';
 import { useToast } from '../components/Toaster';
 import { useAuth } from '../hooks/useAuth';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
@@ -63,13 +63,7 @@ export function LoginPage() {
                 {/* Header */}
                 <div className="text-center mb-5">
                     <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full border border-primary/30 bg-base-300">
-                        <img
-                            src={logo}
-                            alt="Raaz"
-                            width={405}
-                            height={810}
-                            className="h-9 w-auto object-contain"
-                        />
+                        <ShortLogo className="h-9 w-auto object-contain" />
                     </div>
                     <h1 className="text-2xl font-heading font-bold text-base-content tracking-tight">
                         Sign in to Raaz

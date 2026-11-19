@@ -140,7 +140,7 @@ export function ProjectLayout() {
         <div className="space-y-6">
             <button
                 type="button"
-                className="btn btn-ghost btn-sm h-9 gap-2 px-2 text-base-content/70 hover:text-base-content"
+                className="btn btn-ghost btn-sm h-9 gap-2 px-2 text-base-content/70 hover:text-primary transition-colors"
                 onClick={() => {
                     if (
                         typeof window.history.state?.idx === 'number' &&

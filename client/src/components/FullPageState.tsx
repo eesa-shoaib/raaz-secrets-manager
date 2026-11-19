@@ -99,7 +99,7 @@ export function EmptyState({
 }) {
     return (
         <div className="card bg-base-200 border border-base-300 p-10 rounded-2xl text-center max-w-lg mx-auto my-8 space-y-4">
-            <div className="w-12 h-12 rounded-full bg-base-300 text-base-content/60 flex items-center justify-center mx-auto">
+            <div className="w-12 h-12 rounded-full bg-primary/10 text-primary border border-primary/20 flex items-center justify-center mx-auto">
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
                         strokeLinecap="round"

@@ -7,6 +7,7 @@ import * as accountApi from '../api/account';
 import * as authApi from '../api/auth';
 import { ToastProvider } from '../components/Toaster';
 import { AuthProvider } from '../context/AuthContext';
+import { ThemeProvider } from '../context/ThemeContext';
 import type { ApiError } from '../lib/errorHandling';
 import { queryKeys } from '../lib/queryClient';
 import SettingsPage from './SettingsPage';
@@ -70,14 +71,16 @@ describe('SettingsPage', () => {
         const utils = render(
             <QueryClientProvider client={client}>
                 <MemoryRouter initialEntries={['/settings']}>
-                    <AuthProvider>
-                        <ToastProvider>
-                            <Routes>
-                                <Route path="/settings" element={<SettingsPage />} />
-                                <Route path="/login" element={<LoginSentinel />} />
-                            </Routes>
-                        </ToastProvider>
-                    </AuthProvider>
+                    <ThemeProvider>
+                        <AuthProvider>
+                            <ToastProvider>
+                                <Routes>
+                                    <Route path="/settings" element={<SettingsPage />} />
+                                    <Route path="/login" element={<LoginSentinel />} />
+                                </Routes>
+                            </ToastProvider>
+                        </AuthProvider>
+                    </ThemeProvider>
                 </MemoryRouter>
             </QueryClientProvider>,
         );
@@ -308,5 +311,53 @@ describe('SettingsPage', () => {
             expect(screen.getByTestId('login-reason').textContent).toBe('account-deactivated');
         });
         expect(client.getQueryData(queryKeys.me)).toBeNull();
+    });
+
+    it('renders theme palette options and switches themes with localStorage persistence', async () => {
+        window.localStorage.clear();
+        document.documentElement.removeAttribute('data-theme');
+
+        renderSettings();
+
+        await waitFor(() => {
+            expect(screen.getByText('Appearance & Theme')).toBeTruthy();
+        });
+
+        // Verify all 4 themes are rendered
+        expect(screen.getByRole('button', { name: /select default theme/i })).toBeTruthy();
+        expect(screen.getByRole('button', { name: /select midnight theme/i })).toBeTruthy();
+        expect(screen.getByRole('button', { name: /select nordic forest theme/i })).toBeTruthy();
+        expect(screen.getByRole('button', { name: /select velvet sunset theme/i })).toBeTruthy();
+
+        // Default theme starts active
+        expect(document.documentElement.getAttribute('data-theme')).toBe('default');
+        const defaultBtn = screen.getByRole('button', { name: /select default theme/i });
+        expect(defaultBtn.getAttribute('aria-pressed')).toBe('true');
+
+        // Switch to Midnight theme
+        const midnightBtn = screen.getByRole('button', { name: /select midnight theme/i });
+        fireEvent.click(midnightBtn);
+
+        expect(document.documentElement.getAttribute('data-theme')).toBe('midnight');
+        expect(window.localStorage.getItem('raaz_theme')).toBe('midnight');
+        expect(midnightBtn.getAttribute('aria-pressed')).toBe('true');
+        expect(defaultBtn.getAttribute('aria-pressed')).toBe('false');
+
+        // Switch to Nordic Forest (emerald)
+        const emeraldBtn = screen.getByRole('button', { name: /select nordic forest theme/i });
+        fireEvent.click(emeraldBtn);
+        expect(document.documentElement.getAttribute('data-theme')).toBe('emerald');
+        expect(window.localStorage.getItem('raaz_theme')).toBe('emerald');
+
+        // Switch to Velvet Sunset (amethyst)
+        const amethystBtn = screen.getByRole('button', { name: /select velvet sunset theme/i });
+        fireEvent.click(amethystBtn);
+        expect(document.documentElement.getAttribute('data-theme')).toBe('amethyst');
+        expect(window.localStorage.getItem('raaz_theme')).toBe('amethyst');
+
+        // Switch back to Default
+        fireEvent.click(defaultBtn);
+        expect(document.documentElement.getAttribute('data-theme')).toBe('default');
+        expect(window.localStorage.getItem('raaz_theme')).toBe('default');
     });
 });

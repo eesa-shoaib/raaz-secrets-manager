@@ -23,6 +23,7 @@ import {
 } from '../hooks/useAccount';
 import { useAuth } from '../hooks/useAuth';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import { useTheme } from '../hooks/useTheme';
 import { isApiError } from '../lib/errorHandling';
 
 const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
@@ -49,6 +50,7 @@ export function SettingsPage() {
     useDocumentTitle('Account Settings');
     const { user } = useAuth();
     const { toast } = useToast();
+    const { theme, setTheme, themes } = useTheme();
 
     const updateProfileMutation = useUpdateProfile();
     const uploadAvatarMutation = useUploadAvatar();
@@ -380,6 +382,85 @@ export function SettingsPage() {
                         </button>
                     </div>
                 </form>
+            </section>
+
+            {/* Theme & Appearance */}
+            <section
+                aria-label="Theme & Appearance"
+                className="card bg-base-200 border border-base-300 rounded-3xl p-6 shadow-sm space-y-5"
+            >
+                <div className="text-center">
+                    <h2 className="font-heading text-lg font-bold text-base-content">
+                        Appearance & Theme
+                    </h2>
+                    <p className="text-xs font-ui text-base-content/60 mt-1 max-w-md mx-auto">
+                        Choose a color palette for your workspace. Your preference is saved locally
+                        and applies instantly across all pages.
+                    </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    {themes.map((item) => {
+                        const isSelected = theme === item.id;
+                        return (
+                            <button
+                                key={item.id}
+                                type="button"
+                                onClick={() => {
+                                    setTheme(item.id);
+                                    toast.success(`Theme changed to ${item.name}`);
+                                }}
+                                aria-pressed={isSelected}
+                                aria-label={`Select ${item.name} theme`}
+                                className={`flex flex-col text-left p-4 rounded-2xl border transition-all ${
+                                    isSelected
+                                        ? 'border-primary ring-2 ring-primary/40 bg-base-300/80 shadow-md'
+                                        : 'border-base-300 bg-base-300/30 hover:bg-base-300/60 hover:border-base-content/20'
+                                }`}
+                            >
+                                <div className="flex items-center justify-between w-full">
+                                    <span className="font-heading font-semibold text-sm text-base-content flex items-center gap-2">
+                                        {item.name}
+                                        {isSelected && (
+                                            <span className="badge badge-primary badge-xs text-primary-content font-bold">
+                                                Active
+                                            </span>
+                                        )}
+                                    </span>
+                                    {/* Visual color swatches pill */}
+                                    <div
+                                        aria-hidden="true"
+                                        className="flex items-center gap-1 p-1 rounded-full bg-base-100 border border-base-300"
+                                    >
+                                        <span
+                                            className="w-3.5 h-3.5 rounded-full inline-block border border-white/10"
+                                            style={{ backgroundColor: item.swatch.base }}
+                                            title="Base background"
+                                        />
+                                        <span
+                                            className="w-3.5 h-3.5 rounded-full inline-block border border-white/10"
+                                            style={{ backgroundColor: item.swatch.surface }}
+                                            title="Surface card"
+                                        />
+                                        <span
+                                            className="w-3.5 h-3.5 rounded-full inline-block border border-white/10"
+                                            style={{ backgroundColor: item.swatch.primary }}
+                                            title="Primary accent"
+                                        />
+                                        <span
+                                            className="w-3.5 h-3.5 rounded-full inline-block border border-white/10"
+                                            style={{ backgroundColor: item.swatch.accent }}
+                                            title="Secondary accent"
+                                        />
+                                    </div>
+                                </div>
+                                <p className="text-xs font-ui text-base-content/65 mt-2">
+                                    {item.description}
+                                </p>
+                            </button>
+                        );
+                    })}
+                </div>
             </section>
 
             {/* Security */}
