@@ -67,6 +67,30 @@ export const THEMES: readonly ThemeMeta[] = [
     },
 ];
 
+export const THEME_LOGO_COLORS: Record<ThemeId, { highlight: string; mid: string; dark: string }> =
+    {
+        default: {
+            highlight: 'rgb(180, 210, 0)',
+            mid: '#637300',
+            dark: '#2e3600',
+        },
+        midnight: {
+            highlight: '#06b6d4',
+            mid: '#0284c7',
+            dark: '#0c4a6e',
+        },
+        emerald: {
+            highlight: '#10b981',
+            mid: '#059669',
+            dark: '#064e3b',
+        },
+        amethyst: {
+            highlight: '#f43f5e',
+            mid: '#c084fc',
+            dark: '#4c0519',
+        },
+    };
+
 export const VALID_THEME_IDS: readonly ThemeId[] = THEMES.map((t) => t.id);
 
 export function isThemeId(value: unknown): value is ThemeId {
@@ -91,6 +115,16 @@ export function applyTheme(theme: ThemeId): void {
     try {
         document.documentElement.setAttribute('data-theme', theme);
         window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+
+        // Update favicon dynamically to reflect active palette
+        const faviconLink = document.querySelector<HTMLLinkElement>("link[rel~='icon']");
+        if (faviconLink) {
+            const highlight = THEME_LOGO_COLORS[theme]?.highlight || 'rgb(180, 210, 0)';
+            const rPath =
+                'M43.669 727.629Q28.602 741.58 21.51 732.28Q14.418 722.979 13.597 698.952Q12.775 674.925 17.999 646.248Q23.223 617.57 33.198 591.993Q43.173 566.416 57.217 552.465L323.312 301.345L296.34 436.206L130.693 185.085Q122.23 171.134 122.485 145.557Q122.741 119.98 129.143 90.527Q135.545 61.075 145.978 37.048Q156.41 13.021 167.222 3.72Q178.034 -5.58 187.521 8.371L331.326 233.139Q355.601 270.342 336.38 366.45Q326.459 416.054 312.12 449.382Q297.781 482.709 277.382 502.861Z';
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="31" fill="#1f2334" stroke="${highlight}" stroke-opacity=".5" stroke-width="2"/><svg x="22" y="11" width="20" height="42" viewBox="-14 -14 405.3 809.9"><path d="${rPath}" fill="${highlight}"/></svg></svg>`;
+            faviconLink.href = `data:image/svg+xml,${encodeURIComponent(svg)}`;
+        }
     } catch {
         // localStorage may throw in restricted sandboxes
     }

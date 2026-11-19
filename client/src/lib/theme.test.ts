@@ -5,6 +5,7 @@ import {
     getStoredTheme,
     isThemeId,
     THEMES,
+    THEME_LOGO_COLORS,
     THEME_STORAGE_KEY,
     VALID_THEME_IDS,
 } from './theme';
@@ -71,13 +72,32 @@ describe('theme library', () => {
         expect(getStoredTheme()).toBe('amethyst');
     });
 
+    it('defines logo colors for all theme ids in THEME_LOGO_COLORS', () => {
+        VALID_THEME_IDS.forEach((id) => {
+            const colors = THEME_LOGO_COLORS[id];
+            expect(colors).toBeDefined();
+            expect(colors.highlight).toBeTruthy();
+            expect(colors.mid).toBeTruthy();
+            expect(colors.dark).toBeTruthy();
+        });
+    });
+
     it('applies theme to documentElement attribute and persists to localStorage', () => {
+        const link = document.createElement('link');
+        link.rel = 'icon';
+        link.href = '/favicon.svg';
+        document.head.appendChild(link);
+
         applyTheme('midnight');
         expect(document.documentElement.getAttribute('data-theme')).toBe('midnight');
         expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe('midnight');
+        expect(link.href).toContain('data:image/svg+xml');
 
         applyTheme('emerald');
         expect(document.documentElement.getAttribute('data-theme')).toBe('emerald');
         expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe('emerald');
+        expect(link.href).toContain('data:image/svg+xml');
+
+        link.remove();
     });
 });
