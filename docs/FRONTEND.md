@@ -437,13 +437,31 @@ promise.
 
 ### 3.10 `SettingsPage` — `/settings`
 
-**Self-service Account Profile & Security.**
+**Self-service Account Profile, Security, and Theme Customization.**
 
 - **Guard:** `RequireAuth`.
 - **Sections:**
     1. **Profile:** read-only email (`me.email`), optional `username` input (`3–30` lowercase `[a-z0-9_-]`, or clear to unset) saving via `PATCH /api/account/profile`, and profile picture controls (`UserAvatar` preview, Upload/Replace PNG/JPEG/WebP ≤ 2 MiB via `PUT /api/account/avatar`, Remove via `DELETE /api/account/avatar`).
-    2. **Security:** change password form (`currentPassword`, `newPassword` with `8–72` chars) submitting to `POST /api/auth/change-password`. Wrong current password (`401`) surfaces an inline alert without logging out; success clears `queryClient` and redirects to `/login` with `state.reason = 'password-changed'`.
-    3. **Danger Zone (Deactivate Account):** `Deactivate Account` opens a password-confirmed modal submitting `POST /api/account/deactivate`. Wrong password returns `401`, last active Platform Admin returns `409 CONFLICT`, and `204` clears `queryClient` and redirects to `/login` with `state.reason = 'account-deactivated'`.
+    2. **Appearance & Theme:** theme selection cards allowing users to instantly switch between 4 curated color palettes (`default`, `midnight`, `emerald`, `amethyst`). Previews each palette with a color swatch pill (base, surface, primary, accent, text), an active badge, and an animated check icon. Selection takes effect immediately across all application surfaces and persists in `localStorage`.
+    3. **Security:** change password form (`currentPassword`, `newPassword` with `8–72` chars) submitting to `POST /api/auth/change-password`. Wrong current password (`401`) surfaces an inline alert without logging out; success clears `queryClient` and redirects to `/login` with `state.reason = 'password-changed'`.
+    4. **Danger Zone (Deactivate Account):** `Deactivate Account` opens a password-confirmed modal submitting `POST /api/account/deactivate`. Wrong password returns `401`, last active Platform Admin returns `409 CONFLICT`, and `204` clears `queryClient` and redirects to `/login` with `state.reason = 'account-deactivated'`.
+
+### 3.11 Theme Customization System
+
+**Centralized, persistent, multi-palette theme architecture.**
+
+- **Palettes:**
+    - `default` ("Default" / "Coffee & Warm Amber"): The baseline Raaz UI palette (espresso `#20161F`, warm amber `#DB924B`, terracotta `#DE7B69`). Preserved unchanged to protect existing visual design.
+    - `midnight` ("Midnight" / "Obsidian & Electric Cyan"): Deep obsidian background (`#0B0F19`), rich dark navy surface (`#111827`), electric cyan primary (`#06B6D4`), and sky blue accent (`#38BDF8`).
+    - `emerald` ("Emerald" / "Evergreen & Jade Mint"): Deep forest shadow background (`#061510`), dark spruce surface (`#0C231B`), vibrant jade emerald primary (`#10B981`), and mint accent (`#34D399`).
+    - `amethyst` ("Amethyst" / "Velvet Plum & Coral Rose"): Midnight violet background (`#130E1E`), dark royal plum surface (`#1D152E`), radiant amethyst purple primary (`#A855F7`), and soft coral rose accent (`#F472B6`).
+
+- **Architecture & Uniformity:**
+    - **Central definition:** `client/src/lib/theme.ts` defines `ThemeId`, the `THEMES` registry, metadata, swatch colors, storage key (`raaz_theme`), and theme validator/getter/applier functions.
+    - **Tailwind & DaisyUI:** `client/tailwind.config.js` declares all 4 DaisyUI themes alongside legacy fallback aliases. All themes share identical geometry tokens (`--rounded-box: 2rem`, `--rounded-btn: 0.5rem`, `--rounded-badge: 2rem`, `--border-btn: 2px`, `--tab-radius: 0.5rem`), ensuring layout geometry, padding, borders, and typography remain identical.
+    - **Semantic design tokens:** The entire application renders via semantic DaisyUI utility classes (`bg-base-100`, `bg-base-200`, `bg-base-300`, `text-base-content`, `btn-primary`, `btn-secondary`, `btn-accent`, `btn-neutral`, `border-base-300`, etc.). Switching the root `data-theme` attribute dynamically re-skins cards, headers, tables, navigation, dialogs, toasts, and inputs without code duplication or hardcoded hex values.
+    - **FOUC Prevention:** `client/index.html` executes an early inline `<script>` before stylesheet rendering to read `localStorage.getItem('raaz_theme')` and set the `data-theme` attribute on `<html>`, preventing flash of unstyled theme during page load or refresh.
+    - **State Management & Persistence:** `client/src/context/ThemeContext.tsx` provides `ThemeProvider` and `useTheme()`. Theme changes write to `localStorage` and update the DOM immediately; a window `storage` event listener keeps multiple open tabs in sync.
 
 ## 4. Per-Role UI Map
 
@@ -487,9 +505,9 @@ Reintroduce only if a real need appears — not speculatively.
 | `AdminMenu`, `UserMenu`                                             | Inline in `NavBar`                          |
 | `FullPageSpinner`, `FullPageError`, `CardSkeleton`, `TableSkeleton` | Collapsed into `FullPageState` / `Skeleton` |
 | `ProjectAdminOnlyHint` guard                                        | Inline where needed                         |
-| `ProjectTabs`, `AdminTabs`                                          | Collapsed into `TabNav`                     |
-| Theme toggle                                                        | Follow system preference                    |
-| Cross-tab auth sync                                                 | Deferred (P2)                               |
+| `ProjectTabs`, `AdminTabs`                                          | Collapsed into `TabNav`                                                                     |
+| Theme toggle (in navbar)                                            | Placed in `/settings` as a multi-palette theme selector with persistent state and previews  |
+| Cross-tab auth sync                                                 | Deferred (P2)                                                                               |
 | Visual regression testing                                           | Deferred (P2)                               |
 | Historical-environment filtering                                    | Deferred                                    |
 | Stacked-card mobile tables                                          | Horizontal scroll instead                   |
