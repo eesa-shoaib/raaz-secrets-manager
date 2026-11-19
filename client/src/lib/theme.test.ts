@@ -7,7 +7,6 @@ import {
     THEMES,
     THEME_STORAGE_KEY,
     VALID_THEME_IDS,
-    type ThemeId,
 } from './theme';
 
 describe('theme library', () => {
@@ -23,6 +22,7 @@ describe('theme library', () => {
 
     it('defines 4 distinct palettes with required swatch colors and descriptions', () => {
         expect(THEMES).toHaveLength(4);
+        expect(VALID_THEME_IDS).toEqual(['default', 'midnight', 'emerald', 'amethyst']);
         const ids = THEMES.map((t) => t.id);
         expect(ids).toEqual(['default', 'midnight', 'emerald', 'amethyst']);
 
