@@ -23,10 +23,10 @@ export function SearchInput({
     };
 
     return (
-        <div className={`relative flex items-center ${className}`}>
+        <div className={`relative group flex items-center ${className}`}>
             <svg
                 aria-hidden="true"
-                className="pointer-events-none absolute left-3 h-4 w-4 text-base-content/50"
+                className="pointer-events-none absolute left-3 h-4 w-4 text-base-content/50 group-focus-within:text-primary transition-colors"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"

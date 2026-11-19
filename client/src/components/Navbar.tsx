@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import logo from '../assets/logo-v2.svg';
 import { useAuth } from '../hooks/useAuth';
+import { Logo } from './Logo';
 import { UserAvatar } from './UserAvatar';
 
 export function Navbar() {
@@ -36,14 +36,9 @@ export function Navbar() {
                     <Link
                         to="/projects"
                         className="flex shrink-0 items-center hover:opacity-90 transition-opacity"
+                        aria-label="Raaz home"
                     >
-                        <img
-                            src={logo}
-                            alt="Raaz"
-                            width={2103}
-                            height={830}
-                            className="h-10 w-auto sm:h-12"
-                        />
+                        <Logo className="h-10 w-auto sm:h-12" />
                     </Link>
 
                     {user && (
@@ -85,7 +80,7 @@ export function Navbar() {
                             <button
                                 type="button"
                                 onClick={() => setDropdownOpen((prev) => !prev)}
-                                className="button-textured flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-base-300/80 hover:bg-base-300 text-sm font-ui border border-base-300 transition-colors"
+                                className="button-textured group flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-base-300/80 hover:bg-base-300 text-sm font-ui border border-base-300 transition-colors"
                                 aria-label={`Account menu for ${user.email}`}
                                 aria-expanded={dropdownOpen}
                                 aria-haspopup="true"
@@ -102,7 +97,7 @@ export function Navbar() {
                                     {user.username || user.email}
                                 </span>
                                 <svg
-                                    className={`w-4 h-4 text-base-content/60 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`}
+                                    className={`w-4 h-4 text-base-content/60 group-hover:text-primary transition-all duration-200 ${dropdownOpen ? 'rotate-180 text-primary' : ''}`}
                                     fill="none"
                                     viewBox="0 0 24 24"
                                     stroke="currentColor"
@@ -133,16 +128,42 @@ export function Navbar() {
                                         <Link
                                             to="/settings"
                                             onClick={() => setDropdownOpen(false)}
-                                            className="w-full text-left px-3 py-2 text-sm text-base-content hover:bg-base-300 rounded-xl transition-colors font-medium flex items-center gap-2"
+                                            className="w-full text-left px-3 py-2 text-sm text-base-content hover:bg-base-300 hover:text-primary rounded-xl transition-colors font-medium flex items-center gap-2 group"
                                         >
+                                            <svg
+                                                aria-hidden="true"
+                                                className="w-4 h-4 text-primary/80 group-hover:text-primary shrink-0"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="2"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                            >
+                                                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                                                <circle cx="12" cy="7" r="4" />
+                                            </svg>
                                             Account Settings
                                         </Link>
                                         {user.isPlatformAdmin && (
                                             <Link
                                                 to="/admin/users"
                                                 onClick={() => setDropdownOpen(false)}
-                                                className="w-full text-left px-3 py-2 text-sm text-base-content hover:bg-base-300 rounded-xl transition-colors font-medium flex items-center gap-2"
+                                                className="w-full text-left px-3 py-2 text-sm text-base-content hover:bg-base-300 hover:text-primary rounded-xl transition-colors font-medium flex items-center gap-2 group"
                                             >
+                                                <svg
+                                                    aria-hidden="true"
+                                                    className="w-4 h-4 text-primary/80 group-hover:text-primary shrink-0"
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="2"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                >
+                                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
+                                                    <path d="m9 12 2 2 4-4" />
+                                                </svg>
                                                 Manage Users
                                             </Link>
                                         )}
