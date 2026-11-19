@@ -25,45 +25,57 @@ export function App() {
                 <ThemeProvider>
                     <AuthProvider>
                         <ToastProvider>
-                        <Routes>
-                            {/* Route 1: redirect / -> /projects */}
-                            <Route path="/" element={<Navigate to="/projects" replace />} />
+                            <Routes>
+                                {/* Route 1: redirect / -> /projects */}
+                                <Route path="/" element={<Navigate to="/projects" replace />} />
 
-                            {/* Public only routes */}
-                            <Route element={<PublicOnly />}>
-                                <Route path="/login" element={<LoginPage />} />
-                                <Route path="/signup" element={<SignupPage />} />
-                            </Route>
+                                {/* Public only routes */}
+                                <Route element={<PublicOnly />}>
+                                    <Route path="/login" element={<LoginPage />} />
+                                    <Route path="/signup" element={<SignupPage />} />
+                                </Route>
 
-                            {/* Protected routes */}
-                            <Route element={<RequireAuth />}>
-                                <Route element={<AppShell />}>
-                                    <Route path="/projects" element={<ProjectsPage />} />
-                                    <Route path="/settings" element={<SettingsPage />} />
-                                    <Route element={<RequirePlatformAdmin />}>
-                                        <Route path="/admin/users" element={<AdminUsersPage />} />
-                                    </Route>
-                                    <Route path="/projects/:projectId" element={<ProjectLayout />}>
-                                        <Route index element={<Navigate to="secrets" replace />} />
-                                        <Route path="secrets" element={<SecretsPage />} />
-                                        <Route path="members" element={<MembersPage />} />
-                                        <Route path="audit-log" element={<ProjectAuditLogPage />} />
+                                {/* Protected routes */}
+                                <Route element={<RequireAuth />}>
+                                    <Route element={<AppShell />}>
+                                        <Route path="/projects" element={<ProjectsPage />} />
+                                        <Route path="/settings" element={<SettingsPage />} />
+                                        <Route element={<RequirePlatformAdmin />}>
+                                            <Route
+                                                path="/admin/users"
+                                                element={<AdminUsersPage />}
+                                            />
+                                        </Route>
+                                        <Route
+                                            path="/projects/:projectId"
+                                            element={<ProjectLayout />}
+                                        >
+                                            <Route
+                                                index
+                                                element={<Navigate to="secrets" replace />}
+                                            />
+                                            <Route path="secrets" element={<SecretsPage />} />
+                                            <Route path="members" element={<MembersPage />} />
+                                            <Route
+                                                path="audit-log"
+                                                element={<ProjectAuditLogPage />}
+                                            />
+                                        </Route>
                                     </Route>
                                 </Route>
-                            </Route>
 
-                            {/* Status routes */}
-                            <Route
-                                path="/unauthorized"
-                                element={<StatusPage variant="unauthorized" />}
-                            />
-                            <Route path="*" element={<StatusPage variant="not-found" />} />
-                        </Routes>
-                    </ToastProvider>
-                </AuthProvider>
-            </ThemeProvider>
-        </BrowserRouter>
-    </QueryClientProvider>
+                                {/* Status routes */}
+                                <Route
+                                    path="/unauthorized"
+                                    element={<StatusPage variant="unauthorized" />}
+                                />
+                                <Route path="*" element={<StatusPage variant="not-found" />} />
+                            </Routes>
+                        </ToastProvider>
+                    </AuthProvider>
+                </ThemeProvider>
+            </BrowserRouter>
+        </QueryClientProvider>
     );
 }
 
