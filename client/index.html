@@ -1,9 +1,23 @@
 <!doctype html>
-<html lang="en" data-theme="coffee">
+<html lang="en" data-theme="default">
   <head>
     <meta charset="UTF-8" />
     <title>Raaz</title>
     <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('raaz_theme');
+          var valid = ['default', 'midnight', 'emerald', 'amethyst', 'coffee'];
+          var theme =
+            saved && valid.indexOf(saved) !== -1
+              ? saved === 'coffee'
+                ? 'default'
+                : saved
+              : 'default';
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {}
+      })();
+
       const savedTitle = window.history.state?.raazTitle;
       if (savedTitle?.pathname === window.location.pathname && typeof savedTitle.title === 'string') {
         document.title = savedTitle.title;

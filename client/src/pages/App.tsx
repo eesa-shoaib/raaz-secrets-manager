@@ -5,6 +5,7 @@ import { AppShell } from '../components/AppShell';
 import { RequireAuth, PublicOnly, RequirePlatformAdmin } from '../components/Guards';
 import { ToastProvider } from '../components/Toaster';
 import { AuthProvider } from '../context/AuthContext';
+import { ThemeProvider } from '../context/ThemeContext';
 import { queryClient } from '../lib/queryClient';
 import AdminUsersPage from './AdminUsersPage';
 import LoginPage from './LoginPage';
@@ -21,8 +22,9 @@ export function App() {
     return (
         <QueryClientProvider client={queryClient}>
             <BrowserRouter>
-                <AuthProvider>
-                    <ToastProvider>
+                <ThemeProvider>
+                    <AuthProvider>
+                        <ToastProvider>
                         <Routes>
                             {/* Route 1: redirect / -> /projects */}
                             <Route path="/" element={<Navigate to="/projects" replace />} />
@@ -59,8 +61,9 @@ export function App() {
                         </Routes>
                     </ToastProvider>
                 </AuthProvider>
-            </BrowserRouter>
-        </QueryClientProvider>
+            </ThemeProvider>
+        </BrowserRouter>
+    </QueryClientProvider>
     );
 }
 
