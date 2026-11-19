@@ -497,21 +497,21 @@ fixture transcribed from the permissions matrix.
 Trimmed as structural or stylistic, not functional.
 Reintroduce only if a real need appears — not speculatively.
 
-| Dropped                                                             | Reason                                      |
-| ------------------------------------------------------------------- | ------------------------------------------- |
-| Per-type badge components                                           | One `Badge` with a variant prop             |
-| Per-shape skeleton components                                       | One `Skeleton` with a shape prop            |
-| `PasswordInput`, `EnvironmentListEditor`, `UserLabel`, `TimeStamp`  | Formatting helpers, not components          |
-| `AdminMenu`, `UserMenu`                                             | Inline in `NavBar`                          |
-| `FullPageSpinner`, `FullPageError`, `CardSkeleton`, `TableSkeleton` | Collapsed into `FullPageState` / `Skeleton` |
-| `ProjectAdminOnlyHint` guard                                        | Inline where needed                         |
-| `ProjectTabs`, `AdminTabs`                                          | Collapsed into `TabNav`                                                                     |
-| Theme toggle (in navbar)                                            | Placed in `/settings` as a multi-palette theme selector with persistent state and previews  |
-| Cross-tab auth sync                                                 | Deferred (P2)                                                                               |
-| Visual regression testing                                           | Deferred (P2)                               |
-| Historical-environment filtering                                    | Deferred                                    |
-| Stacked-card mobile tables                                          | Horizontal scroll instead                   |
-| Reveal countdown UI                                                 | Live-region announcement at reveal only     |
+| Dropped                                                             | Reason                                                                                     |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Per-type badge components                                           | One `Badge` with a variant prop                                                            |
+| Per-shape skeleton components                                       | One `Skeleton` with a shape prop                                                           |
+| `PasswordInput`, `EnvironmentListEditor`, `UserLabel`, `TimeStamp`  | Formatting helpers, not components                                                         |
+| `AdminMenu`, `UserMenu`                                             | Inline in `NavBar`                                                                         |
+| `FullPageSpinner`, `FullPageError`, `CardSkeleton`, `TableSkeleton` | Collapsed into `FullPageState` / `Skeleton`                                                |
+| `ProjectAdminOnlyHint` guard                                        | Inline where needed                                                                        |
+| `ProjectTabs`, `AdminTabs`                                          | Collapsed into `TabNav`                                                                    |
+| Theme toggle (in navbar)                                            | Placed in `/settings` as a multi-palette theme selector with persistent state and previews |
+| Cross-tab auth sync                                                 | Deferred (P2)                                                                              |
+| Visual regression testing                                           | Deferred (P2)                                                                              |
+| Historical-environment filtering                                    | Deferred                                                                                   |
+| Stacked-card mobile tables                                          | Horizontal scroll instead                                                                  |
+| Reveal countdown UI                                                 | Live-region announcement at reveal only                                                    |
 
 ## 6. Build Order
 
