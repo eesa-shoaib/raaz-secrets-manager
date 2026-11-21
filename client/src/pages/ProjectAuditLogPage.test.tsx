@@ -41,6 +41,12 @@ describe('ProjectAuditLogPage', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         currentMockRole = 'projectAdmin';
+        HTMLDialogElement.prototype.showModal = function () {
+            this.setAttribute('open', '');
+        };
+        HTMLDialogElement.prototype.close = function () {
+            this.removeAttribute('open');
+        };
         mockExportAuditLog.mockResolvedValue('audit-log-proj-1.csv');
         mockUseProjectAuditLogPage.mockReturnValue({
             data: {
@@ -117,12 +123,28 @@ describe('ProjectAuditLogPage', () => {
         cleanup();
     });
 
-    it('renders Export CSV and Export JSON for projectAdmin and auditor passing active filters, and hides them for developer', async () => {
+    it('renders single Export button that opens modal with format and filter options for projectAdmin/auditor, and hides it for developer', async () => {
         renderAuditPage(
             '/projects/proj-1/audit?action=reveal&result=denied&environment=production',
         );
 
-        fireEvent.click(screen.getByRole('button', { name: /Export CSV/i }));
+        // Open Export Modal
+        fireEvent.click(screen.getByRole('button', { name: /^Export$/i }));
+        expect(screen.getByText('Export Audit Log')).toBeTruthy();
+
+        // Modal defaults to CSV and pre-fills active page filters
+        expect((screen.getByLabelText('Export action filter') as HTMLSelectElement).value).toBe(
+            'reveal',
+        );
+        expect((screen.getByLabelText('Export result filter') as HTMLSelectElement).value).toBe(
+            'denied',
+        );
+        expect(
+            (screen.getByLabelText('Export environment filter') as HTMLSelectElement).value,
+        ).toBe('production');
+
+        // Submit CSV export
+        fireEvent.click(screen.getByRole('button', { name: /Download CSV/i }));
         await waitFor(() => {
             expect(mockExportAuditLog).toHaveBeenCalledWith({
                 format: 'csv',
@@ -132,12 +154,19 @@ describe('ProjectAuditLogPage', () => {
             });
         });
 
-        fireEvent.click(screen.getByRole('button', { name: /Export JSON/i }));
+        // Re-open modal, switch to JSON and adjust filter inside modal
+        fireEvent.click(screen.getByRole('button', { name: /^Export$/i }));
+        fireEvent.click(screen.getByLabelText(/JSON \(\.json\)/i));
+        fireEvent.change(screen.getByLabelText('Export result filter'), {
+            target: { value: 'allowed' },
+        });
+        fireEvent.click(screen.getByRole('button', { name: /Download JSON/i }));
+
         await waitFor(() => {
             expect(mockExportAuditLog).toHaveBeenCalledWith({
                 format: 'json',
                 action: 'reveal',
-                result: 'denied',
+                result: 'allowed',
                 environment: 'production',
             });
         });
@@ -145,13 +174,11 @@ describe('ProjectAuditLogPage', () => {
         cleanup();
         currentMockRole = 'auditor';
         renderAuditPage();
-        expect(screen.getByRole('button', { name: /Export CSV/i })).toBeTruthy();
-        expect(screen.getByRole('button', { name: /Export JSON/i })).toBeTruthy();
+        expect(screen.getByRole('button', { name: /^Export$/i })).toBeTruthy();
 
         cleanup();
         currentMockRole = 'developer';
         renderAuditPage();
-        expect(screen.queryByRole('button', { name: /Export CSV/i })).toBeNull();
-        expect(screen.queryByRole('button', { name: /Export JSON/i })).toBeNull();
+        expect(screen.queryByRole('button', { name: /^Export$/i })).toBeNull();
     });
 });

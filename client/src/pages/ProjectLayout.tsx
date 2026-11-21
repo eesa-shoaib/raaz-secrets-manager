@@ -179,72 +179,77 @@ export function ProjectLayout() {
 
                 <aside
                     aria-label="Project information"
-                    className="min-w-0 w-full self-start rounded-3xl border border-base-300 bg-base-200 p-6 shadow-sm lg:mt-[3.75rem]"
+                    className="min-w-0 w-full self-start space-y-4 lg:mt-[3.75rem]"
                 >
-                    <div className="flex items-center justify-between gap-2">
-                        <p className="font-ui text-xs font-semibold uppercase tracking-wider text-base-content/60">
-                            Project
-                        </p>
-                        {canEditProject && (
-                            <button
-                                type="button"
-                                onClick={handleOpenEdit}
-                                aria-label="Edit project details"
-                                title="Edit project details"
-                                className="btn btn-ghost btn-xs btn-square rounded-lg text-base-content/70 hover:text-primary"
-                            >
-                                <svg
-                                    aria-hidden="true"
-                                    className="h-4 w-4"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
+                    <div className="rounded-3xl border border-base-300 bg-base-200 p-6 shadow-sm">
+                        <div className="flex items-center justify-between gap-2">
+                            <p className="font-ui text-xs font-semibold uppercase tracking-wider text-base-content/60">
+                                Project
+                            </p>
+                            {canEditProject && (
+                                <button
+                                    type="button"
+                                    onClick={handleOpenEdit}
+                                    aria-label="Edit project details"
+                                    title="Edit project details"
+                                    className="btn btn-ghost btn-xs btn-square rounded-lg text-base-content/70 hover:text-primary"
                                 >
-                                    <path d="M12 20h9" />
-                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                                </svg>
-                            </button>
-                        )}
-                    </div>
-                    <h1 className="mt-2 break-words font-heading text-xl font-bold text-base-content">
-                        {project.name}
-                    </h1>
-                    {project.description ? (
-                        <p className="mt-2 break-words whitespace-pre-wrap font-ui text-sm text-base-content/75">
-                            {project.description}
-                        </p>
-                    ) : (
-                        <p className="mt-2 font-ui text-sm italic text-base-content/45">
-                            No description provided.
-                        </p>
-                    )}
-                    <dl className="mt-5 space-y-3 border-t border-base-300 pt-4 text-sm">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                            <dt className="text-base-content/70">Role</dt>
-                            <dd className="font-semibold text-base-content capitalize">
-                                {project.role === 'projectAdmin' ? 'Project Admin' : project.role}
-                            </dd>
+                                    <svg
+                                        aria-hidden="true"
+                                        className="h-4 w-4"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    >
+                                        <path d="M12 20h9" />
+                                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                                    </svg>
+                                </button>
+                            )}
                         </div>
-                        {project.memberCount !== undefined && (
+                        <h1 className="mt-2 break-words font-heading text-xl font-bold text-base-content">
+                            {project.name}
+                        </h1>
+                        {project.description ? (
+                            <p className="mt-2 break-words whitespace-pre-wrap font-ui text-sm text-base-content/75">
+                                {project.description}
+                            </p>
+                        ) : (
+                            <p className="mt-2 font-ui text-sm italic text-base-content/45">
+                                No description provided.
+                            </p>
+                        )}
+                        <dl className="mt-5 space-y-3 border-t border-base-300 pt-4 text-sm">
                             <div className="flex flex-wrap items-center justify-between gap-2">
-                                <dt className="text-base-content/70">Members</dt>
-                                <dd className="font-semibold text-base-content">
-                                    {project.memberCount}
+                                <dt className="text-base-content/70">Role</dt>
+                                <dd className="font-semibold text-base-content capitalize">
+                                    {project.role === 'projectAdmin'
+                                        ? 'Project Admin'
+                                        : project.role}
                                 </dd>
                             </div>
-                        )}
-                        {project.status === 'archived' && (
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                                <dt className="text-base-content/70">Status</dt>
-                                <dd>
-                                    <Badge variant="projectStatus" value={project.status} />
-                                </dd>
-                            </div>
-                        )}
-                    </dl>
+                            {project.memberCount !== undefined && (
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                    <dt className="text-base-content/70">Members</dt>
+                                    <dd className="font-semibold text-base-content">
+                                        {project.memberCount}
+                                    </dd>
+                                </div>
+                            )}
+                            {project.status === 'archived' && (
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                    <dt className="text-base-content/70">Status</dt>
+                                    <dd>
+                                        <Badge variant="projectStatus" value={project.status} />
+                                    </dd>
+                                </div>
+                            )}
+                        </dl>
+                    </div>
+                    <div id="project-sidebar-env-actions" />
                 </aside>
             </div>
 

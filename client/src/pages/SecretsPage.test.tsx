@@ -297,4 +297,28 @@ describe('SecretsPage', () => {
             expect(mockExportReset).toHaveBeenCalled();
         });
     });
+
+    it('renders Generate .env.example, Import .env, and Export .env inside the right-side project sidebar target when present', async () => {
+        const sidebarHost = document.createElement('aside');
+        sidebarHost.setAttribute('aria-label', 'Project information');
+        const portalTarget = document.createElement('div');
+        portalTarget.id = 'project-sidebar-env-actions';
+        sidebarHost.appendChild(portalTarget);
+        document.body.appendChild(sidebarHost);
+
+        try {
+            renderSecretsPage('/projects/proj-1/secrets?environment=development');
+
+            await waitFor(() => {
+                expect(
+                    portalTarget.querySelector('[data-testid="env-actions-sidebar-card"]'),
+                ).toBeTruthy();
+            });
+            expect(portalTarget.textContent).toContain('Generate .env.example');
+            expect(portalTarget.textContent).toContain('Import .env');
+            expect(portalTarget.textContent).toContain('Export .env');
+        } finally {
+            sidebarHost.remove();
+        }
+    });
 });

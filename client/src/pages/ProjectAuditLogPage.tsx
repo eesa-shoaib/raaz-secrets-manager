@@ -10,6 +10,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { Badge } from '../components/Badge';
 import { EmptyState, ErrorState } from '../components/FullPageState';
 import { Skeleton } from '../components/LoadingSkeleton';
+import { Modal } from '../components/Modal';
 import { PaginationControls } from '../components/PaginationControls';
 import { useToast } from '../components/Toaster';
 import { UserAvatar } from '../components/UserAvatar';
@@ -87,11 +88,19 @@ export function ProjectAuditLogPage() {
     const { can } = usePermissions(projectId);
     const canExport = can('audit.export') === 'enabled';
     const exportMutation = useExportProjectAuditLog(projectId!);
-    const [exportingFormat, setExportingFormat] = useState<AuditExportFormat | null>(null);
 
     const actionFilter = (searchParams.get('action') as AuditAction) || undefined;
     const resultFilter = (searchParams.get('result') as AuditResult) || undefined;
     const environmentFilter = (searchParams.get('environment') as ProjectEnvironment) || undefined;
+
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+    const [exportFormat, setExportFormat] = useState<AuditExportFormat>('csv');
+    const [exportActionFilter, setExportActionFilter] = useState<AuditAction | ''>('');
+    const [exportResultFilter, setExportResultFilter] = useState<AuditResult | ''>('');
+    const [exportEnvironmentFilter, setExportEnvironmentFilter] = useState<ProjectEnvironment | ''>(
+        '',
+    );
+    const [exportError, setExportError] = useState<string | null>(null);
 
     const [cursor, setCursor] = useState<string | null>(null);
     const [cursorHistory, setCursorHistory] = useState<(string | null)[]>([]);
@@ -137,25 +146,40 @@ export function ProjectAuditLogPage() {
         setCursorHistory([]);
     };
 
-    const handleExport = async (format: AuditExportFormat) => {
+    const handleOpenExportModal = () => {
+        setExportFormat('csv');
+        setExportActionFilter(actionFilter || '');
+        setExportResultFilter(resultFilter || '');
+        setExportEnvironmentFilter(environmentFilter || '');
+        setExportError(null);
+        setIsExportModalOpen(true);
+    };
+
+    const handleCloseExportModal = () => {
         if (exportMutation.isPending) return;
-        setExportingFormat(format);
+        setIsExportModalOpen(false);
+        setExportError(null);
+    };
+
+    const handleSubmitExport = async (event: React.FormEvent) => {
+        event.preventDefault();
+        if (exportMutation.isPending) return;
+        setExportError(null);
         try {
             const filename = await exportMutation.mutateAsync({
-                format,
-                action: actionFilter,
-                result: resultFilter,
-                environment: environmentFilter,
+                format: exportFormat,
+                action: exportActionFilter || undefined,
+                result: exportResultFilter || undefined,
+                environment: exportEnvironmentFilter || undefined,
             });
             toast.success(`Exported ${filename}`);
+            setIsExportModalOpen(false);
         } catch (err: unknown) {
-            toast.error(
-                isApiError(err)
-                    ? err.message || 'Failed to export audit log'
-                    : 'Something went wrong — could not export audit log',
-            );
-        } finally {
-            setExportingFormat(null);
+            const message = isApiError(err)
+                ? err.message || 'Failed to export audit log'
+                : 'Something went wrong — could not export audit log';
+            setExportError(message);
+            toast.error(message);
         }
     };
 
@@ -256,10 +280,10 @@ export function ProjectAuditLogPage() {
                         <button
                             type="button"
                             disabled={exportMutation.isPending}
-                            onClick={() => void handleExport('csv')}
+                            onClick={handleOpenExportModal}
                             className="btn btn-ghost btn-sm h-9 px-3 border border-base-300 rounded-xl font-semibold text-xs flex items-center gap-1.5 disabled:opacity-40"
                         >
-                            {exportingFormat === 'csv' ? (
+                            {exportMutation.isPending ? (
                                 <span className="loading loading-spinner loading-xs" />
                             ) : (
                                 <svg
@@ -277,33 +301,7 @@ export function ProjectAuditLogPage() {
                                     <line x1="12" y1="15" x2="12" y2="3" />
                                 </svg>
                             )}
-                            Export CSV
-                        </button>
-                        <button
-                            type="button"
-                            disabled={exportMutation.isPending}
-                            onClick={() => void handleExport('json')}
-                            className="btn btn-ghost btn-sm h-9 px-3 border border-base-300 rounded-xl font-semibold text-xs flex items-center gap-1.5 disabled:opacity-40"
-                        >
-                            {exportingFormat === 'json' ? (
-                                <span className="loading loading-spinner loading-xs" />
-                            ) : (
-                                <svg
-                                    aria-hidden="true"
-                                    className="h-4 w-4"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                >
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                    <polyline points="7 10 12 15 17 10" />
-                                    <line x1="12" y1="15" x2="12" y2="3" />
-                                </svg>
-                            )}
-                            Export JSON
+                            Export
                         </button>
                     </div>
                 )}
@@ -533,6 +531,225 @@ export function ProjectAuditLogPage() {
                         ) : undefined
                     }
                 />
+            )}
+
+            {/* Export Audit Log Modal */}
+            {canExport && (
+                <Modal
+                    isOpen={isExportModalOpen}
+                    onClose={handleCloseExportModal}
+                    title="Export Audit Log"
+                    maxWidth="lg"
+                >
+                    <form onSubmit={handleSubmitExport} className="space-y-4" noValidate>
+                        <p className="text-sm font-ui text-base-content/75">
+                            Choose a file format and filter scope to export matching project audit
+                            log records (up to 5,000 entries, newest first). Secret values are never
+                            stored in or exported from the audit log.
+                        </p>
+
+                        {exportError && (
+                            <div
+                                role="alert"
+                                className="alert alert-error text-sm rounded-xl py-2 px-3 text-error-content font-medium"
+                            >
+                                <span>{exportError}</span>
+                            </div>
+                        )}
+
+                        {/* Format Selection */}
+                        <fieldset className="space-y-2">
+                            <legend className="text-xs font-heading font-semibold uppercase tracking-wider text-base-content/70">
+                                Export Format
+                            </legend>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <label
+                                    className={`flex items-start gap-3 rounded-2xl border p-3.5 cursor-pointer transition-colors ${
+                                        exportFormat === 'csv'
+                                            ? 'border-primary bg-primary/10'
+                                            : 'border-base-300 bg-base-300/40 hover:border-base-content/30'
+                                    }`}
+                                >
+                                    <input
+                                        type="radio"
+                                        name="auditExportFormat"
+                                        value="csv"
+                                        checked={exportFormat === 'csv'}
+                                        onChange={() => setExportFormat('csv')}
+                                        disabled={exportMutation.isPending}
+                                        className="radio radio-primary radio-sm mt-0.5"
+                                    />
+                                    <div className="text-xs font-ui">
+                                        <span className="font-semibold text-base-content block">
+                                            CSV (.csv)
+                                        </span>
+                                        <span className="text-base-content/65">
+                                            Spreadsheet-ready rows sanitized against formula
+                                            injection
+                                        </span>
+                                    </div>
+                                </label>
+
+                                <label
+                                    className={`flex items-start gap-3 rounded-2xl border p-3.5 cursor-pointer transition-colors ${
+                                        exportFormat === 'json'
+                                            ? 'border-primary bg-primary/10'
+                                            : 'border-base-300 bg-base-300/40 hover:border-base-content/30'
+                                    }`}
+                                >
+                                    <input
+                                        type="radio"
+                                        name="auditExportFormat"
+                                        value="json"
+                                        checked={exportFormat === 'json'}
+                                        onChange={() => setExportFormat('json')}
+                                        disabled={exportMutation.isPending}
+                                        className="radio radio-primary radio-sm mt-0.5"
+                                    />
+                                    <div className="text-xs font-ui">
+                                        <span className="font-semibold text-base-content block">
+                                            JSON (.json)
+                                        </span>
+                                        <span className="text-base-content/65">
+                                            Structured metadata array for SIEM or compliance scripts
+                                        </span>
+                                    </div>
+                                </label>
+                            </div>
+                        </fieldset>
+
+                        {/* Export Filter Options */}
+                        <div className="space-y-3 rounded-2xl border border-base-300 bg-base-300/30 p-4">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-heading font-semibold uppercase tracking-wider text-base-content/70">
+                                    Filter Options
+                                </span>
+                                {(exportActionFilter ||
+                                    exportResultFilter ||
+                                    exportEnvironmentFilter) && (
+                                    <button
+                                        type="button"
+                                        disabled={exportMutation.isPending}
+                                        onClick={() => {
+                                            setExportActionFilter('');
+                                            setExportResultFilter('');
+                                            setExportEnvironmentFilter('');
+                                        }}
+                                        className="text-xs font-ui text-primary hover:underline"
+                                    >
+                                        Reset to all entries
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div className="form-control">
+                                    <label
+                                        htmlFor="export-audit-action"
+                                        className="label py-1 px-0 text-xs font-heading font-medium text-base-content/70"
+                                    >
+                                        Action
+                                    </label>
+                                    <select
+                                        id="export-audit-action"
+                                        aria-label="Export action filter"
+                                        value={exportActionFilter}
+                                        disabled={exportMutation.isPending}
+                                        onChange={(e) =>
+                                            setExportActionFilter(
+                                                e.target.value as AuditAction | '',
+                                            )
+                                        }
+                                        className="select select-bordered select-sm h-9 w-full bg-base-300 rounded-xl text-xs font-ui"
+                                    >
+                                        <option value="">All Actions</option>
+                                        {PROJECT_ACTIONS.map((act) => (
+                                            <option key={act.value} value={act.value}>
+                                                {act.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="form-control">
+                                    <label
+                                        htmlFor="export-audit-result"
+                                        className="label py-1 px-0 text-xs font-heading font-medium text-base-content/70"
+                                    >
+                                        Result
+                                    </label>
+                                    <select
+                                        id="export-audit-result"
+                                        aria-label="Export result filter"
+                                        value={exportResultFilter}
+                                        disabled={exportMutation.isPending}
+                                        onChange={(e) =>
+                                            setExportResultFilter(
+                                                e.target.value as AuditResult | '',
+                                            )
+                                        }
+                                        className="select select-bordered select-sm h-9 w-full bg-base-300 rounded-xl text-xs font-ui"
+                                    >
+                                        <option value="">All Results</option>
+                                        <option value="allowed">Allowed</option>
+                                        <option value="denied">Denied</option>
+                                    </select>
+                                </div>
+
+                                <div className="form-control">
+                                    <label
+                                        htmlFor="export-audit-environment"
+                                        className="label py-1 px-0 text-xs font-heading font-medium text-base-content/70"
+                                    >
+                                        Environment
+                                    </label>
+                                    <select
+                                        id="export-audit-environment"
+                                        aria-label="Export environment filter"
+                                        value={exportEnvironmentFilter}
+                                        disabled={exportMutation.isPending}
+                                        onChange={(e) =>
+                                            setExportEnvironmentFilter(
+                                                e.target.value as ProjectEnvironment | '',
+                                            )
+                                        }
+                                        className="select select-bordered select-sm h-9 w-full bg-base-300 rounded-xl text-xs font-ui"
+                                    >
+                                        <option value="">All Environments</option>
+                                        <option value="development">Development</option>
+                                        <option value="staging">Staging</option>
+                                        <option value="production">Production</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-end gap-3 pt-4 border-t border-base-300">
+                            <button
+                                type="button"
+                                onClick={handleCloseExportModal}
+                                disabled={exportMutation.isPending}
+                                className="btn btn-ghost btn-sm h-9 rounded-xl text-sm"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={exportMutation.isPending}
+                                className="btn btn-primary btn-sm h-9 px-4 text-primary-content font-semibold rounded-xl text-sm flex items-center gap-2 disabled:opacity-40"
+                            >
+                                {exportMutation.isPending ? (
+                                    <>
+                                        <span className="loading loading-spinner loading-xs" />
+                                        Exporting...
+                                    </>
+                                ) : (
+                                    `Download ${exportFormat.toUpperCase()}`
+                                )}
+                            </button>
+                        </div>
+                    </form>
+                </Modal>
             )}
         </div>
     );

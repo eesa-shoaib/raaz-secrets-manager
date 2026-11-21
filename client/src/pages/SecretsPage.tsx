@@ -10,6 +10,7 @@ import {
     type SecretResponse,
 } from '@raaz/shared-schemas';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { ConfirmDialog } from '../components/ConfirmDialog';
@@ -164,6 +165,11 @@ export function SecretsPage() {
 
     const [isExportConfirmOpen, setIsExportConfirmOpen] = useState(false);
     const [exportError, setExportError] = useState<string | null>(null);
+    const [sidebarTarget, setSidebarTarget] = useState<HTMLElement | null>(null);
+
+    useEffect(() => {
+        setSidebarTarget(document.getElementById('project-sidebar-env-actions'));
+    }, []);
 
     const parsedImport = useMemo(() => parseEnvContent(importText), [importText]);
 
@@ -464,6 +470,109 @@ export function SecretsPage() {
     const disabledReason =
         'Developers can create and edit secrets only in the development environment.';
 
+    const hasEnvActionButtons = canEnvExample || canImport !== 'hidden' || canExport;
+
+    const envActionsPanel = hasEnvActionButtons ? (
+        <div
+            data-testid="env-actions-sidebar-card"
+            className="rounded-3xl border border-base-300 bg-base-200 p-5 shadow-sm space-y-3"
+        >
+            <div className="flex items-center justify-between gap-2">
+                <p className="font-ui text-xs font-semibold uppercase tracking-wider text-base-content/60">
+                    .env Actions
+                </p>
+                <span className="font-mono text-[11px] font-semibold uppercase text-base-content/60">
+                    {currentEnv}
+                </span>
+            </div>
+            <div className="flex flex-col gap-2">
+                {canEnvExample && (
+                    <button
+                        type="button"
+                        onClick={handleOpenEnvExample}
+                        className="btn btn-ghost btn-sm h-9 w-full justify-start px-3 border border-base-300 rounded-xl font-semibold flex items-center gap-2 text-xs"
+                    >
+                        <svg
+                            aria-hidden="true"
+                            className="h-4 w-4 shrink-0"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        >
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                            <line x1="16" y1="13" x2="8" y2="13" />
+                            <line x1="16" y1="17" x2="8" y2="17" />
+                        </svg>
+                        Generate .env.example
+                    </button>
+                )}
+                {canImport !== 'hidden' && (
+                    <div
+                        className={
+                            canImport === 'disabled' ? 'tooltip tooltip-left w-full' : 'w-full'
+                        }
+                        data-tip={canImport === 'disabled' ? disabledReason : undefined}
+                    >
+                        <button
+                            type="button"
+                            disabled={canImport === 'disabled'}
+                            onClick={handleOpenImport}
+                            className="btn btn-ghost btn-sm h-9 w-full justify-start px-3 border border-base-300 rounded-xl font-semibold flex items-center gap-2 text-xs disabled:opacity-40"
+                        >
+                            <svg
+                                aria-hidden="true"
+                                className="h-4 w-4 shrink-0"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            >
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="17 8 12 3 7 8" />
+                                <line x1="12" y1="3" x2="12" y2="15" />
+                            </svg>
+                            Import .env
+                        </button>
+                    </div>
+                )}
+                {canExport && (
+                    <button
+                        type="button"
+                        disabled={exportMutation.isPending}
+                        onClick={handleClickExport}
+                        className="btn btn-ghost btn-sm h-9 w-full justify-start px-3 border border-base-300 rounded-xl font-semibold flex items-center gap-2 text-xs disabled:opacity-40"
+                    >
+                        {exportMutation.isPending ? (
+                            <span className="loading loading-spinner loading-xs" />
+                        ) : (
+                            <svg
+                                aria-hidden="true"
+                                className="h-4 w-4 shrink-0"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            >
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="7 10 12 15 17 10" />
+                                <line x1="12" y1="15" x2="12" y2="3" />
+                            </svg>
+                        )}
+                        Export .env
+                    </button>
+                )}
+            </div>
+        </div>
+    ) : null;
+
     return (
         <div className="space-y-6">
             {/* Top Bar: Environment Tabs + Search + New Secret Action */}
@@ -481,87 +590,6 @@ export function SecretsPage() {
                         ariaLabel="Search secret keys"
                         className="w-full sm:w-52"
                     />
-                    {canEnvExample && (
-                        <button
-                            type="button"
-                            onClick={handleOpenEnvExample}
-                            className="btn btn-ghost btn-sm h-9 px-3 border border-base-300 rounded-xl font-semibold flex items-center gap-1.5 text-xs"
-                        >
-                            <svg
-                                aria-hidden="true"
-                                className="h-4 w-4"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                            >
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                <polyline points="14 2 14 8 20 8" />
-                                <line x1="16" y1="13" x2="8" y2="13" />
-                                <line x1="16" y1="17" x2="8" y2="17" />
-                            </svg>
-                            Generate .env.example
-                        </button>
-                    )}
-                    {canImport !== 'hidden' && (
-                        <div
-                            className={canImport === 'disabled' ? 'tooltip tooltip-left' : ''}
-                            data-tip={canImport === 'disabled' ? disabledReason : undefined}
-                        >
-                            <button
-                                type="button"
-                                disabled={canImport === 'disabled'}
-                                onClick={handleOpenImport}
-                                className="btn btn-ghost btn-sm h-9 px-3 border border-base-300 rounded-xl font-semibold flex items-center gap-1.5 text-xs disabled:opacity-40"
-                            >
-                                <svg
-                                    aria-hidden="true"
-                                    className="h-4 w-4"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                >
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                    <polyline points="17 8 12 3 7 8" />
-                                    <line x1="12" y1="3" x2="12" y2="15" />
-                                </svg>
-                                Import .env
-                            </button>
-                        </div>
-                    )}
-                    {canExport && (
-                        <button
-                            type="button"
-                            disabled={exportMutation.isPending}
-                            onClick={handleClickExport}
-                            className="btn btn-ghost btn-sm h-9 px-3 border border-base-300 rounded-xl font-semibold flex items-center gap-1.5 text-xs disabled:opacity-40"
-                        >
-                            {exportMutation.isPending ? (
-                                <span className="loading loading-spinner loading-xs" />
-                            ) : (
-                                <svg
-                                    aria-hidden="true"
-                                    className="h-4 w-4"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                >
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                    <polyline points="7 10 12 15 17 10" />
-                                    <line x1="12" y1="15" x2="12" y2="3" />
-                                </svg>
-                            )}
-                            Export .env
-                        </button>
-                    )}
                     {canCreate !== 'hidden' && (
                         <div
                             className={canCreate === 'disabled' ? 'tooltip tooltip-left' : ''}
@@ -593,6 +621,10 @@ export function SecretsPage() {
                     )}
                 </div>
             </div>
+
+            {sidebarTarget && envActionsPanel
+                ? createPortal(envActionsPanel, sidebarTarget)
+                : envActionsPanel}
 
             {/* Secrets Table panel keyed by currentEnv to guarantee remount & unmount */}
             <div key={currentEnv} className="min-h-[32rem]">

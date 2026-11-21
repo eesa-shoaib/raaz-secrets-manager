@@ -272,7 +272,7 @@ noted, not omitted.
 
 - **Tabs:** Secrets, Members, Audit log (all members).
 
-- **Layout:** full-width `TabNav` above a 2-column grid (no inner inset or horizontal scrollbar); routed content occupies the main column while a right-side `Project information` card aligns vertically with the table/key header below page controls and displays the project name, `description`, caller `role`, total `memberCount`, optional archived status, and an icon button (Project Admin only) opening the Edit Project Details modal. On smaller screens, the columns stack.
+- **Layout:** full-width `TabNav` above a 2-column grid (no inner inset or horizontal scrollbar); routed content occupies the main column while a right-side `Project information` column aligns vertically with the table/key header below page controls and displays the project name, `description`, caller `role`, total `memberCount`, optional archived status, and an icon button (Project Admin only) opening the Edit Project Details modal. When viewing the Secrets tab, the `.env` action controls (**Generate `.env.example`**, **Import `.env`**, and **Export `.env`**) are rendered on the right side directly under the project description/information panel. On smaller screens, the columns stack.
 
 - **Back:** an inline back control returns to the previous in-app history entry; when opened directly, it returns to `/projects`. The project header does not display the database ID.
 
@@ -382,9 +382,9 @@ Invariants (correctness properties, not features — see §9):
 
 **Team-visible transparency & compliance export. Stories 3, 4, 6.**
 
-- **Data:** `useProjectAuditLogPage` — `{ action, result, environment, cursor, limit: 25 }` from the URL and cursor pagination. Newest first. Header includes **Export CSV** and **Export JSON** controls (gated via `usePermissions` for `projectAdmin` and `auditor`, hidden for `developer`) passing the currently selected filters to `GET /api/projects/:projectId/audit-log/export`.
+- **Data:** `useProjectAuditLogPage` — `{ action, result, environment, cursor, limit: 25 }` from the URL and cursor pagination. Newest first. Header includes a single **Export** control (gated via `usePermissions` for `projectAdmin` and `auditor`, hidden for `developer`) that opens an **Export Audit Log** modal where the user can choose the export format (**CSV** or **JSON**) and refine or confirm the export filters (`action`, `result`, `environment`) before downloading from `GET /api/projects/:projectId/audit-log/export`.
 
-- **Widgets:** `AuditLogTable`, `Skeleton`, `ErrorState`, `EmptyState`.
+- **Widgets:** `AuditLogTable`, `Modal`, `Skeleton`, `ErrorState`, `EmptyState`.
 
 - **Filters:** action (12 project-scoped actions), result (all / allowed / denied), environment (project's environments; helper text "Only secret actions have an environment.").
 
