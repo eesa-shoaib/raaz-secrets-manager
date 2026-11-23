@@ -477,7 +477,7 @@ promise.
   Settings have no shared enclosing panel: the 15rem desktop sidebar uses the
   project details column's rounded `base-200` card, border, padding, and subtle
   shadow, separated from the content by a clear gap. Selected navigation uses
-  the existing button texture, a darker fill, and bold text, without a colored
+  the existing button texture, a darker fill, and bold primary-colored text, without a colored
   edge or selected border. Fields retain a darker surface.
   The picture uses the existing upload and Remove Photo controls with validation.
 - **Sections:**

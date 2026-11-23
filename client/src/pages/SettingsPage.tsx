@@ -301,7 +301,7 @@ export function SettingsPage() {
                             onClick={() => setSection(item.id)}
                             aria-current={section === item.id ? 'page' : undefined}
                             aria-controls="settings-content"
-                            className={`flex items-center justify-center gap-1.5 rounded-lg border border-transparent px-2 py-2 text-xs font-ui transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:gap-2 sm:px-3 sm:text-sm md:justify-start ${section === item.id ? 'button-textured bg-base-300 font-semibold text-base-content' : 'text-base-content/80 hover:bg-base-300/60 hover:text-base-content'}`}
+                            className={`flex items-center justify-center gap-1.5 rounded-lg border border-transparent px-2 py-2 text-xs font-ui transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:gap-2 sm:px-3 sm:text-sm md:justify-start ${section === item.id ? 'button-textured bg-base-300 font-semibold text-primary' : 'text-base-content/80 hover:bg-base-300/60 hover:text-base-content'}`}
                         >
                             <svg
                                 aria-hidden="true"
