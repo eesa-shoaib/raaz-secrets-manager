@@ -4,6 +4,8 @@ declare global {
             user?: {
                 id: string;
                 email: string;
+                hasPassword?: boolean;
+                oauthProvider?: 'google' | 'github' | null;
                 username?: string | null;
                 hasAvatar?: boolean;
                 avatarUpdatedAt?: Date | null;

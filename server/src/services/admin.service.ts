@@ -13,6 +13,8 @@ import { writeAuditEntry } from './audit.service.js';
 function publicUser(user: {
     _id: mongoose.Types.ObjectId;
     email: string;
+    passwordEnabled?: boolean;
+    oauthProvider?: 'google' | 'github' | null;
     username?: string | null;
     hasAvatar?: boolean;
     avatarUpdatedAt?: Date | null;
@@ -24,6 +26,8 @@ function publicUser(user: {
     return publicUserSchema.parse({
         id: user._id.toString(),
         email: user.email,
+        hasPassword: user.passwordEnabled !== false,
+        oauthProvider: user.oauthProvider ?? null,
         username: user.username ?? null,
         hasAvatar: Boolean(user.hasAvatar),
         avatarUpdatedAt: user.avatarUpdatedAt ?? null,
