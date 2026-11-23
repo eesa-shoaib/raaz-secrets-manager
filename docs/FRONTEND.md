@@ -768,7 +768,8 @@ Use existing PaginationControls and field/error patterns; no extra shared widget
 
 Account settings shows repository connection status/login, Connect/Reconnect,
 Manage GitHub access, and confirmed Disconnect; this is independent of sign-in.
-Project details shows its canonical source link beside the description/member count.
+Project details shows a themed GitHub icon linking to its canonical source
+repository beside the description/member count, with an accessible repository label.
 Only copy metadata once. GitHub failures never trigger Raaz's expired-session flow
 unless Raaz itself returns 401. Query keys use `['github', 'connection']`, installations
 and repository keys include account/page/search. Mutations never retry. Repository

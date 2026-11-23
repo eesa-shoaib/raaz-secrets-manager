@@ -3,6 +3,7 @@ import { updateProjectSchema, type UpdateProjectInput } from '@raaz/shared-schem
 import React, { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useParams, Outlet, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import githubMark from '../assets/github-mark.svg';
 import { Badge } from '../components/Badge';
 import { FormField } from '../components/FormField';
 import { ErrorState } from '../components/FullPageState';
@@ -228,9 +229,18 @@ export function ProjectLayout() {
                                 href={project.githubRepository.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="mt-3 block break-all text-sm text-primary hover:underline"
+                                aria-label={`Open ${project.githubRepository.owner}/${project.githubRepository.name} on GitHub`}
+                                title="Open repository on GitHub"
+                                className="btn btn-primary btn-sm btn-square mt-3 rounded-lg"
                             >
-                                {project.githubRepository.owner}/{project.githubRepository.name}
+                                <span
+                                    aria-hidden="true"
+                                    className="h-5 w-5 bg-current [mask-size:contain] [mask-repeat:no-repeat] [mask-position:center]"
+                                    style={{
+                                        maskImage: `url(${githubMark})`,
+                                        WebkitMaskImage: `url(${githubMark})`,
+                                    }}
+                                />
                             </a>
                         )}
                         <dl className="mt-5 space-y-3 border-t border-base-300 pt-4 text-sm">
