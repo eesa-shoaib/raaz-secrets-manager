@@ -5,7 +5,10 @@ import { AppError } from '../utils/app-error.js';
 
 export const notFoundHandler: RequestHandler = (req, res) => {
     res.status(404).json({
-        error: { code: 'NOT_FOUND', message: `Route ${req.method} ${req.originalUrl} not found` },
+        error: {
+            code: 'NOT_FOUND',
+            message: `Route ${req.method} ${req.originalUrl.split('?')[0]} not found`,
+        },
     });
 };
 
