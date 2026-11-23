@@ -395,45 +395,67 @@ export function SettingsPage() {
                                 <h3 className="text-sm font-medium text-base-content">
                                     Profile picture
                                 </h3>
-                                <UserAvatar
-                                    userId={user.id}
-                                    email={user.email}
-                                    username={user.username}
-                                    hasAvatar={user.hasAvatar}
-                                    avatarUpdatedAt={user.avatarUpdatedAt}
-                                    size="lg"
-                                    className="!h-24 !w-24 !text-3xl"
-                                />
-                                <div className="flex flex-wrap gap-2">
-                                    <label
-                                        className={`btn btn-sm h-8 min-h-8 rounded-lg border-base-300 bg-base-200 px-3 font-medium text-base-content hover:bg-base-300 ${isAvatarBusy ? 'btn-disabled' : ''}`}
+                                <div className="group relative w-fit" aria-busy={isAvatarBusy}>
+                                    <UserAvatar
+                                        userId={user.id}
+                                        email={user.email}
+                                        username={user.username}
+                                        hasAvatar={user.hasAvatar}
+                                        avatarUpdatedAt={user.avatarUpdatedAt}
+                                        size="lg"
+                                        className="!h-24 !w-24 !text-3xl"
+                                    />
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept="image/png,image/jpeg,image/webp"
+                                        onChange={handleAvatarChange}
+                                        disabled={isAvatarBusy}
+                                        aria-label="Upload profile photo"
+                                        className="hidden"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => fileInputRef.current?.click()}
+                                        disabled={isAvatarBusy}
+                                        aria-label="Edit profile picture"
+                                        aria-describedby="settings-avatar-limits"
+                                        title="Edit profile picture"
+                                        className={`absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border border-base-content/25 bg-base-300 text-base-content shadow-md transition-opacity hover:text-primary group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary disabled:cursor-wait [@media(hover:none)]:opacity-100 ${isAvatarBusy ? 'opacity-100' : 'opacity-0'}`}
                                     >
-                                        {uploadAvatarMutation.isPending
-                                            ? 'Uploading...'
-                                            : 'Change photo'}
-                                        <input
-                                            ref={fileInputRef}
-                                            type="file"
-                                            accept="image/png,image/jpeg,image/webp"
-                                            onChange={handleAvatarChange}
-                                            disabled={isAvatarBusy}
-                                            aria-label="Upload profile photo"
-                                            className="sr-only"
-                                        />
-                                    </label>
-                                    {user.hasAvatar && (
-                                        <button
-                                            type="button"
-                                            onClick={handleRemoveAvatar}
-                                            disabled={isAvatarBusy}
-                                            className="btn btn-ghost btn-sm h-8 min-h-8 rounded-lg px-2 text-base-content/60"
-                                        >
-                                            {deleteAvatarMutation.isPending
-                                                ? 'Removing...'
-                                                : 'Remove Photo'}
-                                        </button>
-                                    )}
+                                        {uploadAvatarMutation.isPending ? (
+                                            <span
+                                                aria-hidden="true"
+                                                className="loading loading-spinner loading-xs"
+                                            />
+                                        ) : (
+                                            <svg
+                                                aria-hidden="true"
+                                                className="h-4 w-4"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="1.8"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                            >
+                                                <path d="m16 4 4 4M4 20l4-1L21 6a2.1 2.1 0 0 0-3-3L5 16l-1 4Z" />
+                                            </svg>
+                                        )}
+                                    </button>
                                 </div>
+                                {user.hasAvatar && (
+                                    <button
+                                        type="button"
+                                        onClick={handleRemoveAvatar}
+                                        disabled={isAvatarBusy}
+                                        className="btn btn-ghost btn-sm h-8 min-h-8 rounded-lg px-2 text-base-content/80"
+                                    >
+                                        {deleteAvatarMutation.isPending
+                                            ? 'Removing...'
+                                            : 'Remove Photo'}
+                                    </button>
+                                )}
                                 <p
                                     id="settings-avatar-limits"
                                     className="text-xs text-base-content/70"

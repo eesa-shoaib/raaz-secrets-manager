@@ -172,6 +172,10 @@ describe('SettingsPage', () => {
         });
 
         const fileInput = screen.getByLabelText('Upload profile photo');
+        const openFilePicker = vi.spyOn(fileInput as HTMLInputElement, 'click');
+        fireEvent.click(screen.getByRole('button', { name: 'Edit profile picture' }));
+        expect(openFilePicker).toHaveBeenCalledOnce();
+        expect(screen.queryByText('Change photo')).toBeNull();
         const svgFile = new File(['<svg></svg>'], 'bad.svg', { type: 'image/svg+xml' });
         fireEvent.change(fileInput, { target: { files: [svgFile] } });
 

@@ -479,7 +479,9 @@ promise.
   shadow, separated from the content by a clear gap. Selected navigation uses
   the existing button texture, a darker fill, and bold primary-colored text, without a colored
   edge or selected border. Fields retain a darker surface.
-  The picture uses the existing upload and Remove Photo controls with validation.
+  The picture's edit icon appears on hover or keyboard focus and
+  remains visible on touch devices; it opens the existing file picker. Keep
+  upload validation, pending states, and the separate Remove Photo action.
 - **Sections:**
     1. **Profile:** read-only email (`me.email`), optional `username` input (`3–30` lowercase `[a-z0-9_-]`, or clear to unset) saving via `PATCH /api/account/profile`, and profile picture controls (`UserAvatar` preview, Upload/Replace PNG/JPEG/WebP ≤ 2 MiB via `PUT /api/account/avatar`, Remove via `DELETE /api/account/avatar`).
     2. **Appearance:** compact theme options for 4 curated color palettes (`default`, `midnight`, `emerald`, `amethyst`), showing a name, palette swatches, and selected check mark. Equal-sized options fill the content width: four columns on wide screens, two on medium screens, and one on small screens. Selection takes effect immediately across all application surfaces and persists in `localStorage`.
