@@ -486,3 +486,20 @@ never contain a decrypted value.
 
 See DATA_MODEL.md for full entity fields/constraints and API.md for the
 complete endpoint contract.
+
+## Google/GitHub authentication
+
+The [OAuth flow](./OAUTH_AUTH.md) uses server-side authorization-code exchange,
+S256 PKCE, single-use expiring browser-bound attempts, and Google ID-token signature/
+claim validation. Attempts store only a hash of the binding token; the host-only
+httpOnly Lax cookie expires in ten minutes. This owner-approved OAuth cookie is
+separate from the existing Raaz session cookie. Origin checks, boot validation,
+HS256 sessions and project authorization remain unchanged.
+
+OAuth identity creation and its audit entry commit atomically. Login uses stable
+provider IDs without implicit email-based linking. Provider tokens are discarded.
+OAuth-only self-deactivation requires an explicit settings confirmation and a
+fresh round trip bound to the initiating session/version and provider identity;
+the same last-admin counter and transactional deactivation service apply.
+All request paths and unknown-route errors omit query strings. Configure hosting
+access-log handling separately before enabling real providers.

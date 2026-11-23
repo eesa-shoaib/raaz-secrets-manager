@@ -18,6 +18,21 @@ project, secret, member, audit and admin user lists. See [MVP_2_BOARD.md](./MVP_
 acceptance criteria, dependencies, and release evidence. The original MVP 1 cuts below remain
 historical; items assigned to MVP 2 are now promoted and documented in API.md, DATA_MODEL.md, and FRONTEND.md.
 
+## Google and GitHub authentication
+
+Add Google and GitHub sign-in/signup alongside existing email/password login.
+The code is implemented; enabling providers requires operator app credentials
+and live provider/hosted-browser verification. It does not reopen completed MVP 2 tasks.
+The flow, setup instructions and acceptance evidence are in
+[OAUTH_AUTH.md](./OAUTH_AUTH.md); API.md, DATA_MODEL.md, ARCHITECTURE.md and
+FRONTEND.md remain the contract authorities.
+
+New OAuth accounts start active, non-admin and without project membership.
+Existing account email matches must not silently link identities or reactivate a
+disabled account. Provider tokens are temporary server-only credentials, never
+Raaz API tokens or stored project secrets. Organization SSO, repository access,
+provider avatar import and general account linking/unlinking remain deferred.
+
 ## Problem
 
 Small teams commonly share API keys and environment variables through
@@ -87,15 +102,16 @@ about role-based access control.
 
 This table is the single source of truth for scope; other docs link here.
 
-| Story                                               | Cut     | Reason                                                                                                                    | Target           |
-| --------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------- | ---------------- |
-| 5 — Project Admin manages their team                | None    | Add, change role, and remove are included in the MVP                                                                      | MVP              |
-| 6 — Project Admin reviews project activity          | Partial | Read-only log with 3 filters kept; MVP 1 capped at 100 most recent; add cursor pagination and CSV/JSON export in MVP 2    | MVP 2            |
-| 7 — Platform Admin deactivates a malicious user     | UI only | `GET /api/admin/users` and `PATCH /api/admin/users/:userId` retained; add UI in MVP 2                                     | MVP 2            |
-| 8 — Platform Admin archives a project               | Full    | No archive/restore endpoint or UI. `Project.status` and the status check exist, but nothing sets `archived`               | Post-MVP         |
-| — Project rename / description editing              | Full    | No project update endpoint in MVP 1; add member-scoped Project Admin editing in MVP 2                                     | MVP 2            |
-| — Environment editing                               | Full    | Keep development, staging and production fixed                                                                            | Post-MVP         |
-| — Platform project overview and project-level audit | Partial | `/admin/projects` deferred; `/admin/users` includes platform user role/activation audit log only (no project/secret data) | MVP 2 / Post-MVP |
+| Story                                               | Cut           | Reason                                                                                                                          | Target                   |
+| --------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| 5 — Project Admin manages their team                | None          | Add, change role, and remove are included in the MVP                                                                            | MVP                      |
+| 6 — Project Admin reviews project activity          | Partial       | Read-only log with 3 filters kept; MVP 1 capped at 100 most recent; add cursor pagination and CSV/JSON export in MVP 2          | MVP 2                    |
+| 7 — Platform Admin deactivates a malicious user     | UI only       | `GET /api/admin/users` and `PATCH /api/admin/users/:userId` retained; add UI in MVP 2                                           | MVP 2                    |
+| 8 — Platform Admin archives a project               | Full          | No archive/restore endpoint or UI. `Project.status` and the status check exist, but nothing sets `archived`                     | Post-MVP                 |
+| — Project rename / description editing              | Full          | No project update endpoint in MVP 1; add member-scoped Project Admin editing in MVP 2                                           | MVP 2                    |
+| — Environment editing                               | Full          | Keep development, staging and production fixed                                                                                  | Post-MVP                 |
+| — Platform project overview and project-level audit | Partial       | `/admin/projects` deferred; `/admin/users` includes platform user role/activation audit log only (no project/secret data)       | MVP 2 / Post-MVP         |
+| — Google/GitHub sign-in and signup                  | Full in MVP 1 | Optional provider auth implemented; live provider credentials/smoke verification required; existing-email auto-linking deferred | Authentication follow-up |
 
 ### Additional follow-up scope
 

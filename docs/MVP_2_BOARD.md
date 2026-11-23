@@ -407,5 +407,12 @@ project-wide/global admin overviews, email invites/verification/password reset,
 username-based login, editable login email, public profiles, bios, social links,
 custom themes, badges, gamification, notification feeds, drag-and-drop dashboard
 builders, rich-text descriptions, arbitrary external avatar URLs, plaintext
-import/export, CLI/service tokens, SSO/MFA, secret versioning, key rotation,
+import/export, CLI/service tokens, organization SSO/MFA, secret versioning, key rotation,
 expiry reminders, cross-tab auth sync and visual regression tooling.
+
+## Google/GitHub authentication implementation record
+
+Code for provider sign-in/signup and OAuth-only account handling is implemented;
+[OAUTH_AUTH.md](./OAUTH_AUTH.md) documents setup, account policy and remaining live
+provider/hosting validation. Keep completed MVP 2 tasks intact. Provider credentials
+are not configured or committed by this change; live deployment is not implied.

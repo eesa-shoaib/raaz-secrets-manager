@@ -27,6 +27,35 @@ exposes no member identities, and grants no Platform Admin bypass.
 
 Only `POST /api/projects/:projectId/secrets/:secretId/reveal` and `POST /api/projects/:projectId/secrets/export` ever return decrypted secret values; both enforce `revealLimiter`, `requireProjectRole('projectAdmin', 'developer')`, production `confirm: true`, transactional `reveal` audit entries, and `Cache-Control: no-store`.
 
+## Google/GitHub authentication extension
+
+- GET `/api/auth/oauth/providers`: `{ providers: ('google' | 'github')[] }`;
+  only fully configured, valid fixed callback configurations are enabled.
+- POST `/api/auth/oauth/:provider/start`: empty JSON body, existing Origin check,
+  shared per-IP limit (30 start/callback requests / 15 minutes); `{ authorizationUrl }` and a 10-minute
+  host-only httpOnly SameSite=Lax browser-binding cookie, Secure in production.
+- POST `/api/auth/oauth/:provider/deactivate/start`: same response; requires
+  authentication and an OAuth-only account with that provider. Starts explicit
+  self-deactivation reauthentication, bound to the initiating session and version.
+- GET `/api/auth/oauth/:provider/callback`: bounded consumed code/state/error query fields (extra provider fields are not exposed);
+  consume matching live browser-bound attempt once, validate provider response.
+  Success sets the existing session cookie and redirects to fixed CLIENT_ORIGIN
+  `/projects`. Deactivation clears session cookie and redirects `/login?oauth=deactivated`.
+  Failed login redirects `/login?oauth=failed`; failed deactivation redirects
+  `/settings?oauth=failed`. Last-admin rejection uses `/settings?oauth=last-admin`.
+  Application transaction/audit failures return 500 INTERNAL_ERROR with no success
+  session cookie. Only fixed flags, never provider errors or tokens.
+- Missing/disabled provider: 404 NOT_FOUND; malformed start: 422; rate limit: 429.
+  Callbacks with bad query/state/binding, denial, replay, collision, invalid identity
+  or upstream errors fail generically. Never return callback query strings in errors.
+- No automatic linking on email match. Stable provider subject identifies returning
+  users; new users require verified email and existing signup-domain restrictions.
+  New users are non-admin with no membership. Disabled accounts cannot sign in.
+- Public users add optional `hasPassword` and `oauthProvider` metadata. OAuth-only
+  password change/deactivation-by-password reject safely; provider reauthentication
+  is the self-deactivation path. Password login always performs bcrypt, including
+  dummy comparison for accounts without a password. No password-set/link/unlink API.
+
 ## Conventions
 
 - **Base path:** all routes are under `/api` (unversioned for this build —
