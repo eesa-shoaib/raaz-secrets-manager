@@ -324,6 +324,10 @@ noted, not omitted.
   `SecretValueCell`, `RevealConfirmDialog`, `Modal`, `ConfirmDialog`,
   `EmptyState`, `ErrorState`, `Skeleton`, `Toaster`.
 
+- **Environment selector:** disable DaisyUI's button-pop mount animation and
+  press scaling for these segmented buttons so opening a project does not make
+  the controls grow and shrink. Keep the existing dimensions and selection flow.
+
 - **Columns:** Key · Value · Actions. (`Last Accessed` and `Created` are omitted to keep the table compact without horizontal scrollbars; Copy key, Edit, and Delete use accessible icon buttons with tooltips and `aria-label`s.)
 
 - **Controls by role:**

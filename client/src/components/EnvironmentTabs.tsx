@@ -29,7 +29,7 @@ export function EnvironmentTabs({ currentEnvironment, onSelect }: EnvironmentTab
                             type="button"
                             aria-pressed={isActive}
                             onClick={() => onSelect(env)}
-                            className={`btn btn-sm join-item h-10 min-h-10 whitespace-nowrap border-0 px-4 font-ui text-sm font-medium shadow-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${
+                            className={`btn btn-sm join-item h-10 min-h-10 animate-none whitespace-nowrap border-0 px-4 font-ui text-sm font-medium shadow-none [--btn-focus-scale:1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${
                                 isActive
                                     ? 'bg-base-300 text-primary font-bold hover:bg-base-300'
                                     : 'bg-transparent text-base-content/70 hover:bg-base-300/60 hover:text-base-content'
