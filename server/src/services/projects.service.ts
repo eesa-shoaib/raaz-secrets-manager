@@ -1,3 +1,4 @@
+import type { GitHubRepositorySource } from '@raaz/shared-schemas';
 import mongoose, { Types } from 'mongoose';
 import { ProjectModel } from '../models/Project.js';
 import type { ProjectDoc } from '../models/Project.js';
@@ -11,10 +12,18 @@ import {
 } from '../utils/pagination.js';
 import { writeAuditEntry } from './audit.service.js';
 import { createMembership } from './membership.service.js';
+import { createSecretInTransaction } from './secrets.service.js';
 
 export type ProjectView = Pick<
     ProjectDoc,
-    'name' | 'description' | 'environments' | 'status' | 'createdBy' | 'createdAt' | 'updatedAt'
+    | 'name'
+    | 'description'
+    | 'environments'
+    | 'status'
+    | 'createdBy'
+    | 'createdAt'
+    | 'updatedAt'
+    | 'githubRepository'
 > & {
     _id: Types.ObjectId;
     role?: 'projectAdmin' | 'developer' | 'auditor';
@@ -121,12 +130,15 @@ export async function createProject(
     userId: string,
     name: string,
     description = '',
+    githubRepository?: GitHubRepositorySource,
+    mockSecretKeys: string[] = [],
 ): Promise<ProjectView> {
     const session = await mongoose.startSession();
     try {
         let createdView: ProjectView | null = null;
         await session.withTransaction(async () => {
             const project = new ProjectModel({
+                githubRepository,
                 name,
                 description,
                 environments: ['development', 'staging', 'production'],
@@ -143,6 +155,16 @@ export async function createProject(
                 action: 'project_created',
                 result: 'allowed',
             });
+            for (const key of mockSecretKeys) {
+                await createSecretInTransaction(
+                    userId,
+                    project._id.toString(),
+                    key,
+                    'development',
+                    'MOCK_VALUE_REPLACE_ME',
+                    session,
+                );
+            }
             createdView = { ...project.toObject(), memberCount: 1 };
         });
         return createdView!;

@@ -3,6 +3,7 @@ import { accountRoutes } from './account.routes.js';
 import { adminRoutes } from './admin.routes.js';
 import { auditRoutes } from './audit.routes.js';
 import { authRoutes } from './auth.routes.js';
+import { githubRoutes } from './github.routes.js';
 import { memberRoutes } from './member.routes.js';
 import { projectRoutes } from './project.routes.js';
 import { secretRoutes } from './secret.routes.js';
@@ -11,6 +12,7 @@ import { userRoutes } from './user.routes.js';
 export const apiRoutes = Router();
 
 apiRoutes.use('/auth', authRoutes);
+apiRoutes.use('/integrations/github', githubRoutes);
 apiRoutes.use('/account', accountRoutes);
 apiRoutes.use('/users', userRoutes);
 apiRoutes.use('/projects', projectRoutes);

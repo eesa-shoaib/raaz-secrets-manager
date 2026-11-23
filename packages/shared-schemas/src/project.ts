@@ -7,6 +7,13 @@ export type ProjectEnvironment = z.infer<typeof projectEnvironmentEnum>;
 export const CANONICAL_ENVIRONMENTS = ['development', 'staging', 'production'] as const;
 export const projectStatusEnum = z.enum(['active', 'archived']);
 export type ProjectStatus = z.infer<typeof projectStatusEnum>;
+export const githubRepositorySourceSchema = z.object({
+    id: z.number().int().positive().safe(),
+    owner: z.string(),
+    name: z.string(),
+    url: z.string().url().startsWith('https://github.com/'),
+});
+export type GitHubRepositorySource = z.infer<typeof githubRepositorySourceSchema>;
 
 export const projectDescriptionSchema = z
     .string()
@@ -35,6 +42,7 @@ export const projectUpdateInputSchema = updateProjectSchema;
 export type UpdateProjectInput = z.infer<typeof updateProjectSchema>;
 
 export const projectResponseSchema = z.object({
+    githubRepository: githubRepositorySourceSchema.nullable().optional(),
     id: z.string(),
     name: z.string(),
     description: z.string().max(500).optional().default(''),

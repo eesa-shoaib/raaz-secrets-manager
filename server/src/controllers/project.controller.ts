@@ -19,6 +19,7 @@ function response(project: ProjectView, role?: Request['projectRole']) {
     return projectResponseSchema.parse({
         id: project._id.toString(),
         name: project.name,
+        githubRepository: project.githubRepository ?? null,
         description: project.description ?? '',
         environments: project.environments,
         status: project.status,

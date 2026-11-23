@@ -35,16 +35,16 @@ and general account linking/unlinking remain deferred.
 
 ### Approved follow-up: GitHub import and authentication polish
 
-[GITHUB_IMPORT_TODO.md](./GITHUB_IMPORT_TODO.md) records planned, unimplemented work:
-one-time repository metadata import into Raaz projects, a persistent import entry
+[GITHUB_IMPORT_TODO.md](./GITHUB_IMPORT_TODO.md) records the implemented repository follow-up and remaining live verification:
+one-time repository import into Raaz projects, including mock development secrets
+from root `.env.example` keys (source values discarded), a persistent import entry
 point and support for repositories created after login, an explicit GitHub App
-connection with minimal permissions, GitHub username defaults, and themed provider
+connection with Metadata read-only and Contents read-only for example-file seeding, GitHub username defaults, and themed provider
 icons. Repository access is approved only for this import flow, separate from
 identity-only login. Explicit GitHub connection for Google/password users is part
-of that plan; general account linking remains deferred. GitHub task-board import,
+of this flow; general account linking remains deferred. GitHub task-board import,
 secret-value retrieval, collaborator sync, and ongoing repository synchronization
-are outside this follow-up. Existing API/schema/frontend contracts must be updated
-before implementation.
+are outside this follow-up. API/schema/frontend contracts describe the implemented flow. Basic sign-in tokens remain temporary; the separate repository grant is stored encrypted server-side.
 
 ## Problem
 

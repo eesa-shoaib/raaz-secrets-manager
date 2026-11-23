@@ -203,6 +203,8 @@ export async function writeAuditEntry(params: WriteAuditEntryParams): Promise<vo
         'platform_admin_revoked',
         'bootstrap_admin',
         'oauth_registered',
+        'github_connected',
+        'github_disconnected',
         'password_changed',
         'profile_updated',
         'avatar_updated',

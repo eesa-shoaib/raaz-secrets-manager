@@ -37,3 +37,4 @@ export interface CursorPaginatedResponse<T> {
     total: number;
 }
 export * from './oauth.js';
+export * from './github.js';
