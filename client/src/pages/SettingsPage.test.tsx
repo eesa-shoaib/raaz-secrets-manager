@@ -5,6 +5,7 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as accountApi from '../api/account';
 import * as authApi from '../api/auth';
+import * as githubApi from '../api/github';
 import { startOAuth } from '../api/oauth';
 import { ToastProvider } from '../components/Toaster';
 import { AuthProvider } from '../context/AuthContext';
@@ -12,6 +13,20 @@ import { ThemeProvider } from '../context/ThemeContext';
 import type { ApiError } from '../lib/errorHandling';
 import { queryKeys } from '../lib/queryClient';
 import SettingsPage from './SettingsPage';
+
+vi.mock('../api/github', () => ({
+    disconnectGitHub: vi.fn(),
+    startGitHubConnection: vi.fn(),
+    getGitHubInstallations: vi.fn(),
+    getGitHubRepositories: vi.fn(),
+    importGitHubRepository: vi.fn(),
+    getGitHubConnection: vi.fn(async () => ({
+        enabled: false,
+        connected: false,
+        login: null,
+        manageUrl: null,
+    })),
+}));
 
 vi.mock('../api/oauth', () => ({ getOAuthProviders: vi.fn(), startOAuth: vi.fn() }));
 
@@ -54,6 +69,12 @@ function LoginSentinel() {
 describe('SettingsPage', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        vi.mocked(githubApi.getGitHubConnection).mockResolvedValue({
+            enabled: false,
+            connected: false,
+            login: null,
+            manageUrl: null,
+        });
         HTMLDialogElement.prototype.showModal = function () {
             this.setAttribute('open', '');
         };
@@ -131,6 +152,35 @@ describe('SettingsPage', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Profile' }));
         expect((screen.getByLabelText('Username') as HTMLInputElement).value).toBe('unsaved_name');
         expect(accountApi.updateProfile).not.toHaveBeenCalled();
+    });
+
+    it('confirms repository disconnect without changing the Raaz login', async () => {
+        vi.mocked(githubApi.getGitHubConnection).mockResolvedValue({
+            enabled: true,
+            connected: true,
+            login: 'repo-owner',
+            manageUrl: 'https://github.com/apps/raaz/installations/new',
+        });
+        vi.mocked(githubApi.disconnectGitHub).mockResolvedValue(undefined);
+        const { client } = renderSettings();
+        fireEvent.click(await screen.findByRole('button', { name: 'Account' }));
+        await screen.findByText('Connected as repo-owner');
+        fireEvent.click(screen.getByRole('button', { name: 'Disconnect GitHub' }));
+        expect(githubApi.disconnectGitHub).not.toHaveBeenCalled();
+        fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+        expect(githubApi.disconnectGitHub).not.toHaveBeenCalled();
+        fireEvent.click(screen.getByRole('button', { name: 'Disconnect GitHub' }));
+        vi.mocked(githubApi.getGitHubConnection).mockResolvedValue({
+            enabled: true,
+            connected: false,
+            login: null,
+            manageUrl: 'https://github.com/apps/raaz/installations/new',
+        });
+        fireEvent.click(screen.getByRole('button', { name: 'Confirm disconnect' }));
+        await screen.findByText('Not connected');
+        expect(githubApi.disconnectGitHub).toHaveBeenCalledOnce();
+        expect(client.getQueryData(queryKeys.me)).toEqual(BASE_USER);
+        expect(authApi.logout).not.toHaveBeenCalled();
     });
 
     it('updates username and handles 409 username conflict inline', async () => {

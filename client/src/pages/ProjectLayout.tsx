@@ -223,6 +223,16 @@ export function ProjectLayout() {
                                 No description provided.
                             </p>
                         )}
+                        {project.githubRepository && (
+                            <a
+                                href={project.githubRepository.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mt-3 block break-all text-sm text-primary hover:underline"
+                            >
+                                {project.githubRepository.owner}/{project.githubRepository.name}
+                            </a>
+                        )}
                         <dl className="mt-5 space-y-3 border-t border-base-300 pt-4 text-sm">
                             <div className="flex flex-wrap items-center justify-between gap-2">
                                 <dt className="text-base-content/70">Role</dt>
