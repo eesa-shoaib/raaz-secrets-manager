@@ -54,6 +54,10 @@ across all project tabs and stacks on mobile.
 Reuse one `UserAvatar` component with deterministic initials and broken-image
 fallback; display usernames with email available for identity disambiguation.
 
+The navbar account dropdown contains actions only: Account Settings, permitted
+administration links, and Sign Out. Do not repeat a "Signed in as" block, username,
+or email inside it; the existing account trigger can still identify the user.
+
 ## 1. Route Map
 
 | \#  | Path                                        | Page                                | Guard                                  | API                                                                                                                                                                                                                                                                                                                  | Phase        |
