@@ -153,16 +153,16 @@ A reveal never writes any query key. The secret row is keyed by secret id, so th
 
 **Shared visual treatment:** `<main>` uses the same `w-[84%] max-w-9xl mx-auto px-4 sm:px-6` container width as `NavBar` (`88%` outer wrapper inside viewport) so page content edges stay aligned with the header and no horizontal scrollbars occur on desktop. Project navigation uses underlined links; environment selection uses a separately labeled segmented control. Primary actions consistently use `btn-primary btn-sm h-9 text-primary-content`, ghost actions `btn-ghost btn-sm h-9`, and icon row actions `btn-ghost btn-xs btn-square rounded-lg`. Filled buttons have a dark noise texture, while page backgrounds, cards, panels, and modals (`rounded-3xl`) use a lighter texture. Ghost, link, outline, and transparent buttons stay clear. Keep text and focus indicators readable; visually check contrast when changing theme colors or texture strength.
 
-| Widget                  | Purpose                                                                                                       |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `AppShell`              | Skip link, `NavBar`, `<main id="main">`, `Toaster`                                                            |
-| `NavBar`                | Brand, Projects link, Admin link (Platform Admin only), user dropdown with avatar, Settings, Sign out.        |
-| `PageHeader`            | `<h1>` + optional actions slot                                                                                |
-| `TabNav`                | Project tabs (`Secrets`, `Members`, `Audit log`). `items: { to, label, visible? }[]`                          |
-| `SearchInput`           | Shared search input with leading magnifying-glass icon, consistent height (`h-9`), and clear button.          |
-| `StatusPage`            | Variants `not-found`, `unauthorized`                                                                          |
-| `ProjectArchivedNotice` | Replaces project chrome when `GET /projects/:id` returns 403                                                  |
-| `PaginationControls`    | Reusable First page / Previous / Next cursor navigation bar with page indicator, loading, and boundary states |
+| Widget                  | Purpose                                                                                                                                                  |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AppShell`              | Skip link, `NavBar`, `<main id="main">`, `Toaster`                                                                                                       |
+| `NavBar`                | Brand, Projects link, Admin link (Platform Admin only), user dropdown with avatar, Settings, Sign out.                                                   |
+| `PageHeader`            | `<h1>` + optional actions slot                                                                                                                           |
+| `TabNav`                | Project tabs (`Secrets`, `Members`, `Audit log`). `items: { to, label, visible? }[]`                                                                     |
+| `SearchInput`           | Shared search input with leading magnifying-glass icon, consistent height (`h-9`), and clear button.                                                     |
+| `StatusPage`            | Variants `not-found`, `unauthorized`                                                                                                                     |
+| `ProjectArchivedNotice` | Replaces project chrome when `GET /projects/:id` returns 403                                                                                             |
+| `PaginationControls`    | Reusable theme-colored first-page / previous / next arrow icon buttons with accessible labels and tooltips, page indicator, loading, and boundary states |
 
 ### 2.2 Feedback and state
 
