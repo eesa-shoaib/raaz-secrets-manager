@@ -23,8 +23,12 @@ implementing each MVP 2 feature; unlisted follow-up work remains deferred.
 
 ## Google/GitHub authentication extension
 
-Login and signup compose provider buttons inline after the existing form. Fetch
-configured providers through the single Axios instance, POST a start request and
+Login and signup compose provider buttons inline after the existing form.
+Both forms include decorative local provider icons. Google and GitHub use
+matching monochrome masks in the primary theme color, without a white backing.
+Button text, borders, hover/focus, disabled states, spacing, and height follow the
+existing theme controls. Pending redirects replace the icon with a spinner.
+Fetch configured providers through the single Axios instance, POST a start request and
 navigate to the returned authorization URL. No provider SDK, popup or extra page.
 Provider metadata query key is `['auth', 'oauthProviders']`; starts use a non-retrying
 mutation. No new shared widget or page is added. Callback landing reloads auth state using the normal `/auth/me` flow; flags are

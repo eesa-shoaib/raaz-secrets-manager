@@ -1,6 +1,7 @@
 # GitHub import and authentication polish — TODO
 
-Status: approved follow-up plan; not implemented. Added 2026-11-23.
+Status: provider-button UI implemented; username defaults and repository
+integration remain planned. Added 2026-11-23.
 
 Outcome: create a Raaz project from a GitHub repository without retyping its
 details, return to import future repositories, and recognize provider accounts
@@ -30,19 +31,27 @@ open until their own acceptance evidence is recorded.
 
 ## 2. Theme-consistent provider buttons
 
-- [ ] Add GitHub and Google icons to their existing buttons on both sign-in and
+- [x] Add GitHub and Google icons to their existing buttons on both sign-in and
       sign-up screens; retain clear visible provider labels.
-- [ ] Use theme tokens for icon color, text, borders, hover, focus, and disabled
+- [x] Use theme tokens for icon color, text, borders, hover, focus, and disabled
       states. Match existing control dimensions and spacing; do not hardcode a
       separate provider-colored background.
-- [ ] Use monochrome icons where provider asset rules permit. Check official
-      Google branding requirements before recoloring its logo; preserve any
-      required brand colors while theming the surrounding button.
-- [ ] Reuse existing icons or local SVG assets where possible; request approval
+- [x] Use matching monochrome, primary-colored Google and GitHub icons across
+      both auth forms.
+- [x] Reuse existing icons or local SVG assets where possible; request approval
       before adding a dependency. Decorative icons must be hidden from assistive
       technology, and the buttons must retain accessible names.
 - [ ] Verify configured-provider visibility, pending/error behavior, keyboard
       focus, contrast, and appearance across the supported themes and mobile widths.
+
+Implementation: existing buttons remain inline on LoginPage and SignupPage.
+Google and GitHub use matching local icon masks in the theme's primary color,
+without white backings. The provider text remains visible,
+icons are decorative, pending redirects show a spinner, and no dependency was
+added. Asset sources are recorded in
+[OAUTH_AUTH.md](./OAUTH_AUTH.md). Automated provider visibility, pending, and error
+checks are part of OAuthForms.test.tsx; live theme/mobile/keyboard review remains
+unchecked above until browser evidence is recorded.
 
 ## 3. Separate repository access from login
 
