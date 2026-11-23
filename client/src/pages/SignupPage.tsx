@@ -165,7 +165,7 @@ export function SignupPage() {
                                 type="button"
                                 disabled={oauth.pending || isSubmitting}
                                 onClick={() => oauth.continueWith(provider)}
-                                className="btn btn-outline btn-sm relative h-10 min-h-10 w-full gap-3 rounded-md border-base-content/25 bg-base-300 px-3 text-sm text-base-content hover:border-primary hover:bg-base-200 hover:text-base-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50"
+                                className="btn btn-sm relative h-10 min-h-10 w-full gap-3 rounded-md border-base-content/25 bg-base-300 px-3 text-sm text-base-content hover:border-primary hover:bg-base-200 hover:text-base-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50"
                             >
                                 <span
                                     aria-hidden="true"
