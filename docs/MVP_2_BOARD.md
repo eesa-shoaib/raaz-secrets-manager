@@ -412,6 +412,11 @@ expiry reminders, cross-tab auth sync and visual regression tooling.
 
 ## Google/GitHub authentication implementation record
 
+Planned follow-up: [GitHub import and authentication polish TODO](./GITHUB_IMPORT_TODO.md)
+covers repository import at any time, future repository access, GitHub username
+defaults, and themed provider icons. It does not mark these features implemented
+or change completed MVP 2 acceptance evidence.
+
 Code for provider sign-in/signup and OAuth-only account handling is implemented;
 [OAUTH_AUTH.md](./OAUTH_AUTH.md) documents setup, account policy and remaining live
 provider/hosting validation. Keep completed MVP 2 tasks intact. Provider credentials
