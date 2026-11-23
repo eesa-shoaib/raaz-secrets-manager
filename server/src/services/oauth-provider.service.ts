@@ -2,6 +2,7 @@ import type { OAuthProvider } from '@raaz/shared-schemas';
 import * as oidc from 'openid-client';
 import { z } from 'zod';
 import { AppError } from '../utils/app-error.js';
+import { githubOAuthFetch } from '../utils/github-fetch.js';
 import { diagnoseOAuthStage, OAuthHttpFailure } from './oauth-diagnostics.service.js';
 
 export interface ProviderIdentity {
@@ -9,6 +10,7 @@ export interface ProviderIdentity {
     subject: string;
     email: string;
     emailVerified: boolean;
+    login?: string;
 }
 
 export function getProviderConfig(provider: OAuthProvider) {
@@ -56,30 +58,7 @@ export function getProviderConfig(provider: OAuthProvider) {
         return null;
     }
     config.timeout = 10;
-    if (provider === 'github') {
-        config[oidc.customFetch] = async (url, options) => {
-            const response = await fetch(url, options as RequestInit);
-            // GitHub may return OAuth error JSON with HTTP 200. Normalize only
-            // token-endpoint errors so the standards client can reject and classify
-            // them normally; never log or expose the upstream response body.
-            if (String(url) === metadata.token_endpoint && response.status === 200) {
-                const body: unknown = await response
-                    .clone()
-                    .json()
-                    .catch(() => null);
-                if (
-                    body &&
-                    typeof body === 'object' &&
-                    'error' in body &&
-                    typeof body.error === 'string' &&
-                    body.error.length > 0
-                ) {
-                    return Response.json(body, { status: 400 });
-                }
-            }
-            return response;
-        };
-    }
+    if (provider === 'github') config[oidc.customFetch] = githubOAuthFetch;
     if (provider === 'google') oidc.enableNonRepudiationChecks(config);
     return { config, redirectUri };
 }
@@ -164,7 +143,12 @@ export async function exchangeProviderCode(
         return response.json();
     }
     const user = await diagnoseOAuthStage(provider, 'identity', async () =>
-        z.object({ id: z.number().int().positive().safe() }).parse(await get('/user')),
+        z
+            .object({
+                id: z.number().int().positive().safe(),
+                login: z.string().min(1).max(100),
+            })
+            .parse(await get('/user')),
     );
     const emails = await diagnoseOAuthStage(provider, 'email_lookup', async () =>
         z
@@ -184,5 +168,6 @@ export async function exchangeProviderCode(
         subject: String(user.id),
         email: email?.email.toLowerCase() ?? '',
         emailVerified: Boolean(email),
+        login: user.login,
     };
 }

@@ -294,3 +294,95 @@ it('omits query strings from request logs and unknown-route errors', async () =>
         log.mockRestore();
     }
 });
+
+describe('GitHub username defaults', () => {
+    it('sets a normalized username and preserves a custom username after provider renames', async () => {
+        await resolveOAuthUser({
+            provider: 'github',
+            subject: 'username-subject',
+            email: 'handle@example.test',
+            emailVerified: true,
+            login: 'Original-Handle',
+        });
+        const user = await UserModel.findOne({ email: 'handle@example.test' });
+        expect(user?.username).toBe('original-handle');
+        expect(
+            await AuditLogEntryModel.countDocuments({
+                userId: user!._id,
+                action: 'profile_updated',
+            }),
+        ).toBe(1);
+        await UserModel.updateOne({ _id: user!._id }, { username: 'custom_handle' });
+        await resolveOAuthUser({
+            provider: 'github',
+            subject: 'username-subject',
+            email: 'changed@example.test',
+            emailVerified: true,
+            login: 'Renamed-Handle',
+        });
+        expect((await UserModel.findById(user!._id))?.username).toBe('custom_handle');
+        await UserModel.updateOne({ _id: user!._id }, { username: null });
+        await resolveOAuthUser({
+            provider: 'github',
+            subject: 'username-subject',
+            email: 'changed@example.test',
+            emailVerified: true,
+            login: 'Renamed-Handle',
+        });
+        expect((await UserModel.findById(user!._id))?.username).toBe('renamed-handle');
+    });
+    it('handles concurrent claims, short and invalid handles without blocking sign-in', async () => {
+        await Promise.all(
+            [1, 2].map((index) =>
+                resolveOAuthUser({
+                    provider: 'github',
+                    subject: `collision-${index}`,
+                    email: `collision${index}@example.test`,
+                    emailVerified: true,
+                    login: 'shared-handle',
+                }),
+            ),
+        );
+        const users = await UserModel.find({ email: /^collision/ }).lean();
+        expect(new Set(users.map((user) => user.username)).size).toBe(2);
+        expect(
+            users.every((user) => typeof user.username === 'string' && user.username.length <= 30),
+        ).toBe(true);
+        await resolveOAuthUser({
+            provider: 'github',
+            subject: 'short-handle',
+            email: 'short@example.test',
+            emailVerified: true,
+            login: 'X',
+        });
+        expect((await UserModel.findOne({ email: 'short@example.test' }))?.username).toBe('x-gh');
+        await resolveOAuthUser({
+            provider: 'github',
+            subject: 'invalid-handle',
+            email: 'invalid@example.test',
+            emailVerified: true,
+            login: '@@',
+        });
+        expect((await UserModel.findOne({ email: 'invalid@example.test' }))?.username).toBeNull();
+    });
+});
+
+describe('GitHub profile audit atomicity', () => {
+    it('rolls back an automatic username claim when its audit write fails', async () => {
+        const account = {
+            provider: 'github' as const,
+            subject: 'audit-handle',
+            email: 'audit-handle@example.test',
+            emailVerified: true,
+        };
+        await resolveOAuthUser(account);
+        vi.mocked(writeAuditEntry).mockImplementationOnce(async () => {
+            throw new Error('Synthetic profile audit failure');
+        });
+        await expect(resolveOAuthUser({ ...account, login: 'audit-name' })).rejects.toMatchObject({
+            status: 500,
+        });
+        expect((await UserModel.findOne({ email: account.email }))?.username).toBeNull();
+        expect(await AuditLogEntryModel.countDocuments({ action: 'profile_updated' })).toBe(0);
+    });
+});
