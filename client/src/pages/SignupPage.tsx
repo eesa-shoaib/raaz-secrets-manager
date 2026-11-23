@@ -7,9 +7,11 @@ import { FormField } from '../components/FormField';
 import { ShortLogo } from '../components/ShortLogo';
 import { useAuth } from '../hooks/useAuth';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import { useOAuth } from '../hooks/useOAuth';
 import { isApiError } from '../lib/errorHandling';
 
 export function SignupPage() {
+    const oauth = useOAuth();
     useDocumentTitle('Sign up');
     const { signup } = useAuth();
     const [showPassword, setShowPassword] = useState(false);
@@ -151,6 +153,25 @@ export function SignupPage() {
                         )}
                     </button>
                 </form>
+
+                {oauth.providers.length > 0 && (
+                    <div className="mt-4 space-y-2">
+                        <div className="divider text-xs text-base-content/60">or</div>
+                        {oauth.providers.map((provider) => (
+                            <button
+                                key={provider}
+                                type="button"
+                                disabled={oauth.pending || isSubmitting}
+                                onClick={() => oauth.continueWith(provider)}
+                                className="btn btn-outline btn-sm h-10 w-full rounded-md text-sm"
+                            >
+                                {oauth.pending && oauth.pendingProvider === provider
+                                    ? 'Redirecting…'
+                                    : `Continue with ${provider === 'google' ? 'Google' : 'GitHub'}`}
+                            </button>
+                        ))}
+                    </div>
+                )}
 
                 {/* Footer */}
                 <div className="text-center mt-5 border-t border-base-content/20 pt-4 text-sm text-base-content/70">

@@ -106,7 +106,7 @@ describe('ProjectAuditLogPage', () => {
             limit: 25,
         });
 
-        fireEvent.change(screen.getByDisplayValue('All Results'), {
+        fireEvent.change(screen.getByLabelText('Filter by result'), {
             target: { value: 'denied' },
         });
 

@@ -95,7 +95,7 @@ function requestLogger(
         logger.info(
             {
                 method: req.method,
-                path: req.originalUrl,
+                path: req.originalUrl.split('?')[0],
                 statusCode: res.statusCode,
                 durationMs: Math.round(performance.now() - startedAt),
             },

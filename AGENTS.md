@@ -99,6 +99,14 @@ CSRF (Origin check) → authenticate → requireProjectRole | requireProjectRole
 
 ### Auth
 
+- Google/GitHub auth is an implemented optional extension; setup and remaining
+  live verification are in `docs/OAUTH_AUTH.md`. The separately approved temporary
+  host-only Lax callback cookie does not change the existing session-cookie policy.
+  Provider IDs identify returning accounts; email matches never auto-link. New
+  OAuth accounts have no password, admin flag or project membership. Password
+  login still performs a dummy bcrypt comparison for accounts without a hash.
+  OAuth-only self-deactivation requires fresh session-bound provider confirmation.
+
 - JWT in an httpOnly cookie, never in a response body or `localStorage`. `jwt.verify` always passes `algorithms: ['HS256']`.
 - `authenticate` re-fetches the user every request: checks signature **and** `tokenVersion`, and rejects `isActive: false` with `401`.
 - Login always runs `bcrypt.compare` (against a fixed dummy hash if the email is unknown) and returns the same generic `401` for unknown email, wrong password, and deactivated account.

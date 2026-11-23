@@ -194,6 +194,7 @@ export async function writeAuditEntry(params: WriteAuditEntryParams): Promise<vo
         'platform_admin_granted',
         'platform_admin_revoked',
         'bootstrap_admin',
+        'oauth_registered',
         'password_changed',
         'profile_updated',
         'avatar_updated',

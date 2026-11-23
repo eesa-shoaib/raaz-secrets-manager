@@ -21,6 +21,18 @@ The approved follow-up scope is in PRODUCT.md and [MVP_2_BOARD.md](./MVP_2_BOARD
 Update this document’s routes, widgets, query keys, and permissions before
 implementing each MVP 2 feature; unlisted follow-up work remains deferred.
 
+## Google/GitHub authentication extension
+
+Login and signup compose provider buttons inline after the existing form. Fetch
+configured providers through the single Axios instance, POST a start request and
+navigate to the returned authorization URL. No provider SDK, popup or extra page.
+Provider metadata query key is `['auth', 'oauthProviders']`; starts use a non-retrying
+mutation. No new shared widget or page is added. Callback landing reloads auth state using the normal `/auth/me` flow; flags are
+consumed/removed from the URL after showing one toast. No tokens enter browser storage.
+Settings show provider sign-in information instead of password controls when
+hasPassword is false. Confirm deactivation then start fresh provider authentication;
+never call the password-only deactivation endpoint for an OAuth-only user.
+
 ## MVP 2 surfaces — active contract
 
 | Surface                        | Specification                                                                                                                                                        |

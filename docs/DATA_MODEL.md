@@ -31,6 +31,23 @@ records via defaults and schema normalization. Back up and rehearse any
 persistent-data/index transition; the disposable dev/test database agreement
 never authorizes dropping hosted pilot data.
 
+## OAuth storage extension (implemented)
+
+`OAuthIdentity`: provider enum + stable subject (unique pair), userId reference
+(unique per provider/user). No provider tokens stored. `OAuthAttempt`: provider,
+state (unique), hash of browser-binding secret, PKCE verifier, nonce, fixed callback,
+intent login/deactivate, optional initiating userId/session hash/tokenVersion,
+expiresAt (10 minutes; TTL plus explicit query expiry). Sensitive attempt fields
+are select:false and never public. Consume atomically before provider exchange.
+
+User passwordHash becomes nullable for OAuth-only users; passwordEnabled defaults
+true for legacy accounts and false for OAuth-created accounts. oauthProvider is
+null/google/github. Only safe hasPassword/oauthProvider reach public user schemas.
+Bootstrap resetting a password also enables password login. New account + identity
+
+- platform-wide `oauth_registered` audit entry commit atomically. Deactivation
+  continues to use `user_deactivated` and atomic last-admin protection.
+
 ## Entity Relationship Overview
 
 ```mermaid

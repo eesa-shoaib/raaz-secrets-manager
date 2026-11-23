@@ -13,6 +13,8 @@ import { writeAuditEntry } from './audit.service.js';
 function toPublicUser(user: {
     _id: Types.ObjectId;
     email: string;
+    passwordEnabled?: boolean;
+    oauthProvider?: 'google' | 'github' | null;
     username?: string | null;
     hasAvatar?: boolean;
     avatarUpdatedAt?: Date | null;
@@ -24,6 +26,8 @@ function toPublicUser(user: {
     return publicUserSchema.parse({
         id: user._id.toString(),
         email: user.email,
+        hasPassword: user.passwordEnabled !== false,
+        oauthProvider: user.oauthProvider ?? null,
         username: user.username ?? null,
         hasAvatar: Boolean(user.hasAvatar),
         avatarUpdatedAt: user.avatarUpdatedAt ?? null,
@@ -216,16 +220,27 @@ export async function deactivateOwnAccount(userId: string, currentPassword: stri
         throw new AppError(404, 'NOT_FOUND', 'User not found');
     }
 
+    if (!existing.passwordHash || existing.passwordEnabled === false) {
+        throw new AppError(409, 'CONFLICT', 'Confirm deactivation using your sign-in provider');
+    }
     const passwordMatches = await bcrypt.compare(currentPassword, existing.passwordHash);
     if (!passwordMatches) {
         throw new AppError(401, 'UNAUTHENTICATED', 'Current password is incorrect');
     }
 
+    await deactivateVerifiedAccount(userId, existing.tokenVersion);
+}
+
+// Called only after password verification or a fresh, session-bound provider callback.
+export async function deactivateVerifiedAccount(
+    userId: string,
+    expectedVersion: number,
+): Promise<void> {
     const session = await mongoose.startSession();
     try {
         await session.withTransaction(async () => {
             const user = await UserModel.findById(userId).session(session);
-            if (!user || !user.isActive) {
+            if (!user || !user.isActive || user.tokenVersion !== expectedVersion) {
                 throw new AppError(401, 'UNAUTHENTICATED', 'Account is not active');
             }
 

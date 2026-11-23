@@ -137,3 +137,9 @@ Because the database is already on Atlas and the server reads all secrets
 (DB URI, JWT secret, master encryption key) from environment variables, moving
 from local-only to deployed later requires **no new secret-handling code**.
 It does require a few extra environment variables and cookie attributes. The preferred topology is same-site (a Vercel `/api/*` rewrite to Render, or custom subdomains): set `COOKIE_SAMESITE=Lax`, `CLIENT_ORIGIN`, and `COOKIE_DOMAIN` if subdomains are used. If the two hosts stay on unrelated domains, cookies are cross-site (`SameSite=None; Secure`) and third-party-cookie blocking must be tested — see ARCHITECTURE.md's "Cross-Origin Deployment & CSRF" section for the full policy. That logic is written once, branching on `NODE_ENV` and `COOKIE_SAMESITE`, so it doesn't need to be revisited at deploy time — but it is real code, not purely configuration.
+
+## OAuth client
+
+`openid-client` is an approved server dependency for Google/GitHub authorization
+code flow, PKCE and OIDC validation. No client-side provider SDK is added. See
+[OAUTH_AUTH.md](./OAUTH_AUTH.md) for enabled-provider configuration and testing.

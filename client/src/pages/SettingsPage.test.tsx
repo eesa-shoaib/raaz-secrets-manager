@@ -5,12 +5,15 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as accountApi from '../api/account';
 import * as authApi from '../api/auth';
+import { startOAuth } from '../api/oauth';
 import { ToastProvider } from '../components/Toaster';
 import { AuthProvider } from '../context/AuthContext';
 import { ThemeProvider } from '../context/ThemeContext';
 import type { ApiError } from '../lib/errorHandling';
 import { queryKeys } from '../lib/queryClient';
 import SettingsPage from './SettingsPage';
+
+vi.mock('../api/oauth', () => ({ getOAuthProviders: vi.fn(), startOAuth: vi.fn() }));
 
 vi.mock('../api/auth', () => ({
     getMe: vi.fn(),
@@ -86,6 +89,26 @@ describe('SettingsPage', () => {
         );
         return { client, ...utils };
     }
+
+    it('uses provider confirmation instead of password controls for an OAuth-only user', async () => {
+        vi.mocked(authApi.getMe).mockResolvedValue({
+            ...BASE_USER,
+            hasPassword: false,
+            oauthProvider: 'google',
+        });
+        vi.mocked(startOAuth).mockReturnValue(new Promise(() => {}));
+        renderSettings();
+        expect(await screen.findByText(/This account has no Raaz password/)).toBeTruthy();
+        expect(
+            (screen.getByRole('button', { name: 'Password settings' }) as HTMLButtonElement)
+                .disabled,
+        ).toBe(true);
+        fireEvent.click(screen.getByRole('button', { name: 'Deactivate Account' }));
+        expect(screen.queryByLabelText('Confirm Current Password')).toBeNull();
+        fireEvent.click(screen.getByRole('button', { name: 'Confirm Deactivation' }));
+        await waitFor(() => expect(startOAuth).toHaveBeenCalledWith('google', true));
+        expect(accountApi.deactivateAccount).not.toHaveBeenCalled();
+    });
 
     it('updates username and handles 409 username conflict inline', async () => {
         renderSettings();

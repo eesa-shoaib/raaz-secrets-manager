@@ -90,3 +90,15 @@ The server tests create their own `raaz_test_*` database on the cluster named in
 ## License
 
 MIT
+
+## Google and GitHub sign-in
+
+Optional provider buttons appear on login/signup when the server has a valid
+client ID, client secret and callback URL for that provider. See
+[OAuth setup](./docs/OAUTH_AUTH.md#provider-configuration) and server/.env.example.
+Local development callbacks use http://localhost:5173/api/auth/oauth/google/callback
+and http://localhost:5173/api/auth/oauth/github/callback through Vite's API proxy.
+Production callbacks must use the browser-facing API origin and HTTPS.
+
+Password login stays available. New OAuth accounts have no project membership;
+existing-email matches do not auto-link to password accounts or another provider.

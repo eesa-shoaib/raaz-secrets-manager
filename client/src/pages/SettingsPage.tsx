@@ -23,6 +23,7 @@ import {
 } from '../hooks/useAccount';
 import { useAuth } from '../hooks/useAuth';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import { useOAuth } from '../hooks/useOAuth';
 import { useTheme } from '../hooks/useTheme';
 import { isApiError } from '../lib/errorHandling';
 
@@ -47,6 +48,7 @@ const passwordModalFormSchema = z
 type PasswordModalFormValues = z.infer<typeof passwordModalFormSchema>;
 
 export function SettingsPage() {
+    const oauth = useOAuth(false);
     useDocumentTitle('Account Settings');
     const { user } = useAuth();
     const { toast } = useToast();
@@ -468,8 +470,9 @@ export function SettingsPage() {
                 <div>
                     <h2 className="font-heading text-lg font-bold text-base-content">Security</h2>
                     <p className="text-xs font-ui text-base-content/60 mt-1 max-w-md mx-auto">
-                        Update your account password. Changing your password invalidates all
-                        existing sessions and requires signing in again.
+                        {user?.hasPassword === false
+                            ? `You sign in with ${user.oauthProvider === 'google' ? 'Google' : 'GitHub'}. This account has no Raaz password.`
+                            : 'Update your account password. Changing your password invalidates all existing sessions and requires signing in again.'}
                     </p>
                 </div>
 
@@ -477,6 +480,7 @@ export function SettingsPage() {
                     <button
                         type="button"
                         onClick={handleOpenPasswordModal}
+                        disabled={user?.hasPassword === false}
                         className="btn btn-primary btn-sm h-9 px-4 text-primary-content font-semibold rounded-xl flex items-center gap-2"
                     >
                         <svg
@@ -649,14 +653,23 @@ export function SettingsPage() {
                     maxWidth="md"
                 >
                     <form
-                        onSubmit={handleSubmitDeactivate(onDeactivateSubmit)}
+                        onSubmit={(event) => {
+                            if (user?.hasPassword === false && user.oauthProvider) {
+                                event.preventDefault();
+                                oauth.continueWith(user.oauthProvider, true);
+                            } else {
+                                void handleSubmitDeactivate(onDeactivateSubmit)(event);
+                            }
+                        }}
                         className="space-y-4"
                         noValidate
                     >
                         <p className="text-sm font-ui text-base-content/80 leading-relaxed">
                             You will be signed out immediately and will not be able to sign back in
-                            unless a Platform Admin reactivates your account. Enter your current
-                            password to confirm.
+                            unless a Platform Admin reactivates your account.{' '}
+                            {user?.hasPassword === false
+                                ? 'Continue to your sign-in provider to confirm deactivation.'
+                                : 'Enter your current password to confirm.'}
                         </p>
 
                         {deactivateError && (
@@ -668,38 +681,48 @@ export function SettingsPage() {
                             </div>
                         )}
 
-                        <div className="form-control">
-                            <label htmlFor="deactivate-current-password" className="label">
-                                <span className="label-text font-medium">
-                                    Confirm Current Password
-                                </span>
-                            </label>
-                            <input
-                                id="deactivate-current-password"
-                                type="password"
-                                autoComplete="current-password"
-                                {...registerDeactivate('currentPassword')}
-                                className="input input-bordered w-full rounded-xl bg-base-100"
-                            />
-                            {deactivateErrors.currentPassword && (
-                                <span className="mt-1 text-xs text-error" role="alert">
-                                    {deactivateErrors.currentPassword.message}
-                                </span>
-                            )}
-                        </div>
+                        {user?.hasPassword !== false && (
+                            <div className="form-control">
+                                <label htmlFor="deactivate-current-password" className="label">
+                                    <span className="label-text font-medium">
+                                        Confirm Current Password
+                                    </span>
+                                </label>
+                                <input
+                                    id="deactivate-current-password"
+                                    type="password"
+                                    autoComplete="current-password"
+                                    {...registerDeactivate('currentPassword')}
+                                    className="input input-bordered w-full rounded-xl bg-base-100"
+                                />
+                                {deactivateErrors.currentPassword && (
+                                    <span className="mt-1 text-xs text-error" role="alert">
+                                        {deactivateErrors.currentPassword.message}
+                                    </span>
+                                )}
+                            </div>
+                        )}
 
                         <div className="flex items-center justify-end gap-3 pt-4 border-t border-base-300">
                             <button
                                 type="button"
                                 onClick={handleCloseDeactivate}
-                                disabled={deactivateAccountMutation.isPending || isDeactivating}
+                                disabled={
+                                    deactivateAccountMutation.isPending ||
+                                    isDeactivating ||
+                                    oauth.pending
+                                }
                                 className="btn btn-ghost btn-sm h-9 rounded-xl text-sm"
                             >
                                 Cancel
                             </button>
                             <button
                                 type="submit"
-                                disabled={deactivateAccountMutation.isPending || isDeactivating}
+                                disabled={
+                                    deactivateAccountMutation.isPending ||
+                                    isDeactivating ||
+                                    oauth.pending
+                                }
                                 className="btn btn-error btn-sm h-9 px-4 text-error-content font-semibold rounded-xl text-sm"
                             >
                                 {deactivateAccountMutation.isPending || isDeactivating

@@ -68,6 +68,8 @@ export const avatarUploadInputSchema = z
 export type AvatarUploadInput = z.infer<typeof avatarUploadInputSchema>;
 
 export const publicUserSchema = z.object({
+    hasPassword: z.boolean().optional(),
+    oauthProvider: z.enum(['google', 'github']).nullable().optional(),
     id: z.string(),
     email: z.string().email(),
     username: usernameSchema.nullable().optional().default(null),

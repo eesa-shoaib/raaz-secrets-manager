@@ -41,7 +41,7 @@ export async function login(
     const hashToCompare = user?.passwordHash ?? DUMMY_HASH;
 
     const isValid = await bcrypt.compare(password, hashToCompare);
-    if (!isValid || !user || !user.isActive) {
+    if (!isValid || !user || !user.isActive || user.passwordEnabled === false) {
         return null;
     }
 
@@ -50,7 +50,7 @@ export async function login(
     return { user: user as unknown as UserDoc, token };
 }
 
-function assertSignupDomainAllowed(email: string): void {
+export function assertSignupDomainAllowed(email: string): void {
     const rawDomains = process.env.SIGNUP_ALLOWED_DOMAINS;
     if (!rawDomains) return;
 
@@ -83,6 +83,7 @@ export async function bootstrapPlatformAdmin(): Promise<void> {
             let user = await UserModel.findOne({ email }).session(session);
             if (user) {
                 user.passwordHash = passwordHash;
+                user.passwordEnabled = true;
                 user.isPlatformAdmin = true;
                 user.isActive = true;
                 user.tokenVersion += 1;
@@ -154,6 +155,13 @@ export async function changePassword(
                 throw new AppError(401, 'UNAUTHENTICATED', 'Authentication required');
             }
 
+            if (!user.passwordHash || user.passwordEnabled === false) {
+                throw new AppError(
+                    409,
+                    'CONFLICT',
+                    'This account signs in with an external provider',
+                );
+            }
             const matches = await bcrypt.compare(currentPassword, user.passwordHash);
             if (!matches) {
                 throw new AppError(401, 'UNAUTHENTICATED', 'Current password is incorrect');
@@ -182,6 +190,8 @@ export async function findAuthenticatedUser(userId: string, tokenVersion: number
     return {
         id: user._id.toString(),
         email: user.email,
+        hasPassword: user.passwordEnabled !== false,
+        oauthProvider: user.oauthProvider ?? null,
         username: user.username ?? null,
         hasAvatar: Boolean(user.hasAvatar),
         avatarUpdatedAt: user.avatarUpdatedAt ?? null,

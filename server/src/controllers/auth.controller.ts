@@ -45,6 +45,8 @@ function toPublicUser(user: {
     _id?: { toString(): string };
     id?: string;
     email: string;
+    passwordEnabled?: boolean;
+    oauthProvider?: 'google' | 'github' | null;
     username?: string | null;
     hasAvatar?: boolean;
     avatarUpdatedAt?: Date | null;
@@ -56,6 +58,8 @@ function toPublicUser(user: {
     return publicUserSchema.parse({
         id: user._id?.toString() ?? user.id,
         email: user.email,
+        hasPassword: user.passwordEnabled !== false,
+        oauthProvider: user.oauthProvider ?? null,
         username: user.username ?? null,
         hasAvatar: Boolean(user.hasAvatar),
         avatarUpdatedAt: user.avatarUpdatedAt ?? null,

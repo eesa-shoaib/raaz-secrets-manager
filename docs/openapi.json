@@ -5,34 +5,58 @@
         "version": "1.0.0",
         "description": "MVP contract from API.md. Secret, audit-log and admin routes require further database-backed integration testing. State-changing requests require an Origin matching CLIENT_ORIGIN. Login sets an httpOnly cookie; configure Hoppscotch to send cookies."
     },
-    "servers": [{ "url": "http://localhost:5000/api", "description": "Local server" }],
-    "security": [{ "cookieAuth": [] }],
+    "servers": [
+        {
+            "url": "http://localhost:5000/api",
+            "description": "Local server"
+        }
+    ],
+    "security": [
+        {
+            "cookieAuth": []
+        }
+    ],
     "components": {
-        "securitySchemes": { "cookieAuth": { "type": "apiKey", "in": "cookie", "name": "token" } },
+        "securitySchemes": {
+            "cookieAuth": {
+                "type": "apiKey",
+                "in": "cookie",
+                "name": "token"
+            }
+        },
         "parameters": {
             "projectId": {
                 "name": "projectId",
                 "in": "path",
                 "required": true,
-                "schema": { "type": "string" }
+                "schema": {
+                    "type": "string"
+                }
             },
             "userId": {
                 "name": "userId",
                 "in": "path",
                 "required": true,
-                "schema": { "type": "string" }
+                "schema": {
+                    "type": "string"
+                }
             },
             "secretId": {
                 "name": "secretId",
                 "in": "path",
                 "required": true,
-                "schema": { "type": "string" }
+                "schema": {
+                    "type": "string"
+                }
             },
             "origin": {
                 "name": "Origin",
                 "in": "header",
                 "required": true,
-                "schema": { "type": "string", "example": "http://localhost:5173" }
+                "schema": {
+                    "type": "string",
+                    "example": "http://localhost:5173"
+                }
             }
         },
         "schemas": {
@@ -40,7 +64,11 @@
                 "type": "object",
                 "required": ["email", "password"],
                 "properties": {
-                    "email": { "type": "string", "format": "email", "example": "user@example.com" },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "user@example.com"
+                    },
                     "password": {
                         "type": "string",
                         "format": "password",
@@ -49,8 +77,14 @@
                     }
                 }
             },
-            "role": { "type": "string", "enum": ["projectAdmin", "developer", "auditor"] },
-            "environment": { "type": "string", "enum": ["development", "staging", "production"] }
+            "role": {
+                "type": "string",
+                "enum": ["projectAdmin", "developer", "auditor"]
+            },
+            "environment": {
+                "type": "string",
+                "enum": ["development", "staging", "production"]
+            }
         }
     },
     "paths": {
@@ -58,18 +92,28 @@
             "post": {
                 "summary": "Sign up",
                 "security": [],
-                "parameters": [{ "$ref": "#/components/parameters/origin" }],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/origin"
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
-                            "schema": { "$ref": "#/components/schemas/credentials" }
+                            "schema": {
+                                "$ref": "#/components/schemas/credentials"
+                            }
                         }
                     }
                 },
                 "responses": {
-                    "201": { "description": "Account created" },
-                    "422": { "description": "Invalid input" }
+                    "201": {
+                        "description": "Account created"
+                    },
+                    "422": {
+                        "description": "Invalid input"
+                    }
                 }
             }
         },
@@ -77,32 +121,54 @@
             "post": {
                 "summary": "Log in and set cookie",
                 "security": [],
-                "parameters": [{ "$ref": "#/components/parameters/origin" }],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/origin"
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
-                            "schema": { "$ref": "#/components/schemas/credentials" }
+                            "schema": {
+                                "$ref": "#/components/schemas/credentials"
+                            }
                         }
                     }
                 },
                 "responses": {
-                    "200": { "description": "Logged in" },
-                    "401": { "description": "Invalid credentials" }
+                    "200": {
+                        "description": "Logged in"
+                    },
+                    "401": {
+                        "description": "Invalid credentials"
+                    }
                 }
             }
         },
         "/auth/logout": {
             "post": {
                 "summary": "Log out",
-                "parameters": [{ "$ref": "#/components/parameters/origin" }],
-                "responses": { "204": { "description": "Logged out" } }
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/origin"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Logged out"
+                    }
+                }
             }
         },
         "/auth/change-password": {
             "post": {
                 "summary": "Change own password and invalidate sessions",
-                "parameters": [{ "$ref": "#/components/parameters/origin" }],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/origin"
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -129,9 +195,15 @@
                     }
                 },
                 "responses": {
-                    "204": { "description": "Password updated and session cleared" },
-                    "401": { "description": "Current password incorrect or unauthenticated" },
-                    "422": { "description": "Validation error" }
+                    "204": {
+                        "description": "Password updated and session cleared"
+                    },
+                    "401": {
+                        "description": "Current password incorrect or unauthenticated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
                 }
             }
         },
@@ -139,15 +211,23 @@
             "get": {
                 "summary": "Current user",
                 "responses": {
-                    "200": { "description": "Current user" },
-                    "401": { "description": "Unauthenticated" }
+                    "200": {
+                        "description": "Current user"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
                 }
             }
         },
         "/account/profile": {
             "patch": {
                 "summary": "Update own username",
-                "parameters": [{ "$ref": "#/components/parameters/origin" }],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/origin"
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -167,16 +247,26 @@
                     }
                 },
                 "responses": {
-                    "200": { "description": "Updated user profile" },
-                    "409": { "description": "Username already taken" },
-                    "422": { "description": "Invalid username" }
+                    "200": {
+                        "description": "Updated user profile"
+                    },
+                    "409": {
+                        "description": "Username already taken"
+                    },
+                    "422": {
+                        "description": "Invalid username"
+                    }
                 }
             }
         },
         "/account/avatar": {
             "put": {
                 "summary": "Upload or replace own avatar",
-                "parameters": [{ "$ref": "#/components/parameters/origin" }],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/origin"
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -199,25 +289,43 @@
                     }
                 },
                 "responses": {
-                    "200": { "description": "Avatar updated" },
-                    "422": { "description": "Invalid or oversized image" }
+                    "200": {
+                        "description": "Avatar updated"
+                    },
+                    "422": {
+                        "description": "Invalid or oversized image"
+                    }
                 }
             },
             "delete": {
                 "summary": "Remove own avatar",
-                "parameters": [{ "$ref": "#/components/parameters/origin" }],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/origin"
+                    }
+                ],
                 "responses": {
-                    "200": { "description": "Avatar removed" }
+                    "200": {
+                        "description": "Avatar removed"
+                    }
                 }
             }
         },
         "/users/{userId}/avatar": {
-            "parameters": [{ "$ref": "#/components/parameters/userId" }],
+            "parameters": [
+                {
+                    "$ref": "#/components/parameters/userId"
+                }
+            ],
             "get": {
                 "summary": "Read user avatar binary (owner, shared project member, or Platform Admin)",
                 "responses": {
-                    "200": { "description": "Normalized raster image binary" },
-                    "404": { "description": "No avatar or caller not authorized" }
+                    "200": {
+                        "description": "Normalized raster image binary"
+                    },
+                    "404": {
+                        "description": "No avatar or caller not authorized"
+                    }
                 }
             }
         },
@@ -225,19 +333,42 @@
             "get": {
                 "summary": "List projects",
                 "parameters": [
-                    { "name": "cursor", "in": "query", "schema": { "type": "string" } },
+                    {
+                        "name": "cursor",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
                     {
                         "name": "limit",
                         "in": "query",
-                        "schema": { "type": "integer", "maximum": 100 }
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 100
+                        }
                     },
-                    { "name": "search", "in": "query", "schema": { "type": "string" } }
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
                 ],
-                "responses": { "200": { "description": "Projects" } }
+                "responses": {
+                    "200": {
+                        "description": "Projects"
+                    }
+                }
             },
             "post": {
                 "summary": "Create project",
-                "parameters": [{ "$ref": "#/components/parameters/origin" }],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/origin"
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -246,28 +377,50 @@
                                 "type": "object",
                                 "required": ["name"],
                                 "properties": {
-                                    "name": { "type": "string", "example": "Demo" },
-                                    "description": { "type": "string", "maxLength": 500 }
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Demo"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "maxLength": 500
+                                    }
                                 }
                             }
                         }
                     }
                 },
-                "responses": { "201": { "description": "Project created" } }
+                "responses": {
+                    "201": {
+                        "description": "Project created"
+                    }
+                }
             }
         },
         "/projects/{projectId}": {
-            "parameters": [{ "$ref": "#/components/parameters/projectId" }],
+            "parameters": [
+                {
+                    "$ref": "#/components/parameters/projectId"
+                }
+            ],
             "get": {
                 "summary": "Get project",
                 "responses": {
-                    "200": { "description": "Project with role and memberCount" },
-                    "404": { "description": "Not found or not a member" }
+                    "200": {
+                        "description": "Project with role and memberCount"
+                    },
+                    "404": {
+                        "description": "Not found or not a member"
+                    }
                 }
             },
             "patch": {
                 "summary": "Update project name or description (Project Admin only)",
-                "parameters": [{ "$ref": "#/components/parameters/origin" }],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/origin"
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -275,29 +428,54 @@
                             "schema": {
                                 "type": "object",
                                 "properties": {
-                                    "name": { "type": "string", "minLength": 1, "maxLength": 100 },
-                                    "description": { "type": "string", "maxLength": 500 }
+                                    "name": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 100
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "maxLength": 500
+                                    }
                                 }
                             }
                         }
                     }
                 },
                 "responses": {
-                    "200": { "description": "Updated project" },
-                    "403": { "description": "Forbidden (logged as denied)" },
-                    "404": { "description": "Not found or not a member" }
+                    "200": {
+                        "description": "Updated project"
+                    },
+                    "403": {
+                        "description": "Forbidden (logged as denied)"
+                    },
+                    "404": {
+                        "description": "Not found or not a member"
+                    }
                 }
             }
         },
         "/projects/{projectId}/members": {
-            "parameters": [{ "$ref": "#/components/parameters/projectId" }],
+            "parameters": [
+                {
+                    "$ref": "#/components/parameters/projectId"
+                }
+            ],
             "get": {
                 "summary": "List members",
-                "responses": { "200": { "description": "Members" } }
+                "responses": {
+                    "200": {
+                        "description": "Members"
+                    }
+                }
             },
             "post": {
                 "summary": "Add member",
-                "parameters": [{ "$ref": "#/components/parameters/origin" }],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/origin"
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -306,24 +484,41 @@
                                 "type": "object",
                                 "required": ["email", "role"],
                                 "properties": {
-                                    "email": { "type": "string", "format": "email" },
-                                    "role": { "$ref": "#/components/schemas/role" }
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "role": {
+                                        "$ref": "#/components/schemas/role"
+                                    }
                                 }
                             }
                         }
                     }
                 },
-                "responses": { "201": { "description": "Member added" } }
+                "responses": {
+                    "201": {
+                        "description": "Member added"
+                    }
+                }
             }
         },
         "/projects/{projectId}/members/{userId}": {
             "parameters": [
-                { "$ref": "#/components/parameters/projectId" },
-                { "$ref": "#/components/parameters/userId" }
+                {
+                    "$ref": "#/components/parameters/projectId"
+                },
+                {
+                    "$ref": "#/components/parameters/userId"
+                }
             ],
             "patch": {
                 "summary": "Change member role",
-                "parameters": [{ "$ref": "#/components/parameters/origin" }],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/origin"
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -331,27 +526,47 @@
                             "schema": {
                                 "type": "object",
                                 "required": ["role"],
-                                "properties": { "role": { "$ref": "#/components/schemas/role" } }
+                                "properties": {
+                                    "role": {
+                                        "$ref": "#/components/schemas/role"
+                                    }
+                                }
                             }
                         }
                     }
                 },
                 "responses": {
-                    "200": { "description": "Role changed" },
-                    "409": { "description": "Last admin" }
+                    "200": {
+                        "description": "Role changed"
+                    },
+                    "409": {
+                        "description": "Last admin"
+                    }
                 }
             },
             "delete": {
                 "summary": "Remove member",
-                "parameters": [{ "$ref": "#/components/parameters/origin" }],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/origin"
+                    }
+                ],
                 "responses": {
-                    "204": { "description": "Removed" },
-                    "409": { "description": "Last admin" }
+                    "204": {
+                        "description": "Removed"
+                    },
+                    "409": {
+                        "description": "Last admin"
+                    }
                 }
             }
         },
         "/projects/{projectId}/secrets": {
-            "parameters": [{ "$ref": "#/components/parameters/projectId" }],
+            "parameters": [
+                {
+                    "$ref": "#/components/parameters/projectId"
+                }
+            ],
             "get": {
                 "summary": "List secrets",
                 "parameters": [
@@ -359,14 +574,24 @@
                         "name": "environment",
                         "in": "query",
                         "required": true,
-                        "schema": { "$ref": "#/components/schemas/environment" }
+                        "schema": {
+                            "$ref": "#/components/schemas/environment"
+                        }
                     }
                 ],
-                "responses": { "200": { "description": "Masked secrets" } }
+                "responses": {
+                    "200": {
+                        "description": "Masked secrets"
+                    }
+                }
             },
             "post": {
                 "summary": "Create secret",
-                "parameters": [{ "$ref": "#/components/parameters/origin" }],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/origin"
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -375,25 +600,44 @@
                                 "type": "object",
                                 "required": ["key", "environment", "value"],
                                 "properties": {
-                                    "key": { "type": "string", "example": "API_KEY" },
-                                    "environment": { "$ref": "#/components/schemas/environment" },
-                                    "value": { "type": "string" }
+                                    "key": {
+                                        "type": "string",
+                                        "example": "API_KEY"
+                                    },
+                                    "environment": {
+                                        "$ref": "#/components/schemas/environment"
+                                    },
+                                    "value": {
+                                        "type": "string"
+                                    }
                                 }
                             }
                         }
                     }
                 },
-                "responses": { "201": { "description": "Created" } }
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    }
+                }
             }
         },
         "/projects/{projectId}/secrets/{secretId}": {
             "parameters": [
-                { "$ref": "#/components/parameters/projectId" },
-                { "$ref": "#/components/parameters/secretId" }
+                {
+                    "$ref": "#/components/parameters/projectId"
+                },
+                {
+                    "$ref": "#/components/parameters/secretId"
+                }
             ],
             "patch": {
                 "summary": "Edit secret value",
-                "parameters": [{ "$ref": "#/components/parameters/origin" }],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/origin"
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -401,73 +645,132 @@
                             "schema": {
                                 "type": "object",
                                 "required": ["value"],
-                                "properties": { "value": { "type": "string" } }
+                                "properties": {
+                                    "value": {
+                                        "type": "string"
+                                    }
+                                }
                             }
                         }
                     }
                 },
-                "responses": { "200": { "description": "Updated" } }
+                "responses": {
+                    "200": {
+                        "description": "Updated"
+                    }
+                }
             },
             "delete": {
                 "summary": "Delete secret",
-                "parameters": [{ "$ref": "#/components/parameters/origin" }],
-                "responses": { "204": { "description": "Deleted" } }
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/origin"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Deleted"
+                    }
+                }
             }
         },
         "/projects/{projectId}/secrets/{secretId}/reveal": {
             "parameters": [
-                { "$ref": "#/components/parameters/projectId" },
-                { "$ref": "#/components/parameters/secretId" }
+                {
+                    "$ref": "#/components/parameters/projectId"
+                },
+                {
+                    "$ref": "#/components/parameters/secretId"
+                }
             ],
             "post": {
                 "summary": "Reveal secret",
-                "parameters": [{ "$ref": "#/components/parameters/origin" }],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/origin"
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "type": "object",
-                                "properties": { "confirm": { "type": "boolean", "default": false } }
+                                "properties": {
+                                    "confirm": {
+                                        "type": "boolean",
+                                        "default": false
+                                    }
+                                }
                             }
                         }
                     }
                 },
                 "responses": {
-                    "200": { "description": "Decrypted value" },
-                    "422": { "description": "Production confirmation required" }
+                    "200": {
+                        "description": "Decrypted value"
+                    },
+                    "422": {
+                        "description": "Production confirmation required"
+                    }
                 }
             }
         },
         "/projects/{projectId}/audit-log": {
-            "parameters": [{ "$ref": "#/components/parameters/projectId" }],
+            "parameters": [
+                {
+                    "$ref": "#/components/parameters/projectId"
+                }
+            ],
             "get": {
                 "summary": "Project audit log",
                 "parameters": [
-                    { "name": "action", "in": "query", "schema": { "type": "string" } },
+                    {
+                        "name": "action",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
                     {
                         "name": "result",
                         "in": "query",
-                        "schema": { "type": "string", "enum": ["allowed", "denied"] }
+                        "schema": {
+                            "type": "string",
+                            "enum": ["allowed", "denied"]
+                        }
                     },
                     {
                         "name": "environment",
                         "in": "query",
-                        "schema": { "$ref": "#/components/schemas/environment" }
+                        "schema": {
+                            "$ref": "#/components/schemas/environment"
+                        }
                     },
                     {
                         "name": "limit",
                         "in": "query",
-                        "schema": { "type": "integer", "maximum": 100 }
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 100
+                        }
                     }
                 ],
-                "responses": { "200": { "description": "Audit entries" } }
+                "responses": {
+                    "200": {
+                        "description": "Audit entries"
+                    }
+                }
             }
         },
         "/account/deactivate": {
             "post": {
                 "summary": "Deactivate own user account",
-                "parameters": [{ "$ref": "#/components/parameters/origin" }],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/origin"
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -476,16 +779,25 @@
                                 "type": "object",
                                 "required": ["currentPassword"],
                                 "properties": {
-                                    "currentPassword": { "type": "string", "minLength": 1 }
+                                    "currentPassword": {
+                                        "type": "string",
+                                        "minLength": 1
+                                    }
                                 }
                             }
                         }
                     }
                 },
                 "responses": {
-                    "204": { "description": "Account deactivated and session cleared" },
-                    "401": { "description": "Invalid current password" },
-                    "409": { "description": "Last active platform admin" }
+                    "204": {
+                        "description": "Account deactivated and session cleared"
+                    },
+                    "401": {
+                        "description": "Invalid current password"
+                    },
+                    "409": {
+                        "description": "Last active platform admin"
+                    }
                 }
             }
         },
@@ -509,34 +821,80 @@
                     {
                         "name": "result",
                         "in": "query",
-                        "schema": { "type": "string", "enum": ["allowed", "denied"] }
+                        "schema": {
+                            "type": "string",
+                            "enum": ["allowed", "denied"]
+                        }
                     },
-                    { "name": "cursor", "in": "query", "schema": { "type": "string" } },
+                    {
+                        "name": "cursor",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
                     {
                         "name": "limit",
                         "in": "query",
-                        "schema": { "type": "integer", "maximum": 100 }
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 100
+                        }
                     }
                 ],
-                "responses": { "200": { "description": "Platform audit entries" } }
+                "responses": {
+                    "200": {
+                        "description": "Platform audit entries"
+                    }
+                }
             }
         },
         "/admin/users": {
             "get": {
                 "summary": "List users (Platform Admins sorted first)",
                 "parameters": [
-                    { "name": "cursor", "in": "query", "schema": { "type": "string" } },
-                    { "name": "page", "in": "query", "schema": { "type": "integer" } },
-                    { "name": "limit", "in": "query", "schema": { "type": "integer" } }
+                    {
+                        "name": "cursor",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
                 ],
-                "responses": { "200": { "description": "Users" } }
+                "responses": {
+                    "200": {
+                        "description": "Users"
+                    }
+                }
             }
         },
         "/admin/users/{userId}": {
-            "parameters": [{ "$ref": "#/components/parameters/userId" }],
+            "parameters": [
+                {
+                    "$ref": "#/components/parameters/userId"
+                }
+            ],
             "patch": {
                 "summary": "Update user status or admin role",
-                "parameters": [{ "$ref": "#/components/parameters/origin" }],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/origin"
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -544,17 +902,259 @@
                             "schema": {
                                 "type": "object",
                                 "properties": {
-                                    "isActive": { "type": "boolean" },
-                                    "isPlatformAdmin": { "type": "boolean" }
+                                    "isActive": {
+                                        "type": "boolean"
+                                    },
+                                    "isPlatformAdmin": {
+                                        "type": "boolean"
+                                    }
                                 }
                             }
                         }
                     }
                 },
                 "responses": {
-                    "200": { "description": "Updated" },
-                    "403": { "description": "Self-demotion or self-deactivation forbidden" },
-                    "409": { "description": "Last active platform admin" }
+                    "200": {
+                        "description": "Updated"
+                    },
+                    "403": {
+                        "description": "Self-demotion or self-deactivation forbidden"
+                    },
+                    "409": {
+                        "description": "Last active platform admin"
+                    }
+                }
+            }
+        },
+        "/auth/oauth/providers": {
+            "get": {
+                "tags": ["Auth"],
+                "summary": "List configured sign-in providers",
+                "security": [],
+                "responses": {
+                    "200": {
+                        "description": "Enabled providers only; no configuration credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "providers": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string",
+                                                "enum": ["google", "github"]
+                                            }
+                                        }
+                                    },
+                                    "required": ["providers"]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/oauth/{provider}/start": {
+            "post": {
+                "tags": ["Auth"],
+                "summary": "Start Google/GitHub sign-in or signup",
+                "security": [],
+                "parameters": [
+                    {
+                        "name": "provider",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": ["google", "github"]
+                        }
+                    },
+                    {
+                        "name": "Origin",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": false
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Authorization URL; also sets a ten-minute host-only httpOnly Lax browser-binding cookie. No session or provider tokens returned.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "authorizationUrl": {
+                                            "type": "string",
+                                            "format": "uri"
+                                        }
+                                    },
+                                    "required": ["authorizationUrl"]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Authentication required for deactivation"
+                    },
+                    "403": {
+                        "description": "Origin mismatch"
+                    },
+                    "404": {
+                        "description": "Provider not configured"
+                    },
+                    "422": {
+                        "description": "Invalid provider/body"
+                    },
+                    "429": {
+                        "description": "Too many attempts"
+                    }
+                }
+            }
+        },
+        "/auth/oauth/{provider}/deactivate/start": {
+            "post": {
+                "tags": ["Auth"],
+                "summary": "Confirm OAuth-only account deactivation with a fresh provider round trip",
+                "security": [
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "provider",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": ["google", "github"]
+                        }
+                    },
+                    {
+                        "name": "Origin",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": false
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Authorization URL; also sets a ten-minute host-only httpOnly Lax browser-binding cookie. No session or provider tokens returned.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "authorizationUrl": {
+                                            "type": "string",
+                                            "format": "uri"
+                                        }
+                                    },
+                                    "required": ["authorizationUrl"]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Authentication required for deactivation"
+                    },
+                    "403": {
+                        "description": "Origin mismatch"
+                    },
+                    "404": {
+                        "description": "Provider not configured"
+                    },
+                    "422": {
+                        "description": "Invalid provider/body"
+                    },
+                    "429": {
+                        "description": "Too many attempts"
+                    }
+                }
+            }
+        },
+        "/auth/oauth/{provider}/callback": {
+            "get": {
+                "tags": ["Auth"],
+                "summary": "Consume a browser-bound, one-use OAuth callback",
+                "security": [],
+                "parameters": [
+                    {
+                        "name": "provider",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": ["google", "github"]
+                        }
+                    },
+                    {
+                        "name": "state",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 256
+                        }
+                    },
+                    {
+                        "name": "code",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 4096
+                        }
+                    },
+                    {
+                        "name": "error",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 256
+                        }
+                    }
+                ],
+                "responses": {
+                    "303": {
+                        "description": "Fixed client redirect to projects, login or settings with allowlisted outcome flags; successful sign-in sets the existing httpOnly session cookie"
+                    },
+                    "422": {
+                        "description": "Unknown provider"
+                    },
+                    "429": {
+                        "description": "Rate limit exceeded"
+                    },
+                    "500": {
+                        "description": "Application transaction/audit failure; no success session cookie"
+                    }
                 }
             }
         }

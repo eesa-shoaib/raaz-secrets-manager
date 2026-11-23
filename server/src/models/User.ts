@@ -5,7 +5,9 @@ export interface UserDoc extends Document {
     username: string | null;
     hasAvatar: boolean;
     avatarUpdatedAt: Date | null;
-    passwordHash: string;
+    passwordHash: string | null;
+    passwordEnabled: boolean;
+    oauthProvider: 'google' | 'github' | null;
     tokenVersion: number;
     isPlatformAdmin: boolean;
     isActive: boolean;
@@ -19,7 +21,16 @@ const userSchema = new mongoose.Schema<UserDoc>(
         username: { type: String, trim: true, lowercase: true, default: null },
         hasAvatar: { type: Boolean, required: true, default: false },
         avatarUpdatedAt: { type: Date, default: null },
-        passwordHash: { type: String, required: true, select: false },
+        passwordHash: {
+            type: String,
+            default: null,
+            select: false,
+            required: function (this: { passwordEnabled?: boolean }) {
+                return this.passwordEnabled !== false;
+            },
+        },
+        passwordEnabled: { type: Boolean, default: true },
+        oauthProvider: { type: String, enum: ['google', 'github', null], default: null },
         tokenVersion: { type: Number, required: true, default: 0 },
         isPlatformAdmin: { type: Boolean, required: true, default: false },
         isActive: { type: Boolean, required: true, default: true },
