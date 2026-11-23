@@ -9,6 +9,7 @@ const mockUseSecretsPage = vi.fn();
 const mockWriteText = vi.fn();
 const mockGenerateEnvExample = vi.fn();
 const mockImportSecrets = vi.fn();
+const mockRevealSecret = vi.fn();
 const mockExportSecrets = vi.fn();
 const mockExportReset = vi.fn();
 const mockPermissions = {
@@ -26,6 +27,7 @@ vi.mock('../hooks/useSecrets', () => ({
     useDeleteSecret: () => ({ mutateAsync: vi.fn(), isPending: false }),
     useGenerateEnvExample: () => ({ mutateAsync: mockGenerateEnvExample, isPending: false }),
     useImportSecrets: () => ({ mutateAsync: mockImportSecrets, isPending: false }),
+    useRevealSecret: () => ({ mutateAsync: mockRevealSecret, reset: vi.fn() }),
     useExportSecrets: () => ({
         mutateAsync: mockExportSecrets,
         reset: mockExportReset,
@@ -35,12 +37,6 @@ vi.mock('../hooks/useSecrets', () => ({
 
 vi.mock('../hooks/usePermissions', () => ({
     usePermissions: () => mockPermissions,
-}));
-
-vi.mock('../components/SecretValueCell', () => ({
-    SecretValueCell: ({ secretKey }: { secretKey: string }) => (
-        <span data-testid={`masked-${secretKey}`}>••••••••</span>
-    ),
 }));
 
 const renderSecretsPage = (initialEntry = '/projects/proj-1/secrets?environment=development') =>
@@ -232,6 +228,24 @@ describe('SecretsPage', () => {
             '# .env.example — Demo (development)\nDATABASE_URL=\n',
         );
         downloadSpy.mockRestore();
+    });
+
+    it('clears a revealed value after overwrite and reveals the replacement on request', async () => {
+        mockRevealSecret.mockResolvedValue({ value: 'synthetic-before-import' });
+        mockImportSecrets.mockResolvedValue({ created: 0, updated: 1, skipped: 0, total: 1 });
+        renderSecretsPage();
+        fireEvent.click(screen.getByRole('button', { name: 'Reveal secret DATABASE_URL' }));
+        await screen.findByText('synthetic-before-import');
+        fireEvent.click(screen.getByRole('button', { name: /Import \.env/i }));
+        fireEvent.change(screen.getByLabelText(/Paste \.env content/i), {
+            target: { value: 'DATABASE_URL=synthetic-after-import' },
+        });
+        fireEvent.click(screen.getByLabelText('Overwrite'));
+        fireEvent.click(screen.getByRole('button', { name: 'Import 1 Secret' }));
+        await waitFor(() => expect(screen.queryByText('synthetic-before-import')).toBeNull());
+        mockRevealSecret.mockResolvedValue({ value: 'synthetic-after-import' });
+        fireEvent.click(screen.getByRole('button', { name: 'Reveal secret DATABASE_URL' }));
+        await screen.findByText('synthetic-after-import');
     });
 
     it('opens Import .env modal, masks preview values, and submits chosen conflict mode', async () => {
