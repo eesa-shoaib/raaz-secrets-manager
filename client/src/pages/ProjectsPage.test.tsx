@@ -2,12 +2,13 @@ import type { ProjectResponse } from '@raaz/shared-schemas';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react';
 import React from 'react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as projectsApi from '../api/projects';
 import { ToastProvider } from '../components/Toaster';
 import { useProjectsPage } from '../hooks/useProjects';
 import { queryKeys } from '../lib/queryClient';
+import ProjectLayout from './ProjectLayout';
 import ProjectsPage from './ProjectsPage';
 
 vi.mock('../api/projects', async (importOriginal) => {
@@ -15,6 +16,7 @@ vi.mock('../api/projects', async (importOriginal) => {
     return {
         ...actual,
         getProjectsPage: vi.fn(),
+        getProject: vi.fn(),
         createProject: vi.fn(),
     };
 });
@@ -47,6 +49,11 @@ function makeProjects(count: number, offset = 0): ProjectResponse[] {
     }));
 }
 
+function BrowserBack() {
+    const navigate = useNavigate();
+    return <button onClick={() => navigate(-1)}>Browser back</button>;
+}
+
 describe('ProjectsPage 9-item pagination', () => {
     beforeEach(() => {
         vi.clearAllMocks();
@@ -69,8 +76,14 @@ describe('ProjectsPage 9-item pagination', () => {
                 <QueryClientProvider client={client}>
                     <ToastProvider>
                         <MemoryRouter initialEntries={['/projects']}>
+                            <BrowserBack />
                             <Routes>
                                 <Route path="/projects" element={<ProjectsPage />} />
+                                <Route path="/projects/:projectId" element={<ProjectLayout />}>
+                                    <Route path="secrets" element={<p>Secrets content</p>} />
+                                    <Route path="members" element={<p>Members content</p>} />
+                                    <Route path="audit-log" element={<p>Audit content</p>} />
+                                </Route>
                             </Routes>
                         </MemoryRouter>
                     </ToastProvider>
@@ -78,6 +91,69 @@ describe('ProjectsPage 9-item pagination', () => {
             ),
         };
     }
+
+    it.each(['Secrets', 'Members', 'Audit Log', 'Browser back'])(
+        'returns to page two after opening a project via %s',
+        async (destination) => {
+            const selected = { ...makeProjects(1, 9)[0], id: 'aaaaaaaaaaaaaaaaaaaaaaaa' };
+            vi.mocked(projectsApi.getProject).mockResolvedValue(selected);
+            vi.mocked(projectsApi.getProjectsPage).mockImplementation(async (params) => ({
+                data: params?.cursor ? [selected] : makeProjects(9),
+                nextCursor: params?.cursor ? null : 'cursor-page-2',
+                hasMore: !params?.cursor,
+                total: 10,
+                limit: 9,
+            }));
+            renderProjectsPage();
+            await screen.findByText('Project 1');
+            fireEvent.change(screen.getByLabelText('Search projects'), {
+                target: { value: 'Project' },
+            });
+            await waitFor(() =>
+                expect(projectsApi.getProjectsPage).toHaveBeenLastCalledWith({
+                    cursor: null,
+                    limit: 9,
+                    search: 'Project',
+                }),
+            );
+            await waitFor(() =>
+                expect(
+                    (screen.getByRole('button', { name: 'Next' }) as HTMLButtonElement).disabled,
+                ).toBe(false),
+            );
+            fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+            const projectLink = await screen.findByRole('link', { name: /Project 10/ });
+            fireEvent.click(projectLink);
+            await screen.findByRole('navigation', { name: 'Project sections' });
+
+            if (destination === 'Browser back') {
+                fireEvent.click(screen.getByRole('button', { name: 'Browser back' }));
+            } else {
+                fireEvent.click(screen.getByRole('link', { name: destination }));
+                fireEvent.click(screen.getByRole('button', { name: 'Go back' }));
+            }
+
+            await screen.findByRole('link', { name: /Project 10/ });
+            expect(screen.getByLabelText('Page 2 of 2')).toBeTruthy();
+            expect(projectsApi.getProjectsPage).toHaveBeenLastCalledWith({
+                cursor: 'cursor-page-2',
+                limit: 9,
+                search: 'Project',
+            });
+            expect((screen.getByLabelText('Search projects') as HTMLInputElement).value).toBe(
+                'Project',
+            );
+            await waitFor(() =>
+                expect(
+                    (screen.getByRole('button', { name: 'Previous' }) as HTMLButtonElement)
+                        .disabled,
+                ).toBe(false),
+            );
+            fireEvent.click(screen.getByRole('button', { name: 'Previous' }));
+            await screen.findByText('Project 1');
+            expect(screen.getByLabelText('Page 1 of 2')).toBeTruthy();
+        },
+    );
 
     it('requests 9 projects per page and supports Next, Previous, and First page controls', async () => {
         vi.mocked(projectsApi.getProjectsPage).mockImplementation(async (params) => {
@@ -114,6 +190,7 @@ describe('ProjectsPage 9-item pagination', () => {
             expect(screen.getByText('Project 1')).toBeTruthy();
             expect(screen.getByText('Project 9')).toBeTruthy();
             expect(screen.getByLabelText('Page 1 of 3')).toBeTruthy();
+            expect(screen.getByLabelText('Page 1 of 3')).toBeTruthy();
         });
         expect(projectsApi.getProjectsPage).toHaveBeenLastCalledWith({
             cursor: null,
@@ -132,6 +209,7 @@ describe('ProjectsPage 9-item pagination', () => {
         await waitFor(() => {
             expect(screen.getByText('Project 10')).toBeTruthy();
             expect(screen.getByLabelText('Page 2 of 3')).toBeTruthy();
+            expect(screen.getByLabelText('Page 2 of 3')).toBeTruthy();
         });
         expect(projectsApi.getProjectsPage).toHaveBeenLastCalledWith({
             cursor: 'cursor-page-2',
@@ -143,6 +221,7 @@ describe('ProjectsPage 9-item pagination', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Next' }));
         await waitFor(() => {
             expect(screen.getByText('Project 19')).toBeTruthy();
+            expect(screen.getByLabelText('Page 3 of 3')).toBeTruthy();
             expect(screen.getByLabelText('Page 3 of 3')).toBeTruthy();
         });
         expect(projectsApi.getProjectsPage).toHaveBeenLastCalledWith({

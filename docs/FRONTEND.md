@@ -286,7 +286,14 @@ noted, not omitted.
 
 - **Layout:** full-width `TabNav` above a 2-column grid (no inner inset or horizontal scrollbar); routed content occupies the main column while a right-side `Project information` column aligns vertically with the table/key header below page controls and displays the project name, `description`, caller `role`, total `memberCount`, optional archived status, and an icon button (Project Admin only) opening the Edit Project Details modal. When viewing the Secrets tab, the `.env` action controls (**Generate `.env.example`**, **Import `.env`**, and **Export `.env`**) are rendered on the right side directly under the project description/information panel. On smaller screens, the columns stack.
 
-- **Back:** an inline back control returns to the previous in-app history entry; when opened directly, it returns to `/projects`. The project header does not display the database ID.
+- **Back:** the inline back control always returns to `/projects` from Secrets,
+  Members, and Audit Log, rather than stepping through tab history. Project cards
+  carry the projects list's cursor, cursor history, and search in router navigation
+  state; preserve that return state across project tabs. The projects route stores
+  its list state in its own history entry so browser Back also restores the page
+  and filter. Direct project entry returns to the first projects page. No secret
+  values or provider credentials enter navigation state. The project header does
+  not display the database ID.
 
 - **States:**
 

@@ -1,13 +1,15 @@
 import type { ProjectResponse } from '@raaz/shared-schemas';
 import React from 'react';
 import { Link } from 'react-router-dom';
+import type { ProjectsListState } from '../lib/projectsNavigation';
 import { Badge } from './Badge';
 
 interface ProjectCardProps {
     project: ProjectResponse;
+    listState?: ProjectsListState;
 }
 
-export function ProjectCard({ project }: ProjectCardProps) {
+export function ProjectCard({ project, listState }: ProjectCardProps) {
     const isArchived = project.status === 'archived';
 
     const cardContent = (
@@ -76,6 +78,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
     return (
         <Link
             to={`/projects/${project.id}/secrets`}
+            state={listState ? { projectsList: listState } : undefined}
             className="block focus:outline-none focus:ring-2 focus:ring-primary rounded-3xl"
         >
             {cardContent}

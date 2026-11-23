@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { updateProjectSchema, type UpdateProjectInput } from '@raaz/shared-schemas';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useParams, Outlet, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Badge } from '../components/Badge';
@@ -14,6 +14,7 @@ import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { usePermissions } from '../hooks/usePermissions';
 import { useProject, useUpdateProject } from '../hooks/useProjects';
 import { isApiError } from '../lib/errorHandling';
+import { readProjectsListState } from '../lib/projectsNavigation';
 import { StatusPage } from './StatusPage';
 
 const OBJECT_ID_REGEX = /^[a-f\d]{24}$/i;
@@ -22,6 +23,8 @@ export function ProjectLayout() {
     const { projectId } = useParams<{ projectId: string }>();
     const location = useLocation();
     const navigate = useNavigate();
+    const projectsListState = useRef(readProjectsListState(location.state)).current;
+    const returnState = projectsListState ? { projectsList: projectsListState } : undefined;
     const { toast } = useToast();
 
     const validProjectId = projectId && OBJECT_ID_REGEX.test(projectId) ? projectId : undefined;
@@ -92,7 +95,7 @@ export function ProjectLayout() {
         location.pathname === `/projects/${projectId}` ||
         location.pathname === `/projects/${projectId}/`
     ) {
-        return <Navigate to={`/projects/${projectId}/secrets`} replace />;
+        return <Navigate to={`/projects/${projectId}/secrets`} state={returnState} replace />;
     }
 
     const tabItems = [
@@ -142,12 +145,10 @@ export function ProjectLayout() {
                 type="button"
                 className="btn btn-ghost btn-sm h-9 gap-2 px-2 text-base-content/70 hover:text-primary transition-colors"
                 onClick={() => {
-                    if (
-                        typeof window.history.state?.idx === 'number' &&
-                        window.history.state.idx > 0
-                    )
-                        navigate(-1);
-                    else navigate('/projects', { replace: true });
+                    navigate('/projects', {
+                        replace: true,
+                        ...(returnState ? { state: returnState } : {}),
+                    });
                 }}
                 aria-label="Go back"
             >
@@ -169,7 +170,7 @@ export function ProjectLayout() {
             </button>
 
             <div className="border-b border-base-300">
-                <TabNav items={tabItems} />
+                <TabNav items={tabItems} state={returnState} />
             </div>
 
             <div className="grid min-w-0 grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-8">

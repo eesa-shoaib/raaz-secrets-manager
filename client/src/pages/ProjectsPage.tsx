@@ -1,8 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createProjectSchema, type CreateProjectInput } from '@raaz/shared-schemas';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { PROJECTS_PAGE_SIZE } from '../api/projects';
 import { FormField } from '../components/FormField';
 import { EmptyState, ErrorState } from '../components/FullPageState';
@@ -17,24 +17,34 @@ import { useAuth } from '../hooks/useAuth';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { useProjectsPage, useCreateProject } from '../hooks/useProjects';
 import { isApiError } from '../lib/errorHandling';
+import {
+    initialProjectsListState,
+    readProjectsListState,
+    type ProjectsListState,
+} from '../lib/projectsNavigation';
 
 export function ProjectsPage() {
     useDocumentTitle('Raaz');
-    const [searchInput, setSearchInput] = useState('');
-    const [debouncedSearch, setDebouncedSearch] = useState('');
-    const [cursor, setCursor] = useState<string | null>(null);
-    const [cursorHistory, setCursorHistory] = useState<(string | null)[]>([]);
+    const location = useLocation();
+    const navigate = useNavigate();
+    const listState = readProjectsListState(location.state) ?? initialProjectsListState;
+    const { search: debouncedSearch, cursor, cursorHistory } = listState;
+    const [searchInput, setSearchInput] = useState(listState.search);
+    const updateListState = useCallback(
+        (next: ProjectsListState) => {
+            navigate('/projects', { replace: true, state: { projectsList: next } });
+        },
+        [navigate],
+    );
 
     useEffect(() => {
         const trimmed = searchInput.trim();
         if (trimmed === debouncedSearch) return;
         const timer = setTimeout(() => {
-            setDebouncedSearch(trimmed);
-            setCursor(null);
-            setCursorHistory([]);
+            updateListState({ search: trimmed, cursor: null, cursorHistory: [] });
         }, 250);
         return () => clearTimeout(timer);
-    }, [searchInput, debouncedSearch]);
+    }, [searchInput, debouncedSearch, updateListState]);
 
     const { data, isLoading, isFetching, isError, error, refetch } = useProjectsPage({
         cursor,
@@ -45,7 +55,6 @@ export function ProjectsPage() {
     const { mutateAsync: createProject, isPending: isCreating } = useCreateProject();
     const { user } = useAuth();
     const { toast } = useToast();
-    const navigate = useNavigate();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalError, setModalError] = useState<string | null>(null);
@@ -65,21 +74,26 @@ export function ProjectsPage() {
 
     const handleNext = () => {
         if (!data?.nextCursor) return;
-        setCursorHistory((prev) => [...prev, cursor]);
-        setCursor(data.nextCursor);
+        updateListState({
+            ...listState,
+            cursor: data.nextCursor,
+            cursorHistory: [...cursorHistory, cursor],
+        });
     };
 
     const handlePrevious = () => {
         if (cursorHistory.length === 0) return;
         const previousCursor = cursorHistory[cursorHistory.length - 1] ?? null;
-        setCursorHistory((prev) => prev.slice(0, -1));
-        setCursor(previousCursor);
+        updateListState({
+            ...listState,
+            cursor: previousCursor,
+            cursorHistory: cursorHistory.slice(0, -1),
+        });
     };
 
     const handleFirstPage = () => {
         if (cursorHistory.length === 0 && cursor === null) return;
-        setCursor(null);
-        setCursorHistory([]);
+        updateListState({ ...listState, cursor: null, cursorHistory: [] });
     };
 
     const handleOpenModal = () => {
@@ -100,7 +114,7 @@ export function ProjectsPage() {
             const created = await createProject(data);
             toast.success(`Project "${created.name}" created successfully`);
             handleCloseModal();
-            navigate(`/projects/${created.id}/secrets`);
+            navigate(`/projects/${created.id}/secrets`, { state: { projectsList: listState } });
         } catch (err: unknown) {
             if (isApiError(err)) {
                 setModalError(err.message || 'Failed to create project');
@@ -113,17 +127,15 @@ export function ProjectsPage() {
     return (
         <div className="space-y-6">
             <PageHeader
-                title="Projects"
                 description="Manage encrypted secrets and team memberships across environments"
+                title="Projects"
                 actions={
                     <div className="flex flex-wrap items-center gap-3">
                         <SearchInput
                             value={searchInput}
                             onChange={setSearchInput}
                             onClear={() => {
-                                setDebouncedSearch('');
-                                setCursor(null);
-                                setCursorHistory([]);
+                                updateListState(initialProjectsListState);
                             }}
                             placeholder="Search projects..."
                             ariaLabel="Search projects"
@@ -168,7 +180,7 @@ export function ProjectsPage() {
                 <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {projects.map((project) => (
-                            <ProjectCard key={project.id} project={project} />
+                            <ProjectCard key={project.id} project={project} listState={listState} />
                         ))}
                     </div>
                     <PaginationControls
@@ -188,16 +200,14 @@ export function ProjectsPage() {
                 </div>
             ) : debouncedSearch ? (
                 <EmptyState
-                    title="No matching projects"
                     description={`No projects matched "${debouncedSearch}".`}
+                    title="No matching projects"
                     action={
                         <button
                             type="button"
                             onClick={() => {
                                 setSearchInput('');
-                                setDebouncedSearch('');
-                                setCursor(null);
-                                setCursorHistory([]);
+                                updateListState(initialProjectsListState);
                             }}
                             className="btn btn-outline btn-sm rounded-xl"
                         >
@@ -207,7 +217,6 @@ export function ProjectsPage() {
                 />
             ) : (
                 <EmptyState
-                    title="No projects yet"
                     description={
                         <span>
                             You&apos;re not a member of any projects yet. Create a project, or ask a
@@ -218,6 +227,7 @@ export function ProjectsPage() {
                             .
                         </span>
                     }
+                    title="No projects yet"
                     action={
                         <button
                             type="button"
