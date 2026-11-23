@@ -348,6 +348,9 @@ export function MembersPage() {
                         onPrevious={handlePrevious}
                         onNext={handleNext}
                         pageNumber={cursorHistory.length + 1}
+                        totalPages={
+                            data ? Math.max(1, Math.ceil(data.total / data.limit)) : undefined
+                        }
                         itemCount={members.length}
                         isFetching={isFetching}
                         noun="members"

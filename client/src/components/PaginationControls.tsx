@@ -7,6 +7,7 @@ export interface PaginationControlsProps {
     onNext: () => void;
     onFirstPage?: () => void;
     pageNumber: number;
+    totalPages?: number;
     itemCount: number;
     isFetching?: boolean;
     noun?: string;
@@ -19,20 +20,35 @@ export function PaginationControls({
     onNext,
     onFirstPage,
     pageNumber,
+    totalPages,
     itemCount,
     isFetching = false,
 }: PaginationControlsProps) {
     if (!hasPrevious && !hasNext && itemCount === 0) {
         return null;
     }
+    const hasTotal = totalPages !== undefined && Number.isFinite(totalPages) && totalPages > 0;
 
     return (
         <nav
             aria-label="Pagination"
             className="flex flex-wrap items-center justify-between gap-3 pt-2 text-sm font-ui text-base-content/70"
         >
-            <div>
-                Page <span className="font-semibold text-base-content">{pageNumber}</span>
+            <div
+                role="status"
+                className="inline-flex items-baseline gap-1.5 tabular-nums"
+                aria-label={hasTotal ? `Page ${pageNumber} of ${totalPages}` : `Page ${pageNumber}`}
+                aria-live="polite"
+            >
+                <span className="font-semibold text-base-content">{pageNumber}</span>
+                {hasTotal && (
+                    <>
+                        <span aria-hidden="true" className="text-base-content/30">
+                            /
+                        </span>
+                        <span>{totalPages}</span>
+                    </>
+                )}
             </div>
             <div className="flex items-center gap-2">
                 {onFirstPage && (

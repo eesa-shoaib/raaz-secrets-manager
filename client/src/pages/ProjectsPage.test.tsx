@@ -113,6 +113,7 @@ describe('ProjectsPage 9-item pagination', () => {
         await waitFor(() => {
             expect(screen.getByText('Project 1')).toBeTruthy();
             expect(screen.getByText('Project 9')).toBeTruthy();
+            expect(screen.getByLabelText('Page 1 of 3')).toBeTruthy();
         });
         expect(projectsApi.getProjectsPage).toHaveBeenLastCalledWith({
             cursor: null,
@@ -130,6 +131,7 @@ describe('ProjectsPage 9-item pagination', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Next' }));
         await waitFor(() => {
             expect(screen.getByText('Project 10')).toBeTruthy();
+            expect(screen.getByLabelText('Page 2 of 3')).toBeTruthy();
         });
         expect(projectsApi.getProjectsPage).toHaveBeenLastCalledWith({
             cursor: 'cursor-page-2',
@@ -141,6 +143,7 @@ describe('ProjectsPage 9-item pagination', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Next' }));
         await waitFor(() => {
             expect(screen.getByText('Project 19')).toBeTruthy();
+            expect(screen.getByLabelText('Page 3 of 3')).toBeTruthy();
         });
         expect(projectsApi.getProjectsPage).toHaveBeenLastCalledWith({
             cursor: 'cursor-page-3',

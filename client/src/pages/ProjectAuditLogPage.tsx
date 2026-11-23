@@ -502,6 +502,9 @@ export function ProjectAuditLogPage() {
                         onPrevious={handlePrevious}
                         onNext={handleNext}
                         pageNumber={cursorHistory.length + 1}
+                        totalPages={
+                            data ? Math.max(1, Math.ceil(data.total / data.limit)) : undefined
+                        }
                         itemCount={entries.length}
                         isFetching={isFetching}
                         noun="entries"

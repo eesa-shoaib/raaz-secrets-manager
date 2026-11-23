@@ -284,6 +284,9 @@ export function AdminUsersPage() {
                             onPrevious={handlePrevious}
                             onNext={handleNext}
                             pageNumber={cursorHistory.length + 1}
+                            totalPages={
+                                data ? Math.max(1, Math.ceil(data.total / data.limit)) : undefined
+                            }
                             itemCount={users.length}
                             isFetching={isFetching}
                             noun="users"
@@ -496,6 +499,16 @@ export function AdminUsersPage() {
                                 onPrevious={handleAuditPrevious}
                                 onNext={handleAuditNext}
                                 pageNumber={auditHistory.length + 1}
+                                totalPages={
+                                    auditQuery.data
+                                        ? Math.max(
+                                              1,
+                                              Math.ceil(
+                                                  auditQuery.data.total / auditQuery.data.limit,
+                                              ),
+                                          )
+                                        : undefined
+                                }
                                 itemCount={auditEntries.length}
                                 isFetching={auditQuery.isFetching}
                                 noun="entries"
