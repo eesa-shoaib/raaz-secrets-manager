@@ -29,7 +29,7 @@ export function Navbar() {
     };
 
     return (
-        <header className="sticky top-2 z-40 mx-auto mt-4 w-[84%] max-w-9xl rounded-sm border-2 border-solid border-base-300 bg-base-200">
+        <header className="sticky top-2 z-40 mx-auto mt-4 w-[calc(100%-2rem)] sm:w-[90%] lg:w-[84%] max-w-7xl rounded-sm border-2 border-solid border-base-300 bg-base-200">
             <div className="mx-auto flex h-24 items-center justify-between gap-2 px-4 sm:px-6">
                 {/* Left: Brand + Navigation */}
                 <div className="flex items-center gap-6 pl-4 sm:pl-6">
