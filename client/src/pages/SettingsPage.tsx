@@ -403,7 +403,7 @@ export function SettingsPage() {
                                         hasAvatar={user.hasAvatar}
                                         avatarUpdatedAt={user.avatarUpdatedAt}
                                         size="lg"
-                                        className="!h-24 !w-24 !text-3xl"
+                                        className="!h-36 !w-36 !text-5xl"
                                     />
                                     <input
                                         ref={fileInputRef}

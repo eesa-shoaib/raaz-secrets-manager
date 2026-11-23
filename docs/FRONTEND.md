@@ -471,7 +471,7 @@ promise.
   beside one active content section; navigation becomes a row on mobile. Reuse
   the existing theme tokens, typography, inputs, avatar, and confirmation modals.
   Use section dividers instead of stacked centered cards. Profile fields align
-  left with a 6rem picture preview to their right on wide screens. Keep labels,
+  left with a 9rem picture preview to their right on wide screens. Keep labels,
   errors, upload limits, and confirmation consequences; omit repeated identity
   blocks, introductory prose, theme descriptions, and active badges.
   Settings have no shared enclosing panel: the 15rem desktop sidebar uses the
