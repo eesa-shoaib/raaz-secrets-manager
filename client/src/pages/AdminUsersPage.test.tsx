@@ -50,6 +50,7 @@ describe('AdminUsersPage and RequirePlatformAdmin', () => {
             data: [],
             nextCursor: null,
             hasMore: false,
+            total: 0,
             limit: 25,
         });
         HTMLDialogElement.prototype.showModal = function () {
@@ -109,6 +110,7 @@ describe('AdminUsersPage and RequirePlatformAdmin', () => {
                     ],
                     nextCursor: null,
                     hasMore: false,
+                    total: 3,
                     limit: 25,
                 };
             }
@@ -126,6 +128,7 @@ describe('AdminUsersPage and RequirePlatformAdmin', () => {
                 ],
                 nextCursor: 'cursor-page-2',
                 hasMore: true,
+                total: 3,
                 limit: 25,
             };
         });
@@ -262,6 +265,7 @@ describe('AdminUsersPage and RequirePlatformAdmin', () => {
             ],
             nextCursor: null,
             hasMore: false,
+            total: 1,
             limit: 25,
         });
 

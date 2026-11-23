@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { Buffer } from 'node:buffer';
 import {
+    createCursorPaginatedResponseSchema,
     signupSchema,
     loginSchema,
     publicUserSchema,
@@ -60,7 +61,7 @@ assert.throws(() =>
     changePasswordInputSchema.parse({
         currentPassword: 'samePassword123',
         newPassword: 'samePassword123',
-    })
+    }),
 );
 
 const deactivateInput = deactivateAccountInputSchema.parse({ currentPassword: 'oldPassword123' });
@@ -72,9 +73,7 @@ assert.strictEqual(profileUpdated.username, 'ali_dev-01');
 const profileCleared = profileUpdateInputSchema.parse({ username: '' });
 assert.strictEqual(profileCleared.username, null);
 assert.throws(() => profileUpdateInputSchema.parse({ username: 'a!' }));
-assert.throws(() =>
-    profileUpdateInputSchema.parse({ username: 'ali_dev', isPlatformAdmin: true })
-);
+assert.throws(() => profileUpdateInputSchema.parse({ username: 'ali_dev', isPlatformAdmin: true }));
 
 const avatarInput = avatarUploadInputSchema.parse({
     contentType: 'image/png',
@@ -82,7 +81,7 @@ const avatarInput = avatarUploadInputSchema.parse({
 });
 assert.strictEqual(avatarInput.contentType, 'image/png');
 assert.throws(() =>
-    avatarUploadInputSchema.parse({ contentType: 'image/svg+xml', data: 'PHN2Zz48L3N2Zz4=' })
+    avatarUploadInputSchema.parse({ contentType: 'image/svg+xml', data: 'PHN2Zz48L3N2Zz4=' }),
 );
 
 const adminPageQuery = adminUsersQuerySchema.parse({});
@@ -154,13 +153,13 @@ assert.strictEqual(projQuery.limit, 25);
 
 // 3. Secret schemas
 assert.throws(() =>
-    createSecretSchema.parse({ environment: 'invalid', key: 'TEST', value: 'val' })
+    createSecretSchema.parse({ environment: 'invalid', key: 'TEST', value: 'val' }),
 );
 assert.throws(() =>
-    createSecretSchema.parse({ environment: 'development', key: 'invalid-key!', value: 'val' })
+    createSecretSchema.parse({ environment: 'development', key: 'invalid-key!', value: 'val' }),
 );
 assert.throws(() =>
-    createSecretSchema.parse({ environment: 'development', key: 'lower_case', value: 'val' })
+    createSecretSchema.parse({ environment: 'development', key: 'lower_case', value: 'val' }),
 );
 
 const secret = createSecretSchema.parse({
@@ -224,5 +223,12 @@ const auditEntry = auditLogEntrySchema.parse({
 });
 assert.strictEqual(auditEntry.action, 'reveal');
 assert.strictEqual(auditEntry.user?.username, 'ali_dev');
+
+const cursorResponseSchema = createCursorPaginatedResponseSchema(projectResponseSchema);
+const emptyCursorPage = { data: [], nextCursor: null, hasMore: false, limit: 9, total: 0 };
+assert.strictEqual(cursorResponseSchema.parse(emptyCursorPage).total, 0);
+assert.throws(() => cursorResponseSchema.parse({ ...emptyCursorPage, total: -1 }));
+assert.throws(() => cursorResponseSchema.parse({ ...emptyCursorPage, total: 1.5 }));
+assert.throws(() => cursorResponseSchema.parse({ ...emptyCursorPage, total: undefined }));
 
 console.log('✓ All shared-schemas tests passed!');

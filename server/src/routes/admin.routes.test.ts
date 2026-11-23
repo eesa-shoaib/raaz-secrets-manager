@@ -21,6 +21,7 @@ vi.mock('../services/admin.service.js', () => ({
         data: [],
         nextCursor: null,
         hasMore: false,
+        total: 0,
         limit,
     })),
     updateUser: vi.fn(async () => ({ id: 'bbbbbbbbbbbbbbbbbbbbbbbb' })),
@@ -30,6 +31,7 @@ vi.mock('../services/audit.service.js', () => ({
         data: [],
         nextCursor: null,
         hasMore: false,
+        total: 0,
         limit: q.limit ?? 25,
     })),
 }));

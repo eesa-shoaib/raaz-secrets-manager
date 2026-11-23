@@ -86,6 +86,7 @@ describe('ProjectsPage 9-item pagination', () => {
                     data: makeProjects(9, 9),
                     nextCursor: 'cursor-page-3',
                     hasMore: true,
+                    total: 21,
                     limit: 9,
                 };
             }
@@ -94,6 +95,7 @@ describe('ProjectsPage 9-item pagination', () => {
                     data: makeProjects(3, 18),
                     nextCursor: null,
                     hasMore: false,
+                    total: 21,
                     limit: 9,
                 };
             }
@@ -101,6 +103,7 @@ describe('ProjectsPage 9-item pagination', () => {
                 data: makeProjects(9, 0),
                 nextCursor: 'cursor-page-2',
                 hasMore: true,
+                total: 21,
                 limit: 9,
             };
         });
@@ -180,18 +183,21 @@ describe('ProjectsPage 9-item pagination', () => {
                 data: makeProjects(9, 0),
                 nextCursor: 'cursor-page-2',
                 hasMore: true,
+                total: 11,
                 limit: 9,
             })
             .mockResolvedValueOnce({
                 data: makeProjects(2, 9),
                 nextCursor: null,
                 hasMore: false,
+                total: 11,
                 limit: 9,
             })
             .mockResolvedValueOnce({
                 data: makeProjects(1, 0),
                 nextCursor: null,
                 hasMore: false,
+                total: 1,
                 limit: 9,
             });
 
@@ -227,6 +233,7 @@ describe('ProjectsPage 9-item pagination', () => {
             data: makeProjects(9, 0),
             nextCursor: null,
             hasMore: false,
+            total: 0,
             limit: 9,
         });
 

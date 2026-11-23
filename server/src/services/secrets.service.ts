@@ -72,7 +72,7 @@ export async function listSecretsCursor(
         .findOne({ userId: new Types.ObjectId(userId), projectId: new Types.ObjectId(projectId) })
         .lean()) as ProjectMembershipDoc | null;
     if (!membership) {
-        return { data: [], nextCursor: null, hasMore: false, limit: query.limit };
+        return { data: [], nextCursor: null, hasMore: false, limit: query.limit, total: 0 };
     }
 
     const project = await ProjectModel.findById(projectId).lean();
@@ -88,16 +88,20 @@ export async function listSecretsCursor(
     if (query.search) {
         conditions.push({ key: { $regex: new RegExp(escapeRegex(query.search), 'i') } });
     }
+    const countFilter = conditions.length === 1 ? conditions[0] : { $and: [...conditions] };
     if (decoded) {
         conditions.push(buildCursorCondition(decoded));
     }
 
     const filter = conditions.length === 1 ? conditions[0] : { $and: conditions };
-    const rows = await SecretModel.find(filter)
-        .sort({ createdAt: -1, _id: -1 })
-        .limit(query.limit + 1)
-        .lean()
-        .select('key environment createdAt updatedAt lastAccessedAt');
+    const [rows, total] = await Promise.all([
+        SecretModel.find(filter)
+            .sort({ createdAt: -1, _id: -1 })
+            .limit(query.limit + 1)
+            .lean()
+            .select('key environment createdAt updatedAt lastAccessedAt'),
+        SecretModel.countDocuments(countFilter),
+    ]);
 
     const hasMore = rows.length > query.limit;
     const items = hasMore ? rows.slice(0, query.limit) : rows;
@@ -110,6 +114,7 @@ export async function listSecretsCursor(
         nextCursor,
         hasMore,
         limit: query.limit,
+        total,
     };
 }
 
