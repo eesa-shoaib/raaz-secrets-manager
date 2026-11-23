@@ -385,7 +385,7 @@ export function SettingsPage() {
                                 <button
                                     type="submit"
                                     disabled={isSavingProfile}
-                                    className="btn btn-primary btn-sm h-8 min-h-8 rounded-lg !bg-none px-4 text-primary-content"
+                                    className="btn btn-primary btn-sm h-8 min-h-8 rounded-lg px-4 text-primary-content"
                                 >
                                     {isSavingProfile ? 'Saving...' : 'Save Profile'}
                                 </button>
