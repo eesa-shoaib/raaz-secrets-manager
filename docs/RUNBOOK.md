@@ -108,3 +108,31 @@ alone: recovery requires **both** the encrypted database backup and the exact
     1. Promote the previous verified Vercel deployment from the Vercel dashboard.
     2. Re-deploy the previous known-good Render commit/image.
     3. Verify `GET /api/health` and run read-only smoke verification (list projects/secrets, audit log). Note: do not run destructive schema drops during rollback.
+
+## GitHub repository integration operations
+
+- Configure the separate GitHub App using README's repository-import
+  setup. Keep expiring user tokens enabled; no app private key is used. Never paste
+  provider credentials or callback query strings into tickets or logs.
+- An enabled connection does not add a Raaz login identity. Disconnect in Account
+  settings removes local encrypted credentials and pending connection attempts;
+  it never deletes projects, memberships, or the user's original sign-in method.
+  Use Manage GitHub access to change selected repositories or revoke the app on GitHub.
+- Organization approval and repository selection are managed by GitHub. After
+  adding a repository, grant it access if needed and Refresh repositories in Raaz.
+- A GitHub 409 reconnect message does not mean the Raaz session expired. Temporary
+  provider failures and rate limits retain local projects; retry after the provider
+  recovers or its quota resets. Do not weaken state/session/PKCE checks to recover.
+- Backups include encrypted connection credentials. The existing protected master
+  key is necessary to decrypt them. On suspected master-key compromise, revoke
+  GitHub App authorizations as well as affected secret-provider credentials, and
+  reconnect only after the replacement deployment is secured. Imported projects
+  survive local disconnect; this release has no automatic metadata synchronization.
+- Hosted acceptance remains operator-owned: test personal and organization access,
+  selected versus all-repositories installation, create a new repository after
+  login, grant access, refresh/import, then disconnect without losing Raaz access.
+
+Example-file seeding requires Contents read-only in addition to Metadata. Existing
+installations must approve that permission change. Only root `.env.example` or
+`env.example` is read; original values are discarded. Imported development mocks
+are `MOCK_VALUE_REPLACE_ME` and must be replaced before use.

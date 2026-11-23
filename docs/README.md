@@ -16,25 +16,25 @@ created. **Scope authority:** PRODUCT.md's _Cut from MVP_ table is the single
 source of truth for what is in or out of the MVP; other docs link to it
 rather than restating it.
 
-| Doc                                              | Contents                                                                                         |
-| ------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
-| [OAUTH_AUTH.md](./OAUTH_AUTH.md)                 | Google/GitHub sign-in setup, identity policy, tests and remaining live checks                    |
-| [GITHUB_IMPORT_TODO.md](./GITHUB_IMPORT_TODO.md) | Planned repository import, future repository access, username defaults and themed provider icons |
-| [PRODUCT.md](./PRODUCT.md)                       | Problem, users, scope, non-goals, user stories, acceptance criteria                              |
-| [ARCHITECTURE.md](./ARCHITECTURE.md)             | System design, boundaries and planned MVP 2 flows                                                |
-| [TECH_STACK.md](./TECH_STACK.md)                 | Languages, frameworks, tools, versions, rationale                                                |
-| [PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md)   | Folder layout, module boundaries, naming rules                                                   |
-| [DATA_MODEL.md](./DATA_MODEL.md)                 | Baseline entities and planned profile/avatar/project/pagination data                             |
-| [API.md](./API.md)                               | Implemented contracts, planned MVP 2 extensions, errors and permissions                          |
-| [openapi.json](./openapi.json)                   | Importable MVP API requests and implementation status                                            |
-| [FRONTEND.md](./FRONTEND.md)                     | Frontend blueprint: routes, pages, widgets, build phases, MVP boundary                           |
-| [CLIENT_TODO.md](./CLIENT_TODO.md)               | Historical client checklist and planned MVP 2 handoff                                            |
-| [MVP_BOARD.md](./MVP_BOARD.md)                   | Closed MVP 1 delivery and verification carryover record                                          |
-| [MVP_2_BOARD.md](./MVP_2_BOARD.md)               | Active team-pilot scope, tasks, acceptance criteria, and release gates                           |
-| [RUNBOOK.md](./RUNBOOK.md)                       | Production deployment (Vercel/Render/Atlas), backup/recovery, incidents                          |
-| [QUERIES.md](./QUERIES.md)                       | Dataview query reference for MVP scope, tasks, cross-refs                                        |
-| [architecture.canvas](./architecture.canvas)     | Visual architecture diagram (MERN, RBAC, Crypto, Deployment)                                     |
-| [VAULT_README.md](./VAULT_README.md)             | Obsidian vault setup guide for contributors and AI agents                                        |
+| Doc                                              | Contents                                                                                              |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| [OAUTH_AUTH.md](./OAUTH_AUTH.md)                 | Google/GitHub sign-in setup, identity policy, tests and remaining live checks                         |
+| [GITHUB_IMPORT_TODO.md](./GITHUB_IMPORT_TODO.md) | Repository import, GitHub connection setup, username defaults, provider icons and acceptance evidence |
+| [PRODUCT.md](./PRODUCT.md)                       | Problem, users, scope, non-goals, user stories, acceptance criteria                                   |
+| [ARCHITECTURE.md](./ARCHITECTURE.md)             | System design, boundaries and planned MVP 2 flows                                                     |
+| [TECH_STACK.md](./TECH_STACK.md)                 | Languages, frameworks, tools, versions, rationale                                                     |
+| [PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md)   | Folder layout, module boundaries, naming rules                                                        |
+| [DATA_MODEL.md](./DATA_MODEL.md)                 | Baseline entities and planned profile/avatar/project/pagination data                                  |
+| [API.md](./API.md)                               | Implemented contracts, planned MVP 2 extensions, errors and permissions                               |
+| [openapi.json](./openapi.json)                   | Importable MVP API requests and implementation status                                                 |
+| [FRONTEND.md](./FRONTEND.md)                     | Frontend blueprint: routes, pages, widgets, build phases, MVP boundary                                |
+| [CLIENT_TODO.md](./CLIENT_TODO.md)               | Historical client checklist and planned MVP 2 handoff                                                 |
+| [MVP_BOARD.md](./MVP_BOARD.md)                   | Closed MVP 1 delivery and verification carryover record                                               |
+| [MVP_2_BOARD.md](./MVP_2_BOARD.md)               | Active team-pilot scope, tasks, acceptance criteria, and release gates                                |
+| [RUNBOOK.md](./RUNBOOK.md)                       | Production deployment (Vercel/Render/Atlas), backup/recovery, incidents                               |
+| [QUERIES.md](./QUERIES.md)                       | Dataview query reference for MVP scope, tasks, cross-refs                                             |
+| [architecture.canvas](./architecture.canvas)     | Visual architecture diagram (MERN, RBAC, Crypto, Deployment)                                          |
+| [VAULT_README.md](./VAULT_README.md)             | Obsidian vault setup guide for contributors and AI agents                                             |
 
 ## Access Model (at a glance)
 
