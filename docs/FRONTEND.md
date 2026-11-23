@@ -188,18 +188,18 @@ A reveal never writes any query key. The secret row is keyed by secret id, so th
 
 ### 2.4 Domain
 
-| Widget            | Purpose                                                                                                                                           |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Badge`           | One component, variants `role`, `environment`, `projectStatus`, `auditResult`, `userStatus`. Text always present.                                 |
-| `UserAvatar`      | Private avatar image with cache-busting `?v=` query and deterministic initials fallback when unset or on error.                                   |
-| `ProjectCard`     | One project on the list showing project name and role (active card links; archived card shows status). Description/count live in `/projects/:id`. |
-| `EnvironmentTabs` | Tab strip above the secrets table. State is `?environment=`.                                                                                      |
-| `SecretsTable`    | Frame + column headers (`Key`, `Value`, `Actions`, without horizontal scrollbars)                                                                 |
-| `SecretRow`       | One secret: truncated key, icon Copy button, `SecretValueCell`, icon Edit/Delete buttons                                                          |
-| `SecretValueCell` | The reveal state machine, per row. Owns the value in local state; icon Copy/Hide buttons when revealed.                                           |
-| `MembersTable`    | Members list with `UserAvatar`, truncated email/username, and icon role-change / remove buttons                                                   |
-| `AuditLogTable`   | Project audit entries with actor username/email and `project_updated` / `project_renamed` labels                                                  |
-| `AdminUsersTable` | Platform users sorted admins-first, truncated emails, active/inactive icons, DaisyUI `kbd` self indicator, and Manage modal trigger.              |
+| Widget            | Purpose                                                                                                                                                                          |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Badge`           | One component, variants `role`, `environment`, `projectStatus`, `auditResult`, `userStatus`. Text always present.                                                                |
+| `UserAvatar`      | Private avatar image with cache-busting `?v=` query and deterministic initials fallback when unset or on error.                                                                  |
+| `ProjectCard`     | One project on the list showing project name and role (active card links; archived card shows status). Description/count live in `/projects/:id`.                                |
+| `EnvironmentTabs` | Tab strip above the secrets table. State is `?environment=`.                                                                                                                     |
+| `SecretsTable`    | Frame + column headers (`Key`, `Value`, `Actions`, without horizontal scrollbars)                                                                                                |
+| `SecretRow`       | One secret: truncated key, icon Copy button, `SecretValueCell`, icon Edit/Delete buttons                                                                                         |
+| `SecretValueCell` | The reveal state machine, per row. Owns the value in local state; theme-colored icon-only Reveal button with accessible label and tooltip; icon Copy/Hide buttons when revealed. |
+| `MembersTable`    | Members list with `UserAvatar`, truncated email/username, and icon role-change / remove buttons                                                                                  |
+| `AuditLogTable`   | Project audit entries with actor username/email and `project_updated` / `project_renamed` labels                                                                                 |
+| `AdminUsersTable` | Platform users sorted admins-first, truncated emails, active/inactive icons, DaisyUI `kbd` self indicator, and Manage modal trigger.                                             |
 
 ## 3. Page Specifications
 
