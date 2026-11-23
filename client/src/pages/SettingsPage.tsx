@@ -8,6 +8,7 @@ import {
 } from '@raaz/shared-schemas';
 import React, { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useSearchParams } from 'react-router-dom';
 import { z } from 'zod';
 import { FormField } from '../components/FormField';
 import { Modal } from '../components/Modal';
@@ -22,6 +23,7 @@ import {
 } from '../hooks/useAccount';
 import { useAuth } from '../hooks/useAuth';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import { useGitHubConnection } from '../hooks/useGitHub';
 import { useOAuth } from '../hooks/useOAuth';
 import { useTheme } from '../hooks/useTheme';
 import { isApiError } from '../lib/errorHandling';
@@ -47,6 +49,9 @@ const passwordModalFormSchema = z
 type PasswordModalFormValues = z.infer<typeof passwordModalFormSchema>;
 
 export function SettingsPage() {
+    const [searchParams] = useSearchParams();
+    const github = useGitHubConnection('settings');
+    const [confirmDisconnect, setConfirmDisconnect] = useState(false);
     const oauth = useOAuth(false);
     useDocumentTitle('Account Settings');
     const { user } = useAuth();
@@ -59,7 +64,9 @@ export function SettingsPage() {
     const changePasswordMutation = useChangePassword();
     const deactivateAccountMutation = useDeactivateAccount();
 
-    const [section, setSection] = useState<'profile' | 'appearance' | 'account'>('profile');
+    const [section, setSection] = useState<'profile' | 'appearance' | 'account'>(() =>
+        searchParams.has('github') ? 'account' : 'profile',
+    );
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [avatarError, setAvatarError] = useState<string | null>(null);
     const [profileError, setProfileError] = useState<string | null>(null);
@@ -549,6 +556,130 @@ export function SettingsPage() {
                                     Password settings
                                 </button>
                             </div>
+                            <div className="space-y-3 py-5">
+                                <div>
+                                    <h3 className="text-sm font-medium">GitHub repositories</h3>
+                                    <p className="mt-1 text-sm text-base-content/60">
+                                        {github.status.isPending
+                                            ? 'Loading connection…'
+                                            : github.status.isError
+                                              ? 'Connection unavailable'
+                                              : github.status.data?.connected
+                                                ? `Connected as ${github.status.data.login}`
+                                                : github.status.data?.enabled
+                                                  ? 'Not connected'
+                                                  : 'Repository import is not configured'}
+                                    </p>
+                                </div>
+                                <div className="divide-y divide-base-content/10">
+                                    {github.status.isError && (
+                                        <div className="flex items-center justify-between gap-4 py-3">
+                                            <span className="text-sm">Check connection</span>
+                                            <button
+                                                type="button"
+                                                className="btn btn-neutral btn-sm rounded-lg"
+                                                onClick={() => github.status.refetch()}
+                                            >
+                                                Retry
+                                            </button>
+                                        </div>
+                                    )}
+                                    {github.status.data?.enabled && (
+                                        <div className="flex items-center justify-between gap-4 py-3">
+                                            <span className="text-sm">
+                                                {github.status.data.connected
+                                                    ? 'Reauthorize GitHub'
+                                                    : 'Connect GitHub'}
+                                            </span>
+                                            <button
+                                                type="button"
+                                                disabled={github.connect.isPending}
+                                                aria-label={
+                                                    github.status.data.connected
+                                                        ? 'Reconnect GitHub'
+                                                        : 'Connect GitHub'
+                                                }
+                                                title={
+                                                    github.status.data.connected
+                                                        ? 'Reauthorize GitHub access'
+                                                        : 'Connect GitHub'
+                                                }
+                                                className="btn btn-primary btn-sm btn-square rounded-lg"
+                                                onClick={() => github.connect.mutate()}
+                                            >
+                                                {github.connect.isPending ? (
+                                                    <span className="loading loading-spinner loading-xs" />
+                                                ) : (
+                                                    <svg
+                                                        aria-hidden="true"
+                                                        className="h-4 w-4"
+                                                        viewBox="0 0 24 24"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        strokeWidth="2"
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                    >
+                                                        <path d="M20 7v5h-5M4 17v-5h5" />
+                                                        <path d="M6.1 7a7 7 0 0 1 11.6-2L20 8M4 16l2.3 3A7 7 0 0 0 18 17" />
+                                                    </svg>
+                                                )}
+                                            </button>
+                                        </div>
+                                    )}
+                                    {github.status.data?.manageUrl && (
+                                        <div className="flex items-center justify-between gap-4 py-3">
+                                            <span className="text-sm">Manage GitHub access</span>
+                                            <a
+                                                href={github.status.data.manageUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                aria-label="Manage GitHub access"
+                                                title="Manage GitHub access"
+                                                className="btn btn-neutral btn-sm btn-square rounded-lg"
+                                            >
+                                                <svg
+                                                    aria-hidden="true"
+                                                    className="h-4 w-4"
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="2"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                >
+                                                    <path d="M15 3h6v6M10 14 21 3M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5" />
+                                                </svg>
+                                            </a>
+                                        </div>
+                                    )}
+                                    {github.status.data?.connected && (
+                                        <div className="flex items-center justify-between gap-4 py-3">
+                                            <span className="text-sm">Disconnect GitHub</span>
+                                            <button
+                                                type="button"
+                                                className="btn btn-error btn-sm btn-square rounded-lg"
+                                                aria-label="Disconnect GitHub"
+                                                title="Disconnect GitHub"
+                                                onClick={() => setConfirmDisconnect(true)}
+                                            >
+                                                <svg
+                                                    aria-hidden="true"
+                                                    className="h-4 w-4"
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="2"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                >
+                                                    <path d="m3 3 18 18M10.6 10.6l-2 2a4 4 0 0 0 5.7 5.7l2-2M13.4 13.4l2-2a4 4 0 0 0-5.7-5.7l-2 2M8 16l-4 4M16 8l4-4" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                             <div className="flex flex-wrap items-center justify-between gap-4 py-5">
                                 <h3 className="text-sm font-medium text-base-content">
                                     Account access
@@ -556,7 +687,7 @@ export function SettingsPage() {
                                 <button
                                     type="button"
                                     onClick={handleOpenDeactivate}
-                                    className="btn btn-error btn-outline btn-sm h-8 min-h-8 rounded-lg px-3"
+                                    className="btn btn-error btn-sm h-8 min-h-8 rounded-lg px-3"
                                 >
                                     Deactivate Account
                                 </button>
@@ -566,6 +697,42 @@ export function SettingsPage() {
                 </section>
             </div>
 
+            {confirmDisconnect && (
+                <Modal
+                    isOpen
+                    onClose={() => {
+                        if (!github.disconnect.isPending) setConfirmDisconnect(false);
+                    }}
+                    title="Disconnect GitHub"
+                    maxWidth="sm"
+                >
+                    <p className="text-sm text-base-content/75">
+                        Imported projects and your sign-in method stay available.
+                    </p>
+                    <div className="mt-4 flex justify-end gap-2">
+                        <button
+                            type="button"
+                            disabled={github.disconnect.isPending}
+                            className="btn btn-sm btn-ghost"
+                            onClick={() => setConfirmDisconnect(false)}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            disabled={github.disconnect.isPending}
+                            className="btn btn-sm btn-error"
+                            onClick={() =>
+                                github.disconnect.mutate(undefined, {
+                                    onSuccess: () => setConfirmDisconnect(false),
+                                })
+                            }
+                        >
+                            Confirm disconnect
+                        </button>
+                    </div>
+                </Modal>
+            )}
             {isPasswordModalOpen && (
                 <Modal
                     isOpen={isPasswordModalOpen}

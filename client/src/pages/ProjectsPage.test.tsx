@@ -11,6 +11,20 @@ import { queryKeys } from '../lib/queryClient';
 import ProjectLayout from './ProjectLayout';
 import ProjectsPage from './ProjectsPage';
 
+vi.mock('../api/github', () => ({
+    disconnectGitHub: vi.fn(),
+    startGitHubConnection: vi.fn(),
+    getGitHubInstallations: vi.fn(),
+    getGitHubRepositories: vi.fn(),
+    importGitHubRepository: vi.fn(),
+    getGitHubConnection: vi.fn(async () => ({
+        enabled: false,
+        connected: false,
+        login: null,
+        manageUrl: null,
+    })),
+}));
+
 vi.mock('../api/projects', async (importOriginal) => {
     const actual = await importOriginal<typeof import('../api/projects')>();
     return {

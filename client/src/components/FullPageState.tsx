@@ -79,7 +79,7 @@ export function ErrorState({
                 <button
                     type="button"
                     onClick={onRetry}
-                    className="btn btn-sm btn-outline btn-error font-medium mx-auto"
+                    className="btn btn-sm btn-error font-medium mx-auto"
                 >
                     Try Again
                 </button>

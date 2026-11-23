@@ -107,6 +107,13 @@ CSRF (Origin check) → authenticate → requireProjectRole | requireProjectRole
   login still performs a dummy bcrypt comparison for accounts without a hash.
   OAuth-only self-deactivation requires fresh session-bound provider confirmation.
 
+- Repository import uses a separate GitHub App connection with Metadata read-only and Contents read-only
+  for explicitly requested root example-file mock seeding; see
+  `docs/GITHUB_IMPORT_TODO.md` and API.md. Store its user grant encrypted server-side,
+  never reuse sign-in tokens or grant GitHub collaborators Raaz membership. Use
+  user access tokens (app/user access intersection), not broader installation-only
+  tokens. Connection callbacks reuse the existing authenticated session cookie.
+
 - JWT in an httpOnly cookie, never in a response body or `localStorage`. `jwt.verify` always passes `algorithms: ['HS256']`.
 - `authenticate` re-fetches the user every request: checks signature **and** `tokenVersion`, and rejects `isActive: false` with `401`.
 - Login always runs `bcrypt.compare` (against a fixed dummy hash if the email is unknown) and returns the same generic `401` for unknown email, wrong password, and deactivated account.

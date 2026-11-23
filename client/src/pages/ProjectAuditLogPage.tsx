@@ -518,7 +518,7 @@ export function ProjectAuditLogPage() {
                             <button
                                 type="button"
                                 onClick={handleClearFilters}
-                                className="btn btn-outline btn-sm rounded-xl"
+                                className="btn btn-neutral btn-sm rounded-xl"
                             >
                                 Clear Filters
                             </button>

@@ -143,48 +143,59 @@ export async function createSecret(
         });
         throw new AppError(403, 'FORBIDDEN', 'Developers can only create secrets in development');
     }
-    // Generate secret ID before encryption
+    const session = await mongoose.startSession();
+    try {
+        let secret: SecretDoc | null = null;
+        await session.withTransaction(async () => {
+            secret = await createSecretInTransaction(
+                userId,
+                projectId,
+                key,
+                environment as SecretDoc['environment'],
+                value,
+                session,
+            );
+        });
+        return secret!;
+    } finally {
+        await session.endSession();
+    }
+}
+
+// Internal write primitive: callers establish authorization and own the transaction.
+export async function createSecretInTransaction(
+    userId: string,
+    projectId: string,
+    key: string,
+    environment: SecretDoc['environment'],
+    value: string,
+    session: mongoose.ClientSession,
+): Promise<SecretDoc> {
     const secretId = new Types.ObjectId();
-
     const encrypted = encrypt(value, projectId, secretId.toString(), environment);
-
-    const secret: SecretDoc = new SecretModel({
+    const secret = new SecretModel({
         _id: secretId,
         projectId,
         environment,
         key,
-        ciphertext: encrypted.ciphertext,
-        iv: encrypted.iv,
-        authTag: encrypted.authTag,
-        encryptionKeyVersion: encrypted.encryptionKeyVersion,
+        ...encrypted,
         createdBy: userId,
         lastEditedBy: null,
         lastAccessedAt: null,
         lastAccessedBy: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
     });
-
-    const session = await mongoose.startSession();
-    try {
-        await session.withTransaction(async () => {
-            secret.isNew = true;
-            await secret.save({ session });
-            await writeAuditEntry({
-                session,
-                userId,
-                projectId,
-                secretId: secretId.toString(),
-                secretKey: key,
-                environment: secret.environment,
-                action: 'create',
-                result: 'allowed',
-            });
-        });
-        return secret;
-    } finally {
-        await session.endSession();
-    }
+    await secret.save({ session });
+    await writeAuditEntry({
+        session,
+        userId,
+        projectId,
+        secretId: secretId.toString(),
+        secretKey: key,
+        environment,
+        action: 'create',
+        result: 'allowed',
+    });
+    return secret;
 }
 
 export async function editSecret(

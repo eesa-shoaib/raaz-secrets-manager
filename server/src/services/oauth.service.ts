@@ -7,6 +7,7 @@ import { UserModel } from '../models/User.js';
 import { AppError } from '../utils/app-error.js';
 import { writeAuditEntry } from './audit.service.js';
 import { assertSignupDomainAllowed, issueToken, verifyToken } from './auth.service.js';
+import { claimGitHubUsername } from './github-username.service.js';
 import { logOAuthFailure, type OAuthFailureReason } from './oauth-diagnostics.service.js';
 import {
     buildProviderAuthorization,
@@ -150,6 +151,8 @@ export async function resolveOAuthUser(identity: ProviderIdentity) {
     } finally {
         await session.endSession();
     }
+    if (identity.provider === 'github' && identity.login)
+        await claimGitHubUsername(userId!, identity.login);
     const user = await UserModel.findOne({ _id: userId, isActive: true }).lean();
     if (!user) throw failure('inactive_account');
     return issueToken(user._id.toString(), user.tokenVersion, user.isPlatformAdmin);

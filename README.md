@@ -1,12 +1,12 @@
 # Raaz
 
-Raaz is a secrets and environment-variable manager for small teams. It keeps a project's config values encrypted in MongoDB and decides who may read them, so a compliance reviewer can confirm that a production key exists and see who touched it without ever being able to read the value.
+Raaz manages encrypted secrets and environment variables for small teams. Project roles control who can retrieve values. Auditors can check that a secret exists and review its history without reading it.
 
 ## What it does
 
-A team creates a project and stores its secrets in it: database URLs, API keys, signing tokens, whatever usually ends up pasted into Slack or passed around as a plaintext `.env`. Each secret belongs to one environment (`development`, `staging`, or `production`), and every environment is fixed at project creation, so there is no chance of an "almost production" environment drifting out of policy.
+Store database URLs, API keys, and other config in projects. Each secret belongs to `development`, `staging`, or `production`; these environments are fixed at project creation.
 
-The secret list is masked. Nothing decrypts until someone asks for a reveal, and production reveals require an explicit confirmation in a dialog. Every create, edit, reveal, delete, and denied attempt is written to the project's audit log in the same transaction as the action itself, so a successful response always comes with a matching log entry.
+Lists mask values. Users explicitly reveal secrets, with confirmation required for production. Secret actions and their audit entries commit together; denied project actions are also logged.
 
 Access combines one global flag with three per-project roles:
 
@@ -19,11 +19,11 @@ Membership is checked before project status, and a non-member gets a `404` rathe
 
 ## How it works
 
-Values are encrypted with AES-256-GCM before they reach the database. Every write gets a fresh random IV, and the ciphertext is bound to its project, secret id, environment, and key version through additional authenticated data, which means a copied ciphertext can't be replayed under a different secret. The master key comes from the `MASTER_KEY` environment variable and is never stored in the database. The server refuses to boot if the key, the JWT secret, or the allowed origins are misconfigured.
+AES-256-GCM encrypts values before storage. Each write uses a fresh IV and binds ciphertext to its project, secret id, environment, and key version. `MASTER_KEY` stays outside MongoDB. Invalid keys, JWT secrets, or origins stop the server at boot.
 
-Authentication uses a JWT in an httpOnly cookie, verified on every request against the user's current `tokenVersion`, so deactivating an account or changing a password ends its sessions. State-changing requests must carry an `Origin` matching `CLIENT_ORIGIN`. Rate limits apply per IP to login and signup, and per user to reveal.
+An httpOnly JWT cookie authenticates requests. The server checks the user’s current `tokenVersion` on every request; password changes and deactivation end sessions. Writes require an `Origin` matching `CLIENT_ORIGIN`. Login/signup are rate-limited by IP; reveal is rate-limited by user.
 
-Request and response bodies are validated with Zod schemas from `packages/shared-schemas`, shared by both apps. Responses are parsed through those schemas before they leave the server, so an undeclared field can't slip into a payload.
+Both apps use Zod schemas from `packages/shared-schemas`. The server validates requests and parses responses to strip undeclared fields.
 
 ```
 Client (React + Vite)  →  Server (Express)  →  MongoDB Atlas
@@ -36,7 +36,7 @@ Client (React + Vite)  →  Server (Express)  →  MongoDB Atlas
 
 ## Running it locally
 
-You need Node 22 or newer and a MongoDB connection string pointing at a replica set. Atlas works out of the box; a local `mongod` needs to be started as a replica set because the audit log and its action commit in one transaction.
+Use Node 22 or newer and a MongoDB replica set. Atlas supports the transactions required for actions and audit entries; configure a local `mongod` as a replica set.
 
 ```bash
 git clone git@github.com:eesa-shoaib/raaz-secrets-manager.git
@@ -60,9 +60,9 @@ Four variables in `server/.env` are required before the server will start:
 | `MASTER_KEY`         | 32 random bytes, base64-encoded, used for AES-256-GCM         |
 | `MASTER_KEY_VERSION` | Positive integer identifying the active key (for example `1`) |
 
-To create the first Platform Admin, also set `PLATFORM_ADMIN_EMAIL` and `PLATFORM_ADMIN_PASSWORD` and boot the server once. Unset them afterwards. Every other variable, including the server port, cookie settings, proxy hop count, log level, and the signup domain allowlist, is listed with defaults in `server/.env.example`.
+Set `PLATFORM_ADMIN_EMAIL` and `PLATFORM_ADMIN_PASSWORD`, boot once, then unset them. Defaults for ports, cookies, proxy hops, logging, and signup domains are in `server/.env.example`.
 
-Point this at a disposable database. There are no migrations, and the dev database is expected to be dropped and recreated at will.
+Use a disposable dev database. There are no migrations; development assumes it can be dropped and recreated.
 
 Other commands, all run from the repo root:
 
@@ -78,7 +78,7 @@ The server tests create their own `raaz_test_*` database on the cluster named in
 
 ## Documentation
 
-`docs/` holds the detail this README only summarizes. Start at [docs/README.md](./docs/README.md) for the index, which links each doc with a one-line description. The ones most people want first:
+Start with [docs/README.md](./docs/README.md). Detailed contracts and deployment instructions:
 
 - [docs/API.md](./docs/API.md): every endpoint, its request and response shape, error codes, and the permissions matrix
 - [docs/DATA_MODEL.md](./docs/DATA_MODEL.md): collections, indexes, field-level rules, and the audit action enum
@@ -102,3 +102,32 @@ Production callbacks must use the browser-facing API origin and HTTPS.
 
 Password login stays available. New OAuth accounts have no project membership;
 existing-email matches do not auto-link to password accounts or another provider.
+
+### GitHub repository import
+
+Repository import uses a **GitHub App**, separate from the OAuth App used for
+GitHub sign-in. Register the app with repository **Metadata: read-only** and
+**Contents: read-only** (for example-file seeding), enable
+expiring user access tokens, and set its user authorization callback to
+`http://localhost:5173/api/integrations/github/callback` in development (your
+same-site `/api/integrations/github/callback` URL in production). Do not point
+its installation setup URL at the authorization callback. A setup URL may point
+to the frontend Projects page; return to the original import dialog and refresh
+when installing through Manage GitHub access.
+
+Set these server-only values, then restart the server:
+
+| Variable                   | Purpose                                                |
+| -------------------------- | ------------------------------------------------------ |
+| `GITHUB_APP_CLIENT_ID`     | GitHub App client ID, separate from `GITHUB_CLIENT_ID` |
+| `GITHUB_APP_CLIENT_SECRET` | GitHub App OAuth client secret                         |
+| `GITHUB_APP_SLUG`          | App slug from its `github.com/apps/<slug>` URL         |
+| `GITHUB_APP_CALLBACK_URL`  | Exact registered user authorization callback URL       |
+
+Generate the client secret under Credentials. Raaz does not use a GitHub App private key; if GitHub requires one for installation, generate it there and keep the PEM outside the repository. User tokens enforce both repository selection and user access. Grants remain encrypted with the existing master key, which must be kept for recovery. Login scopes and cookies stay unchanged. Callbacks require `SameSite=Lax` or `None`; `Strict` blocks the session cookie.
+
+Use Import from GitHub on Projects to connect, select a repository, and review its name. Its description is copied automatically. Imports create normal membership and environments and survive disconnect.
+
+Root `.env.example` (fallback `env.example`) keys can seed development mocks. Source values are discarded; replace `MOCK_VALUE_REPLACE_ME` before use. Missing files create no mocks. Existing installations must approve Contents access and reconnect if prompted; disable seeding to import metadata without it. GitHub Actions secret values cannot be retrieved.
+
+Refresh to see new repositories. Selected-repository installations need access granted first; all-repositories installations include them automatically. Imports scan up to 2000 repositories per installation; narrow app access beyond that limit.

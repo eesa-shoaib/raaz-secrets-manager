@@ -19,6 +19,8 @@ type PlatformAuditActionFilter =
     | 'platform_admin_revoked'
     | 'user_activated'
     | 'user_deactivated'
+    | 'github_connected'
+    | 'github_disconnected'
     | '';
 type AuditResultFilter = 'allowed' | 'denied' | '';
 
@@ -30,6 +32,8 @@ const PLATFORM_AUDIT_ACTIONS: {
     { value: 'platform_admin_revoked', label: 'Revoke Platform Admin' },
     { value: 'user_activated', label: 'Activate User' },
     { value: 'user_deactivated', label: 'Deactivate User' },
+    { value: 'github_connected', label: 'Connect GitHub' },
+    { value: 'github_disconnected', label: 'Disconnect GitHub' },
 ];
 
 const ACTION_COPY: Record<
@@ -646,7 +650,7 @@ export function AdminUsersPage() {
                                         }}
                                         className={`btn btn-sm h-9 flex-1 rounded-xl font-semibold ${
                                             selectedUser.isPlatformAdmin
-                                                ? 'btn-outline btn-error'
+                                                ? 'btn-error'
                                                 : 'btn-primary text-primary-content'
                                         }`}
                                     >
@@ -668,9 +672,7 @@ export function AdminUsersPage() {
                                             );
                                         }}
                                         className={`btn btn-sm h-9 flex-1 rounded-xl font-semibold ${
-                                            selectedUser.isActive
-                                                ? 'btn-outline btn-error'
-                                                : 'btn-outline btn-success'
+                                            selectedUser.isActive ? 'btn-error' : 'btn-success'
                                         }`}
                                     >
                                         {selectedUser.isActive

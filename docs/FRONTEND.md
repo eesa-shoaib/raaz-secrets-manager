@@ -749,3 +749,42 @@ the permission helper. Those are correctness properties, not features.
 The target is a frontend that is **secure → correct → maintainable →
 testable → shippable**. Not one that attempts every production-scale
 problem before the first release.
+
+### GitHub repository import extension
+
+Projects adds Import from GitHub when the server's separate GitHub App is enabled.
+Compose an existing Modal inline: connect if needed, choose an accessible account,
+search/paginate repository names, review an editable project name, then
+import. Refresh repositories fetches current GitHub access, including new repositories;
+Manage GitHub access opens the fixed app installation URL. Explain selected versus
+all-repository access in this flow. Hide repository descriptions in both picker and
+review; retain the source description automatically for the project details. Use
+base-300 rows, base-content text, visible borders and primary focus/hover accents
+to distinguish repositories from the base-200 modal. A checked-by-default option
+adds mock development secrets from root `.env.example` (fallback `env.example`);
+source values are ignored. Contents read-only access is required when enabled.
+Show the created mock count after success. Cancel writes nothing.
+Use existing PaginationControls and field/error patterns; no extra shared widget.
+
+Account settings shows repository connection status/login, Connect/Reconnect,
+Manage GitHub access, and confirmed Disconnect; this is independent of sign-in.
+Project details shows a themed GitHub icon linking to its canonical source
+repository beside the description/member count, with an accessible repository label.
+Only copy metadata once. GitHub failures never trigger Raaz's expired-session flow
+unless Raaz itself returns 401. Query keys use `['github', 'connection']`, installations
+and repository keys include account/page/search. Mutations never retry. Repository
+metadata and credentials do not enter web storage; credentials never reach caches.
+
+After a successful overwrite import, unmount revealed value cells to clear old
+local values. The next reveal must request the current saved value; query
+invalidation alone does not clear a cell’s local reveal state.
+
+Use filled theme button variants rather than transparent outline buttons across
+the application. GitHub settings retains a separate connected status and displays
+reauthorization, access management, and disconnect as individual labeled rows
+with accessible icon buttons. Reauthorization is an optional action, not a
+disconnected status. Disconnect still requires confirmation.
+
+AppShell and Navbar share centered responsive widths and a `max-w-7xl` cap,
+with matching horizontal padding. Mobile keeps a 1rem outer gutter; larger
+screens use proportional side margins.

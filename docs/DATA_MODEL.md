@@ -34,7 +34,7 @@ never authorizes dropping hosted pilot data.
 ## OAuth storage extension (implemented)
 
 `OAuthIdentity`: provider enum + stable subject (unique pair), userId reference
-(unique per provider/user). No provider tokens stored. `OAuthAttempt`: provider,
+(unique per provider/user). No sign-in provider tokens stored; the separate repository connection below encrypts its GitHub App grant. `OAuthAttempt`: provider,
 state (unique), hash of browser-binding secret, PKCE verifier, nonce, fixed callback,
 intent login/deactivate, optional initiating userId/session hash/tokenVersion,
 expiresAt (10 minutes; TTL plus explicit query expiry). Sensitive attempt fields
@@ -290,3 +290,28 @@ across a schema change — which could be as early as a shared staging
 environment, not only "before production" — adopt a migration tool (e.g.
 `migrate-mongo`) so schema changes can be applied to existing documents
 without a manual fix or a drop-and-recreate.
+
+## GitHub repository integration
+
+`GitHubConnection`: unique userId; GitHub subject/login; encrypted credential
+bundle (access token, refresh token, expiry times), timestamps, optional refresh
+lease. Credentials and lease fields are select:false. No token is serialized.
+Encrypt with the existing AES-GCM helper and unchanged four-part AAD format:
+`github-connection|connectionId|userId|keyVersion`. The literal namespace cannot
+collide with a project ObjectId. No secret encryption format or boot checks change.
+
+`GitHubConnectAttempt`: unique state hash, userId, session hash, PKCE verifier,
+returnTo enum, expiry. Hash/verifier fields are select:false. TTL cleanup after ten
+minutes supplements atomic consume with explicit expiry/session/user checks.
+
+Project optionally stores `githubRepository: { id, owner, name, url }`. Unique
+partial index `{ createdBy: 1, 'githubRepository.id': 1 }` applies only to numeric
+repository IDs. Manual projects and different creators remain independent.
+
+Platform audit enums add `github_connected` and `github_disconnected`. Existing
+`project_created` records imports; username defaults use `profile_updated`.
+
+GitHub import may also create normal encrypted Secret records in development
+from root example-file keys. Source file values are never stored. These use the
+existing Secret schema, AAD, creator attribution, and create audit entries; no
+new field or audit action is introduced.

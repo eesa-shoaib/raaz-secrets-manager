@@ -161,7 +161,8 @@ describe('provider protocol', () => {
                     return Response.json([
                         { email: 'private@example.test', primary: true, verified: true },
                     ]);
-                if (String(url).endsWith('/user')) return Response.json({ id: 123, email: null });
+                if (String(url).endsWith('/user'))
+                    return Response.json({ id: 123, login: 'octocat', email: null });
                 return Response.json({
                     access_token: 'synthetic-access',
                     token_type: 'bearer',

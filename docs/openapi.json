@@ -84,6 +84,68 @@
             "environment": {
                 "type": "string",
                 "enum": ["development", "staging", "production"]
+            },
+            "githubStart": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["returnTo"],
+                "properties": {
+                    "returnTo": {
+                        "type": "string",
+                        "enum": ["projects", "settings"]
+                    }
+                }
+            },
+            "githubImport": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["installationId", "repositoryId", "name"],
+                "properties": {
+                    "installationId": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "repositoryId": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 100
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 500,
+                        "default": ""
+                    },
+                    "seedExampleSecrets": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Create development mocks from root .env.example or env.example keys; requires Contents read-only. Source values are ignored."
+                    }
+                }
+            },
+            "githubRepositorySource": {
+                "type": "object",
+                "required": ["id", "owner", "name", "url"],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "owner": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "url": {
+                        "type": "string",
+                        "format": "uri",
+                        "pattern": "^https://github.com/"
+                    }
+                }
             }
         }
     },
@@ -1162,6 +1224,357 @@
                         "description": "Application transaction/audit failure; no success session cookie"
                     }
                 }
+            }
+        },
+        "/integrations/github": {
+            "get": {
+                "tags": ["GitHub repositories"],
+                "summary": "Own GitHub repository connection status (enabled, connected, login, manageUrl)",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "401": {
+                        "description": "Invalid Raaz session"
+                    },
+                    "403": {
+                        "description": "Origin mismatch or GitHub approval required"
+                    },
+                    "404": {
+                        "description": "Unavailable configuration or inaccessible GitHub resource"
+                    },
+                    "409": {
+                        "description": "Reconnect GitHub, retry refresh, or import conflict; Raaz session remains valid"
+                    },
+                    "422": {
+                        "description": "Invalid input or installation exceeds 2000 repositories"
+                    },
+                    "429": {
+                        "description": "Local or provider rate limit"
+                    },
+                    "500": {
+                        "description": "Sanitized provider, database, or audit failure"
+                    }
+                }
+            },
+            "delete": {
+                "tags": ["GitHub repositories"],
+                "summary": "Disconnect repository access without deleting projects or login identity",
+                "responses": {
+                    "204": {
+                        "description": "Success"
+                    },
+                    "401": {
+                        "description": "Invalid Raaz session"
+                    },
+                    "403": {
+                        "description": "Origin mismatch or GitHub approval required"
+                    },
+                    "404": {
+                        "description": "Unavailable configuration or inaccessible GitHub resource"
+                    },
+                    "409": {
+                        "description": "Reconnect GitHub, retry refresh, or import conflict; Raaz session remains valid"
+                    },
+                    "422": {
+                        "description": "Invalid input or installation exceeds 2000 repositories"
+                    },
+                    "429": {
+                        "description": "Local or provider rate limit"
+                    },
+                    "500": {
+                        "description": "Sanitized provider, database, or audit failure"
+                    }
+                },
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/origin"
+                    }
+                ]
+            }
+        },
+        "/integrations/github/start": {
+            "post": {
+                "tags": ["GitHub repositories"],
+                "summary": "Start session-bound GitHub App authorization for repository import",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "401": {
+                        "description": "Invalid Raaz session"
+                    },
+                    "403": {
+                        "description": "Origin mismatch or GitHub approval required"
+                    },
+                    "404": {
+                        "description": "Unavailable configuration or inaccessible GitHub resource"
+                    },
+                    "409": {
+                        "description": "Reconnect GitHub, retry refresh, or import conflict; Raaz session remains valid"
+                    },
+                    "422": {
+                        "description": "Invalid input or installation exceeds 2000 repositories"
+                    },
+                    "429": {
+                        "description": "Local or provider rate limit"
+                    },
+                    "500": {
+                        "description": "Sanitized provider, database, or audit failure"
+                    }
+                },
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/origin"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/githubStart"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/integrations/github/callback": {
+            "get": {
+                "tags": ["GitHub repositories"],
+                "summary": "Validate single-use state, session hash and PKCE; redirect to fixed Projects or Settings",
+                "responses": {
+                    "303": {
+                        "description": "Success"
+                    },
+                    "401": {
+                        "description": "Invalid Raaz session"
+                    },
+                    "403": {
+                        "description": "Origin mismatch or GitHub approval required"
+                    },
+                    "404": {
+                        "description": "Unavailable configuration or inaccessible GitHub resource"
+                    },
+                    "409": {
+                        "description": "Reconnect GitHub, retry refresh, or import conflict; Raaz session remains valid"
+                    },
+                    "422": {
+                        "description": "Invalid input or installation exceeds 2000 repositories"
+                    },
+                    "429": {
+                        "description": "Local or provider rate limit"
+                    },
+                    "500": {
+                        "description": "Sanitized provider, database, or audit failure"
+                    }
+                },
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "state",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 256
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "code",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 4096
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "error",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 256
+                        }
+                    }
+                ]
+            }
+        },
+        "/integrations/github/installations": {
+            "get": {
+                "tags": ["GitHub repositories"],
+                "summary": "Paginated app installations accessible to this connected user",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "401": {
+                        "description": "Invalid Raaz session"
+                    },
+                    "403": {
+                        "description": "Origin mismatch or GitHub approval required"
+                    },
+                    "404": {
+                        "description": "Unavailable configuration or inaccessible GitHub resource"
+                    },
+                    "409": {
+                        "description": "Reconnect GitHub, retry refresh, or import conflict; Raaz session remains valid"
+                    },
+                    "422": {
+                        "description": "Invalid input or installation exceeds 2000 repositories"
+                    },
+                    "429": {
+                        "description": "Local or provider rate limit"
+                    },
+                    "500": {
+                        "description": "Sanitized provider, database, or audit failure"
+                    }
+                },
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "page",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 10000,
+                            "default": 1
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "limit",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100,
+                            "default": 25
+                        }
+                    }
+                ]
+            }
+        },
+        "/integrations/github/repositories": {
+            "get": {
+                "tags": ["GitHub repositories"],
+                "summary": "Fresh accessible repository metadata, literal search and page totals",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "401": {
+                        "description": "Invalid Raaz session"
+                    },
+                    "403": {
+                        "description": "Origin mismatch or GitHub approval required"
+                    },
+                    "404": {
+                        "description": "Unavailable configuration or inaccessible GitHub resource"
+                    },
+                    "409": {
+                        "description": "Reconnect GitHub, retry refresh, or import conflict; Raaz session remains valid"
+                    },
+                    "422": {
+                        "description": "Invalid input or installation exceeds 2000 repositories"
+                    },
+                    "429": {
+                        "description": "Local or provider rate limit"
+                    },
+                    "500": {
+                        "description": "Sanitized provider, database, or audit failure"
+                    }
+                },
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "page",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 10000,
+                            "default": 1
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "limit",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100,
+                            "default": 25
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "installationId",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "search",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 100
+                        }
+                    }
+                ]
+            }
+        },
+        "/integrations/github/import": {
+            "post": {
+                "tags": ["GitHub repositories"],
+                "summary": "Verify GitHub access and import metadata once per creator/repository",
+                "responses": {
+                    "201": {
+                        "description": "Created project with mockSecretsCreated count (no values or file contents)"
+                    },
+                    "401": {
+                        "description": "Invalid Raaz session"
+                    },
+                    "403": {
+                        "description": "Origin mismatch or GitHub approval required"
+                    },
+                    "404": {
+                        "description": "Unavailable configuration or inaccessible GitHub resource"
+                    },
+                    "409": {
+                        "description": "Reconnect GitHub, retry refresh, or import conflict; Raaz session remains valid"
+                    },
+                    "422": {
+                        "description": "Invalid input, installation exceeds 2000 repositories, or example file exceeds 64 KiB/100 keys"
+                    },
+                    "429": {
+                        "description": "Local or provider rate limit"
+                    },
+                    "500": {
+                        "description": "Sanitized provider, database, or audit failure"
+                    },
+                    "200": {
+                        "description": "Existing accessible project; mockSecretsCreated is zero; no secret overwrite or repeated file read"
+                    }
+                },
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/origin"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/githubImport"
+                            }
+                        }
+                    }
+                },
+                "description": "Verify user/installation access and create a project, membership, and optional example-key mock secrets in one audited transaction. Retry returns the existing accessible project without altering secrets."
             }
         }
     }

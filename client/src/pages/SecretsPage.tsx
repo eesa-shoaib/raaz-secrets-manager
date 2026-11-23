@@ -160,6 +160,7 @@ export function SecretsPage() {
     const [isImportOpen, setIsImportOpen] = useState(false);
     const [importText, setImportText] = useState('');
     const [importMode, setImportMode] = useState<ImportSecretsMode>('skip_existing');
+    const [secretValueRevision, setSecretValueRevision] = useState(0);
     const [importError, setImportError] = useState<string | null>(null);
     const importFileRef = useRef<HTMLInputElement>(null);
 
@@ -409,6 +410,7 @@ export function SecretsPage() {
                 mode: importMode,
                 entries: parsedImport.entries,
             });
+            if (summary.updated > 0) setSecretValueRevision((revision) => revision + 1);
             toast.success(
                 `Imported into ${currentEnv}: ${summary.created} created, ${summary.updated} updated, ${summary.skipped} skipped`,
             );
@@ -716,6 +718,7 @@ export function SecretsPage() {
                                             {/* Value */}
                                             <td className="py-4">
                                                 <SecretValueCell
+                                                    key={`${secret.id}:${secretValueRevision}`}
                                                     secretId={secret.id}
                                                     secretKey={secret.key}
                                                     projectId={projectId!}
@@ -829,7 +832,7 @@ export function SecretsPage() {
                                     setCursor(null);
                                     setCursorHistory([]);
                                 }}
-                                className="btn btn-outline btn-sm rounded-xl"
+                                className="btn btn-neutral btn-sm rounded-xl"
                             >
                                 Clear Search
                             </button>

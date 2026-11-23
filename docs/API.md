@@ -351,3 +351,59 @@ Environment editing (and the `PATCH /api/projects/:projectId` endpoint that woul
 | GET    | `/api/admin/audit-log?action=&result=&cursor=&limit=25` | `isPlatformAdmin` | Cursor-paginated platform-wide audit entries (`projectId: null` only; supports `platform_admin_granted`, `platform_admin_revoked`, `user_activated`, `user_deactivated`, plus `password_changed`/`profile_updated`/`avatar_updated`/`avatar_removed`/`bootstrap_admin` when unfiltered). Never returns project-scoped entries or secret metadata.                                                                                                                                                                                                                                                                                                                                                                                                |
 
 Note: `/admin/projects` (platform project overview and archive/restore) remains post-MVP and is not built. Platform Audit Log (`GET /api/admin/audit-log`) returns only platform-wide (`projectId: null`) user role and account events; no admin route returns any `Project` or `Secret` data — not `ciphertext`, and in this build not even project or secret counts or names. A Platform Admin can reveal a secret only by holding a `ProjectMembership` on that specific project.
+
+## GitHub repository connection and import
+
+Authenticated users may connect a separate GitHub App from Projects
+or Settings. This connection never adds a login method, links accounts by email,
+or grants Raaz project roles. Existing GitHub sign-in retains `user:email` only.
+
+| Method | Path                                                                            | Contract                                                                                                                                              |
+| ------ | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/api/integrations/github`                                                      | `{ enabled, connected, login?, manageUrl? }`; own connection only                                                                                     |
+| POST   | `/api/integrations/github/start`                                                | `{ returnTo: 'projects' \| 'settings' }`; returns `{ authorizationUrl }`                                                                              |
+| GET    | `/api/integrations/github/callback`                                             | Existing authenticated session required; validates state/PKCE/session binding; fixed same-origin return                                               |
+| DELETE | `/api/integrations/github`                                                      | Disconnect own repository connection; 204; never removes a sign-in identity or imported project                                                       |
+| GET    | `/api/integrations/github/installations?page=1&limit=25`                        | Accessible app installations, `{ data, page, limit, total }`                                                                                          |
+| GET    | `/api/integrations/github/repositories?installationId=&page=1&limit=25&search=` | Fresh accessible repository metadata; literal case-insensitive name/description search; same page envelope                                            |
+| POST   | `/api/integrations/github/import`                                               | `{ installationId, repositoryId, name, description, seedExampleSecrets? }`; `{ project, created, mockSecretsCreated }`, 201 on creation, 200 on retry |
+
+All routes authenticate; mutations retain the existing Origin check. Integration
+requests use a per-user limit of 60 requests per 15 minutes. IDs are positive safe
+integers, page is 1–10000, limit is 1–100, search is at most 100 characters. Name
+and description use normal project validation. Installation/repository access is
+revalidated through GitHub with the connected user's GitHub App token, never an
+installation-only token with broader access. Repository metadata scans are bounded
+at 2000 repositories per installation; larger installations must narrow the app's
+selected repositories (422), never receive silently truncated search results.
+
+GitHub 401/expired refresh returns 409 with reconnect guidance, preserving the Raaz
+session; revoked/unknown installation/repository returns generic 404, approval
+failures 403, provider rate limits 429, other provider failures sanitized 500.
+Callbacks never echo provider errors, codes, or tokens. No new cookie or CSRF policy.
+
+Imports copy metadata once. Only the verified stable repository ID, canonical
+GitHub URL, owner and name are stored in optional `project.githubRepository`.
+Creators receive their usual projectAdmin membership, canonical environments, and
+transactional `project_created` audit. Per-creator/repository uniqueness makes
+retries idempotent; existing projects are returned only with current membership.
+A different user's copy is never disclosed or treated as a duplicate. GitHub secret values and collaborators are not imported or synchronized.
+
+`seedExampleSecrets` defaults to true. Before creating a project, read only root
+`.env.example` (fallback `env.example`) on the default branch using Contents: read-only
+permission. A missing file creates a project without mock secrets. Other upstream
+errors abort creation with actionable guidance; users may disable seeding. Files
+are limited to 64 KiB and 100 unique normalized keys. Parse dotenv assignments,
+ignore every source value, and encrypt `MOCK_VALUE_REPLACE_ME` for each key in
+**development only**. The project, creator membership, mock secrets, and their
+project/create audit entries commit in one transaction. Return only the count in
+`mockSecretsCreated`, never file contents or values. Idempotent retries return
+zero newly created mocks and never reread the file or overwrite existing secrets.
+Connections and disconnections record `github_connected` / `github_disconnected`
+platform audit entries transactionally. Credential rotation is internal maintenance.
+
+GitHub login initializes an unset username from the provider login (normalized,
+limited to 30 characters, suffixes for collisions, bounded attempts). Existing
+usernames never change automatically. Each successful automatic username claim
+and its `profile_updated` audit entry commit together; exhausted collisions leave
+username unset without blocking sign-in. Stable provider subject remains identity.

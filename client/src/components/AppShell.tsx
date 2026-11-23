@@ -16,7 +16,7 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
             <main
                 id="main"
                 tabIndex={-1}
-                className="flex-1 w-[84%] max-w-9xl mx-auto px-4 sm:px-6 py-8 focus:outline-none"
+                className="flex-1 w-[calc(100%-2rem)] sm:w-[90%] lg:w-[84%] max-w-7xl mx-auto px-4 sm:px-10 lg:px-16 py-8 focus:outline-none"
             >
                 {children ?? <Outlet />}
             </main>

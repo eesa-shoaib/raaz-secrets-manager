@@ -209,3 +209,14 @@ email verification, domain restrictions or account-linking checks.
 - [GitHub authorization code flow and PKCE](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps)
 - [openid-client](https://github.com/panva/openid-client)
 - [Arctic deprecation notice](https://arctic.pilcrowonpaper.com/)
+
+## GitHub username and repository follow-up
+
+GitHub sign-in reads the provider login to initialize an unset Raaz username.
+Stable subject remains identity; existing custom usernames never change. Claims
+use bounded unique-index retries and transactional profile_updated auditing.
+
+Repository access is a separate GitHub App consent flow; see
+[GITHUB_IMPORT_TODO.md](./GITHUB_IMPORT_TODO.md) and README setup. Its encrypted
+user grant is independent of the temporary tokens discarded by basic sign-in.
+Connecting repository access never creates a sign-in identity or links by email.

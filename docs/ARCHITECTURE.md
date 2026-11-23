@@ -503,3 +503,26 @@ fresh round trip bound to the initiating session/version and provider identity;
 the same last-admin counter and transactional deactivation service apply.
 All request paths and unknown-route errors omit query strings. Configure hosting
 access-log handling separately before enabling real providers.
+
+## GitHub App connection
+
+Keep repository consent separate from login. Use GitHub App **user** access tokens,
+which intersect app installation access with the user's own access. No installation
+JWT/private key or broad OAuth repo scope is needed for this design. Store only an
+encrypted, server-only credential bundle; refresh expiring tokens under a bounded
+MongoDB lease. Invalid/revoked credentials request reconnection without ending Raaz
+sessions. Never log provider requests/responses or propagate raw upstream errors.
+
+Example-file seeding reads only root `.env.example` or fallback `env.example`
+with Contents read-only access, capped at 64 KiB. Discard source values and create
+explicit mock placeholders in development. Project creation and mock secret writes
+share one transaction and existing encryption/audit helpers. Never fetch `.env`,
+clone repositories, scan directories, or expose file contents through the API.
+
+Connection callbacks reuse the existing authenticated session cookie, require
+matching session hash and one-use state plus PKCE, and return only to Projects or
+Settings on CLIENT_ORIGIN. No additional cookie or policy exception. Basic provider
+login continues to discard its temporary tokens. Optional GitHub App configuration
+is checked when used, not added to boot validation. Disconnect removes local
+credentials and attempts transactionally with audit; users can revoke the app
+through Manage GitHub access. GitHub outage does not prevent local disconnect.
