@@ -21,7 +21,6 @@ export function PaginationControls({
     pageNumber,
     itemCount,
     isFetching = false,
-    noun = 'items',
 }: PaginationControlsProps) {
     if (!hasPrevious && !hasNext && itemCount === 0) {
         return null;
@@ -33,8 +32,7 @@ export function PaginationControls({
             className="flex flex-wrap items-center justify-between gap-3 pt-2 text-sm font-ui text-base-content/70"
         >
             <div>
-                Showing <span className="font-semibold text-base-content">{itemCount}</span> {noun}{' '}
-                (Page <span className="font-semibold text-base-content">{pageNumber}</span>)
+                Page <span className="font-semibold text-base-content">{pageNumber}</span>
             </div>
             <div className="flex items-center gap-2">
                 {onFirstPage && (
