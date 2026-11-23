@@ -267,11 +267,7 @@ export function SettingsPage() {
 
     return (
         <div className="mx-auto max-w-2xl space-y-6">
-            <PageHeader
-                title="Account Settings"
-                description="Manage your public username, profile photo, password, and account status"
-                className="text-center md:justify-center"
-            />
+            <PageHeader title="Account Settings" className="text-center md:justify-center" />
 
             {/* Profile & Avatar */}
             <section className="card bg-base-200 border border-base-300 rounded-3xl p-6 shadow-sm space-y-6">
@@ -395,10 +391,6 @@ export function SettingsPage() {
                     <h2 className="font-heading text-lg font-bold text-base-content">
                         Appearance & Theme
                     </h2>
-                    <p className="text-xs font-ui text-base-content/60 mt-1 max-w-md mx-auto">
-                        Choose a color palette for your workspace. Your preference is saved locally
-                        and applies instantly across all pages.
-                    </p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">

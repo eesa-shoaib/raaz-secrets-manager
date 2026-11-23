@@ -13,7 +13,6 @@ import { PaginationControls } from '../components/PaginationControls';
 import { ProjectCard } from '../components/ProjectCard';
 import { SearchInput } from '../components/SearchInput';
 import { useToast } from '../components/Toaster';
-import { useAuth } from '../hooks/useAuth';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { useProjectsPage, useCreateProject } from '../hooks/useProjects';
 import { isApiError } from '../lib/errorHandling';
@@ -53,7 +52,6 @@ export function ProjectsPage() {
     });
     const projects = data?.data ?? [];
     const { mutateAsync: createProject, isPending: isCreating } = useCreateProject();
-    const { user } = useAuth();
     const { toast } = useToast();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -127,7 +125,6 @@ export function ProjectsPage() {
     return (
         <div className="space-y-6">
             <PageHeader
-                description="Manage encrypted secrets and team memberships across environments"
                 title="Projects"
                 actions={
                     <div className="flex flex-wrap items-center gap-3">
@@ -200,7 +197,6 @@ export function ProjectsPage() {
                 </div>
             ) : debouncedSearch ? (
                 <EmptyState
-                    description={`No projects matched "${debouncedSearch}".`}
                     title="No matching projects"
                     action={
                         <button
@@ -217,16 +213,6 @@ export function ProjectsPage() {
                 />
             ) : (
                 <EmptyState
-                    description={
-                        <span>
-                            You&apos;re not a member of any projects yet. Create a project, or ask a
-                            Project Admin to add you using your email address:{' '}
-                            <strong className="text-base-content font-mono font-semibold">
-                                {user?.email}
-                            </strong>
-                            .
-                        </span>
-                    }
                     title="No projects yet"
                     action={
                         <button

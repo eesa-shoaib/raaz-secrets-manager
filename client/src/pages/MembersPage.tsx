@@ -174,9 +174,6 @@ export function MembersPage() {
                     <h2 className="text-xl font-heading font-bold text-base-content">
                         Team Members
                     </h2>
-                    <p className="text-sm font-ui text-base-content/70 mt-0.5">
-                        Manage who can view, create, and reveal secrets in this project
-                    </p>
                 </div>
 
                 {canAddMember && (

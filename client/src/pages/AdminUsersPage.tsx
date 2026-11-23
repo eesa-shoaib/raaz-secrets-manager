@@ -210,10 +210,7 @@ export function AdminUsersPage() {
 
     return (
         <div className="space-y-6">
-            <PageHeader
-                title="User Management"
-                description="Manage platform administrators, account activation, and role changes across Raaz"
-            />
+            <PageHeader title="User Management" />
 
             <div className="border-b border-base-300">
                 <div
@@ -260,10 +257,7 @@ export function AdminUsersPage() {
                         onRetry={() => refetch()}
                     />
                 ) : users.length === 0 ? (
-                    <EmptyState
-                        title="No users found"
-                        description="Platform user accounts will appear here."
-                    />
+                    <EmptyState title="No users found" />
                 ) : (
                     <>
                         <AdminUsersTable
@@ -377,11 +371,6 @@ export function AdminUsersPage() {
                                 hasAuditFilters
                                     ? 'No matching audit entries'
                                     : 'No role or account changes recorded yet'
-                            }
-                            description={
-                                hasAuditFilters
-                                    ? 'No platform user audit entries match your filters.'
-                                    : 'Platform admin grants, revocations, activations, and deactivations appear here.'
                             }
                         />
                     ) : (

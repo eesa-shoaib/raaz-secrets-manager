@@ -57,6 +57,9 @@ fallback; display usernames with email available for identity disambiguation.
 The navbar account dropdown contains actions only: Account Settings, permitted
 administration links, and Sign Out. Do not repeat a "Signed in as" block, username,
 or email inside it; the existing account trigger can still identify the user.
+Page headers and empty states use concise titles and relevant actions without
+introductory descriptions. Keep actual project descriptions, field requirements,
+error messages, and confirmation guidance where they inform an action.
 
 ## 1. Route Map
 
@@ -175,7 +178,7 @@ A reveal never writes any query key. The secret row is keyed by secret id, so th
 | `FullPageState` | Variants `loading`, `error`. The only thing rendered during auth bootstrap.                                               |
 | `Skeleton`      | Shape prop: `table`, `card`, `header`                                                                                     |
 | `ErrorState`    | Inline query failure: message + Retry                                                                                     |
-| `EmptyState`    | Title, one sentence, optional action                                                                                      |
+| `EmptyState`    | Concise title and optional action; no explanatory description                                                             |
 | `InlineAlert`   | Variants `info`, `warning`, `error`                                                                                       |
 | `Toaster`       | Toast queue. Success auto-dismisses at 4 s; errors persist unless a duration is provided. Login errors dismiss after 4 s. |
 
@@ -271,9 +274,7 @@ noted, not omitted.
 
     - error — `ErrorState` + Retry;
 
-    - empty (story 10) — "You're not a member of any projects yet. Create
-      a project, or ask a Project Admin to add you using your email
-      address: **{me.email}**." Primary action: New project.
+    - empty (story 10) — "No projects yet." Primary action: New project.
 
 - **On create:** navigate to the new project's secrets page.
 

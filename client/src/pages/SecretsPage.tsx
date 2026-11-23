@@ -820,7 +820,6 @@ export function SecretsPage() {
                 ) : debouncedSearch ? (
                     <EmptyState
                         title="No matching secrets"
-                        description={`No keys in ${currentEnv} matched "${debouncedSearch}".`}
                         action={
                             <button
                                 type="button"
@@ -839,11 +838,6 @@ export function SecretsPage() {
                 ) : (
                     <EmptyState
                         title={`No secrets in ${currentEnv} yet`}
-                        description={
-                            canCreate === 'enabled'
-                                ? `Store your first encrypted ${currentEnv} secret to get started.`
-                                : `No secrets configured for the ${currentEnv} environment.`
-                        }
                         action={
                             canCreate === 'enabled' ? (
                                 <button
