@@ -450,7 +450,7 @@ export function SettingsPage() {
                     )}
 
                     {section === 'appearance' && (
-                        <div className="grid max-w-xl gap-3 sm:grid-cols-2">
+                        <div className="grid w-full gap-3 sm:grid-cols-2 xl:grid-cols-4">
                             {themes.map((item) => {
                                 const isSelected = theme === item.id;
                                 return (
