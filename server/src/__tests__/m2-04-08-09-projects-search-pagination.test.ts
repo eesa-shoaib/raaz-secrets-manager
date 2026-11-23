@@ -87,6 +87,11 @@ describe('M2-04, M2-08, M2-09: Project Details, Literal Search, and Cursor Pagin
         const adminCookie = signAuthCookie(admin._id.toString());
         const devCookie = signAuthCookie(dev._id.toString());
         const outsiderCookie = signAuthCookie(outsider._id.toString());
+        const outsiderProjects = await request(app)
+            .get('/api/projects?mode=cursor')
+            .set('Cookie', outsiderCookie)
+            .expect(200);
+        expect(outsiderProjects.body.total).toBe(0);
 
         const createWithDesc = await request(app)
             .post('/api/projects')
@@ -241,6 +246,7 @@ describe('M2-04, M2-08, M2-09: Project Details, Literal Search, and Cursor Pagin
             .get('/api/projects?mode=cursor&search=.*')
             .set('Cookie', cookie);
         expect(regexRes.status).toBe(200);
+        expect(regexRes.body.total).toBe(1);
         expect(regexRes.body.data.map((p: { name: string }) => p.name)).toEqual(['Auth.*Service']);
 
         // Unbalanced/parenthesis characters "(prod)" should work safely case-insensitively
@@ -264,12 +270,14 @@ describe('M2-04, M2-08, M2-09: Project Details, Literal Search, and Cursor Pagin
             .get(`/api/projects/${projId}/secrets?environment=development&mode=cursor&search=.*`)
             .set('Cookie', cookie);
         expect(secretLiteralStar.status).toBe(200);
+        expect(secretLiteralStar.body.total).toBe(0);
         expect(secretLiteralStar.body.data).toEqual([]);
 
         const secretDb = await request(app)
             .get(`/api/projects/${projId}/secrets?environment=development&mode=cursor&search=db`)
             .set('Cookie', cookie);
         expect(secretDb.status).toBe(200);
+        expect(secretDb.body.total).toBe(2);
         expect(secretDb.body.data.map((s: { key: string }) => s.key).sort()).toEqual([
             'APP_DB_PASS',
             'DB_URL_PROD',
@@ -337,6 +345,7 @@ describe('M2-04, M2-08, M2-09: Project Details, Literal Search, and Cursor Pagin
                 : '?mode=cursor&limit=2';
             const res = await request(app).get(`/api/projects${qs}`).set('Cookie', cookie);
             expect(res.status).toBe(200);
+            expect(res.body.total).toBe(5);
             pages += 1;
             const body = res.body as {
                 data: Array<{ id: string }>;
@@ -372,6 +381,7 @@ describe('M2-04, M2-08, M2-09: Project Details, Literal Search, and Cursor Pagin
             .get(`/api/projects/${projA}/members?mode=cursor&limit=2`)
             .set('Cookie', cookie);
         expect(mPage1.status).toBe(200);
+        expect(mPage1.body.total).toBe(3);
         expect(mPage1.body.data).toHaveLength(2);
         expect(mPage1.body.hasMore).toBe(true);
         const mPage2 = await request(app)
@@ -380,6 +390,7 @@ describe('M2-04, M2-08, M2-09: Project Details, Literal Search, and Cursor Pagin
             )
             .set('Cookie', cookie);
         expect(mPage2.status).toBe(200);
+        expect(mPage2.body.total).toBe(3);
         expect(mPage2.body.data).toHaveLength(1);
         expect(mPage2.body.hasMore).toBe(false);
         const allMembers = [...mPage1.body.data, ...mPage2.body.data];
@@ -408,6 +419,7 @@ describe('M2-04, M2-08, M2-09: Project Details, Literal Search, and Cursor Pagin
             .get(`/api/projects/${projA}/secrets?environment=development&mode=cursor&limit=2`)
             .set('Cookie', cookie);
         expect(sPage1.status).toBe(200);
+        expect(sPage1.body.total).toBe(3);
         expect(sPage1.body.data).toHaveLength(2);
         expect(sPage1.body.hasMore).toBe(true);
 
@@ -434,6 +446,7 @@ describe('M2-04, M2-08, M2-09: Project Details, Literal Search, and Cursor Pagin
             )
             .set('Cookie', cookie);
         expect(sPage2.status).toBe(200);
+        expect(sPage2.body.total).toBe(3);
         expect(sPage2.body.data).toHaveLength(1);
         expect(sPage2.body.hasMore).toBe(false);
 
@@ -461,6 +474,19 @@ describe('M2-04, M2-08, M2-09: Project Details, Literal Search, and Cursor Pagin
             }
             auditCursor = body.nextCursor;
         } while (auditCursor);
+        const filteredAudit = await request(app)
+            .get(
+                `/api/projects/${projA}/audit-log?mode=cursor&limit=1&action=create&environment=development`,
+            )
+            .set('Cookie', cookie)
+            .expect(200);
+        expect(filteredAudit.body.total).toBe(3);
+        expect(filteredAudit.body.data).toHaveLength(1);
+        const allAudit = await request(app)
+            .get(`/api/projects/${projA}/audit-log?mode=cursor&limit=1`)
+            .set('Cookie', cookie)
+            .expect(200);
+        expect(allAudit.body.total).toBe(seenAuditIds.length);
         expect(actorHasUsername).toBe(true);
         expect(new Set(seenAuditIds).size).toBe(seenAuditIds.length);
         expect(seenAuditIds.length).toBeGreaterThanOrEqual(7);
@@ -509,6 +535,17 @@ describe('M2-04, M2-08, M2-09: Project Details, Literal Search, and Cursor Pagin
             },
         ]);
         const cookie = signAuthCookie(owner._id.toString());
+        const outsider = await UserModel.create({
+            email: 'grid_outsider@example.com',
+            passwordHash: DUMMY_HASH,
+            isActive: true,
+        });
+        await request(app)
+            .post('/api/projects')
+            .set('Origin', ORIGIN)
+            .set('Cookie', signAuthCookie(outsider._id.toString()))
+            .send({ name: 'Private outsider project' })
+            .expect(201);
 
         for (let i = 1; i <= 11; i += 1) {
             await request(app)
@@ -524,6 +561,7 @@ describe('M2-04, M2-08, M2-09: Project Details, Literal Search, and Cursor Pagin
             .set('Cookie', cookie);
         expect(page1.status).toBe(200);
         expect(page1.body.limit).toBe(9);
+        expect(page1.body.total).toBe(11);
         expect(page1.body.data).toHaveLength(9);
         expect(page1.body.hasMore).toBe(true);
         expect(typeof page1.body.nextCursor).toBe('string');
@@ -535,6 +573,7 @@ describe('M2-04, M2-08, M2-09: Project Details, Literal Search, and Cursor Pagin
             .set('Cookie', cookie);
         expect(page2.status).toBe(200);
         expect(page2.body.limit).toBe(9);
+        expect(page2.body.total).toBe(11);
         expect(page2.body.data).toHaveLength(2);
         expect(page2.body.hasMore).toBe(false);
         expect(page2.body.nextCursor).toBeNull();

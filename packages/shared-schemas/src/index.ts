@@ -26,6 +26,7 @@ export const createCursorPaginatedResponseSchema = <T extends z.ZodTypeAny>(item
         nextCursor: z.string().nullable(),
         hasMore: z.boolean(),
         limit: z.number().int().min(1).max(100),
+        total: z.number().int().min(0),
     });
 
 export interface CursorPaginatedResponse<T> {
@@ -33,5 +34,6 @@ export interface CursorPaginatedResponse<T> {
     nextCursor: string | null;
     hasMore: boolean;
     limit: number;
+    total: number;
 }
 export * from './oauth.js';

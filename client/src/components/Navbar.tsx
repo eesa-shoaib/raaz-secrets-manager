@@ -113,17 +113,6 @@ export function Navbar() {
 
                             {dropdownOpen && (
                                 <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-base-200 border border-base-300 shadow-2xl py-2 z-50 animate-fade-in font-ui">
-                                    <div className="px-4 py-2 border-b border-base-300">
-                                        <p className="text-xs text-base-content/60">Signed in as</p>
-                                        {user.username && (
-                                            <p className="text-sm font-semibold text-base-content truncate mt-0.5">
-                                                @{user.username}
-                                            </p>
-                                        )}
-                                        <p className="text-xs text-base-content/70 truncate mt-0.5">
-                                            {user.email}
-                                        </p>
-                                    </div>
                                     <div className="px-1 py-1 space-y-0.5">
                                         <Link
                                             to="/settings"

@@ -11,7 +11,6 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { FormField } from '../components/FormField';
 import { Modal } from '../components/Modal';
-import { PageHeader } from '../components/PageHeader';
 import { useToast } from '../components/Toaster';
 import { UserAvatar } from '../components/UserAvatar';
 import {
@@ -60,6 +59,7 @@ export function SettingsPage() {
     const changePasswordMutation = useChangePassword();
     const deactivateAccountMutation = useDeactivateAccount();
 
+    const [section, setSection] = useState<'profile' | 'appearance' | 'account'>('profile');
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [avatarError, setAvatarError] = useState<string | null>(null);
     const [profileError, setProfileError] = useState<string | null>(null);
@@ -266,240 +266,305 @@ export function SettingsPage() {
     const isAvatarBusy = uploadAvatarMutation.isPending || deleteAvatarMutation.isPending;
 
     return (
-        <div className="mx-auto max-w-2xl space-y-6">
-            <PageHeader
-                title="Account Settings"
-                description="Manage your public username, profile photo, password, and account status"
-                className="text-center md:justify-center"
-            />
+        <div className="mx-auto max-w-6xl">
+            <h1 className="mb-6 font-heading text-2xl font-bold text-base-content">
+                Account settings
+            </h1>
 
-            {/* Profile & Avatar */}
-            <section className="card bg-base-200 border border-base-300 rounded-3xl p-6 shadow-sm space-y-6">
-                <h2 className="font-heading text-lg font-bold text-base-content text-center">
-                    Profile
-                </h2>
-
-                <div className="flex flex-col items-center text-center gap-4">
-                    <UserAvatar
-                        userId={user.id}
-                        email={user.email}
-                        username={user.username}
-                        hasAvatar={user.hasAvatar}
-                        avatarUpdatedAt={user.avatarUpdatedAt}
-                        size="lg"
-                    />
-                    <div className="space-y-3">
-                        <div className="text-sm font-ui">
-                            <p className="font-semibold text-base-content">
-                                {user.username ? `@${user.username}` : user.email}
-                            </p>
-                            <p className="text-xs text-base-content/60">{user.email}</p>
-                        </div>
-                        <div className="flex flex-wrap items-center justify-center gap-2">
-                            <label className="btn btn-primary btn-sm h-9 px-4 text-primary-content font-semibold rounded-xl cursor-pointer">
-                                {uploadAvatarMutation.isPending ? 'Uploading...' : 'Upload Photo'}
-                                <input
-                                    ref={fileInputRef}
-                                    type="file"
-                                    accept="image/png,image/jpeg,image/webp"
-                                    onChange={handleAvatarChange}
-                                    disabled={isAvatarBusy}
-                                    aria-label="Upload profile photo"
-                                    className="sr-only"
-                                />
-                            </label>
-                            {user.hasAvatar && (
-                                <button
-                                    type="button"
-                                    onClick={handleRemoveAvatar}
-                                    disabled={isAvatarBusy}
-                                    className="btn btn-ghost btn-sm h-9 px-4 border border-base-300 rounded-xl"
-                                >
-                                    {deleteAvatarMutation.isPending
-                                        ? 'Removing...'
-                                        : 'Remove Photo'}
-                                </button>
-                            )}
-                        </div>
-                        <p className="text-xs text-base-content/60">
-                            PNG, JPEG, or WebP up to 2 MiB. Automatically normalized and stripped of
-                            metadata.
-                        </p>
-                    </div>
-                </div>
-
-                {avatarError && (
-                    <div
-                        role="alert"
-                        className="alert alert-error text-sm rounded-xl py-2 px-3 text-error-content font-medium"
-                    >
-                        <span>{avatarError}</span>
-                    </div>
-                )}
-
-                <form
-                    onSubmit={handleSubmitProfile(onProfileSubmit)}
-                    className="mx-auto w-full max-w-sm space-y-4 pt-4 border-t border-base-300"
+            <div className="grid items-start gap-6 md:grid-cols-[15rem_minmax(0,1fr)] md:gap-8">
+                <nav
+                    aria-label="Settings sections"
+                    className="flex flex-wrap gap-2 rounded-3xl border border-base-300 bg-base-200 p-4 shadow-sm sm:p-6 md:flex-col md:flex-nowrap"
                 >
-                    {profileError && (
-                        <div
-                            role="alert"
-                            className="alert alert-error text-sm rounded-xl py-2 px-3 text-error-content font-medium"
+                    {(
+                        [
+                            {
+                                id: 'profile',
+                                label: 'Profile',
+                                path: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0',
+                            },
+                            {
+                                id: 'appearance',
+                                label: 'Appearance',
+                                path: 'm15 4 5 5M4 20l4-1 13-13a2.1 2.1 0 0 0-3-3L5 16l-1 4Z',
+                            },
+                            {
+                                id: 'account',
+                                label: 'Account',
+                                path: 'M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4',
+                            },
+                        ] as const
+                    ).map((item) => (
+                        <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => setSection(item.id)}
+                            aria-current={section === item.id ? 'page' : undefined}
+                            aria-controls="settings-content"
+                            className={`flex items-center justify-center gap-1.5 rounded-lg border border-transparent px-2 py-2 text-xs font-ui transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:gap-2 sm:px-3 sm:text-sm md:justify-start ${section === item.id ? 'button-textured bg-base-300 font-semibold text-primary' : 'text-base-content/80 hover:bg-base-300/60 hover:text-base-content'}`}
                         >
-                            <span>{profileError}</span>
+                            <svg
+                                aria-hidden="true"
+                                className="hidden h-4 w-4 shrink-0 sm:block"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="1.7"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            >
+                                <path d={item.path} />
+                            </svg>
+                            {item.label}
+                        </button>
+                    ))}
+                </nav>
+
+                <section
+                    id="settings-content"
+                    aria-labelledby="settings-section-heading"
+                    className="min-w-0"
+                >
+                    <h2
+                        id="settings-section-heading"
+                        className="mb-5 border-b border-base-300 pb-3 font-heading text-xl font-semibold text-base-content"
+                    >
+                        {section === 'profile'
+                            ? 'Profile'
+                            : section === 'appearance'
+                              ? 'Appearance'
+                              : 'Account'}
+                    </h2>
+
+                    {section === 'profile' && (
+                        <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_10rem]">
+                            <form
+                                onSubmit={handleSubmitProfile(onProfileSubmit)}
+                                className="max-w-md space-y-4"
+                            >
+                                <div>
+                                    <label
+                                        htmlFor="settings-username"
+                                        className="mb-1.5 block text-sm font-medium text-base-content"
+                                    >
+                                        Username
+                                    </label>
+                                    <input
+                                        id="settings-username"
+                                        type="text"
+                                        autoComplete="username"
+                                        {...registerProfile('username')}
+                                        className="input input-bordered h-9 min-h-9 w-full rounded-lg border-base-content/15 bg-base-300 px-3 text-sm focus:border-primary"
+                                    />
+                                    {profileErrors.username && (
+                                        <p className="mt-1 text-xs text-error" role="alert">
+                                            {profileErrors.username.message}
+                                        </p>
+                                    )}
+                                </div>
+                                <div>
+                                    <label
+                                        htmlFor="settings-email"
+                                        className="mb-1.5 block text-sm font-medium text-base-content"
+                                    >
+                                        Email
+                                    </label>
+                                    <input
+                                        id="settings-email"
+                                        type="email"
+                                        value={user.email}
+                                        readOnly
+                                        className="input input-bordered h-9 min-h-9 w-full rounded-lg border-base-content/15 bg-base-300 px-3 text-sm text-base-content/80"
+                                    />
+                                </div>
+                                {profileError && (
+                                    <p role="alert" className="text-sm text-error">
+                                        {profileError}
+                                    </p>
+                                )}
+                                <button
+                                    type="submit"
+                                    disabled={isSavingProfile}
+                                    className="btn btn-primary btn-sm h-8 min-h-8 rounded-lg px-4 text-primary-content"
+                                >
+                                    {isSavingProfile ? 'Saving...' : 'Save Profile'}
+                                </button>
+                            </form>
+
+                            <div className="space-y-3">
+                                <h3 className="text-sm font-medium text-base-content">
+                                    Profile picture
+                                </h3>
+                                <div className="group relative w-fit" aria-busy={isAvatarBusy}>
+                                    <UserAvatar
+                                        userId={user.id}
+                                        email={user.email}
+                                        username={user.username}
+                                        hasAvatar={user.hasAvatar}
+                                        avatarUpdatedAt={user.avatarUpdatedAt}
+                                        size="lg"
+                                        className="!h-36 !w-36 !text-5xl"
+                                    />
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept="image/png,image/jpeg,image/webp"
+                                        onChange={handleAvatarChange}
+                                        disabled={isAvatarBusy}
+                                        aria-label="Upload profile photo"
+                                        className="hidden"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => fileInputRef.current?.click()}
+                                        disabled={isAvatarBusy}
+                                        aria-label="Edit profile picture"
+                                        aria-describedby="settings-avatar-limits"
+                                        title="Edit profile picture"
+                                        className={`absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border border-base-content/25 bg-base-300 text-base-content shadow-md transition-opacity hover:text-primary group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary disabled:cursor-wait [@media(hover:none)]:opacity-100 ${isAvatarBusy ? 'opacity-100' : 'opacity-0'}`}
+                                    >
+                                        {uploadAvatarMutation.isPending ? (
+                                            <span
+                                                aria-hidden="true"
+                                                className="loading loading-spinner loading-xs"
+                                            />
+                                        ) : (
+                                            <svg
+                                                aria-hidden="true"
+                                                className="h-4 w-4"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="1.8"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                            >
+                                                <path d="m16 4 4 4M4 20l4-1L21 6a2.1 2.1 0 0 0-3-3L5 16l-1 4Z" />
+                                            </svg>
+                                        )}
+                                    </button>
+                                </div>
+                                {user.hasAvatar && (
+                                    <button
+                                        type="button"
+                                        onClick={handleRemoveAvatar}
+                                        disabled={isAvatarBusy}
+                                        className="btn btn-ghost btn-sm h-8 min-h-8 rounded-lg px-2 text-base-content/80"
+                                    >
+                                        {deleteAvatarMutation.isPending
+                                            ? 'Removing...'
+                                            : 'Remove Photo'}
+                                    </button>
+                                )}
+                                <p
+                                    id="settings-avatar-limits"
+                                    className="text-xs text-base-content/70"
+                                >
+                                    PNG, JPG or WebP · 2 MiB max
+                                </p>
+                                {avatarError && (
+                                    <p role="alert" className="text-xs text-error">
+                                        {avatarError}
+                                    </p>
+                                )}
+                            </div>
                         </div>
                     )}
 
-                    <div className="form-control">
-                        <label htmlFor="settings-username" className="label">
-                            <span className="label-text font-medium">Username</span>
-                        </label>
-                        <input
-                            id="settings-username"
-                            type="text"
-                            placeholder="e.g. alice_dev"
-                            autoComplete="username"
-                            {...registerProfile('username')}
-                            className="input input-bordered w-full rounded-xl bg-base-100"
-                        />
-                        {profileErrors.username ? (
-                            <span className="mt-1 text-xs text-error" role="alert">
-                                {profileErrors.username.message}
-                            </span>
-                        ) : (
-                            <span className="mt-1 text-xs text-base-content/60">
-                                3–30 lowercase letters, digits, or underscores. Leave blank to
-                                clear.
-                            </span>
-                        )}
-                    </div>
-
-                    <div className="flex justify-center">
-                        <button
-                            type="submit"
-                            disabled={isSavingProfile}
-                            className="btn btn-primary btn-sm h-9 text-primary-content font-semibold rounded-xl px-5"
-                        >
-                            {isSavingProfile ? 'Saving...' : 'Save Profile'}
-                        </button>
-                    </div>
-                </form>
-            </section>
-
-            {/* Theme & Appearance */}
-            <section
-                aria-label="Theme & Appearance"
-                className="card bg-base-200 border border-base-300 rounded-3xl p-6 shadow-sm space-y-5"
-            >
-                <div className="text-center">
-                    <h2 className="font-heading text-lg font-bold text-base-content">
-                        Appearance & Theme
-                    </h2>
-                    <p className="text-xs font-ui text-base-content/60 mt-1 max-w-md mx-auto">
-                        Choose a color palette for your workspace. Your preference is saved locally
-                        and applies instantly across all pages.
-                    </p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                    {themes.map((item) => {
-                        const isSelected = theme === item.id;
-                        return (
-                            <button
-                                key={item.id}
-                                type="button"
-                                onClick={() => {
-                                    setTheme(item.id);
-                                    toast.success(`Theme changed to ${item.name}`);
-                                }}
-                                aria-pressed={isSelected}
-                                aria-label={`Select ${item.name} theme`}
-                                className={`flex flex-col text-left p-4 rounded-2xl border transition-all ${
-                                    isSelected
-                                        ? 'border-primary ring-2 ring-primary/40 bg-base-300/80 shadow-md'
-                                        : 'border-base-300 bg-base-300/30 hover:bg-base-300/60 hover:border-base-content/20'
-                                }`}
-                            >
-                                <div className="flex items-center justify-between w-full">
-                                    <span className="font-heading font-semibold text-sm text-base-content flex items-center gap-2">
-                                        {item.name}
-                                        {isSelected && (
-                                            <span className="badge badge-primary badge-xs text-primary-content font-bold">
-                                                Active
-                                            </span>
-                                        )}
-                                    </span>
-                                    {/* Visual color swatches pill */}
-                                    <div
-                                        aria-hidden="true"
-                                        className="flex items-center gap-1 p-1 rounded-full bg-base-100 border border-base-300"
+                    {section === 'appearance' && (
+                        <div className="grid w-full gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                            {themes.map((item) => {
+                                const isSelected = theme === item.id;
+                                return (
+                                    <button
+                                        key={item.id}
+                                        type="button"
+                                        onClick={() => {
+                                            setTheme(item.id);
+                                            toast.success(`Theme changed to ${item.name}`);
+                                        }}
+                                        aria-pressed={isSelected}
+                                        aria-label={`Select ${item.name} theme`}
+                                        className={`flex flex-col justify-between gap-3 rounded-xl border bg-base-200 p-3 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${isSelected ? 'border-primary' : 'border-base-300 hover:border-base-content/30'}`}
                                     >
+                                        <span className="flex items-center justify-between gap-2 text-sm font-medium text-base-content">
+                                            {item.name}
+                                            {isSelected && (
+                                                <svg
+                                                    aria-hidden="true"
+                                                    className="h-4 w-4 text-primary"
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="2"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                >
+                                                    <path d="m5 12 4 4L19 6" />
+                                                </svg>
+                                            )}
+                                        </span>
                                         <span
-                                            className="w-3.5 h-3.5 rounded-full inline-block border border-white/10"
-                                            style={{ backgroundColor: item.swatch.base }}
-                                            title="Base background"
-                                        />
-                                        <span
-                                            className="w-3.5 h-3.5 rounded-full inline-block border border-white/10"
-                                            style={{ backgroundColor: item.swatch.surface }}
-                                            title="Surface card"
-                                        />
-                                        <span
-                                            className="w-3.5 h-3.5 rounded-full inline-block border border-white/10"
-                                            style={{ backgroundColor: item.swatch.primary }}
-                                            title="Primary accent"
-                                        />
-                                        <span
-                                            className="w-3.5 h-3.5 rounded-full inline-block border border-white/10"
-                                            style={{ backgroundColor: item.swatch.accent }}
-                                            title="Secondary accent"
-                                        />
-                                    </div>
+                                            aria-hidden="true"
+                                            className="flex overflow-hidden rounded-md border border-base-300"
+                                        >
+                                            {[
+                                                item.swatch.base,
+                                                item.swatch.surface,
+                                                item.swatch.primary,
+                                                item.swatch.accent,
+                                            ].map((color, index) => (
+                                                <span
+                                                    key={index}
+                                                    className="h-5 flex-1"
+                                                    style={{ backgroundColor: color }}
+                                                />
+                                            ))}
+                                        </span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {section === 'account' && (
+                        <div className="divide-y divide-base-300">
+                            <div className="flex flex-wrap items-center justify-between gap-4 pb-5">
+                                <div>
+                                    <h3 className="text-sm font-medium text-base-content">
+                                        Sign-in method
+                                    </h3>
+                                    <p className="mt-1 text-sm text-base-content/60">
+                                        {user.hasPassword === false
+                                            ? `Signed in with ${user.oauthProvider === 'google' ? 'Google' : 'GitHub'}`
+                                            : 'Email and password'}
+                                    </p>
                                 </div>
-                                <p className="text-xs font-ui text-base-content/65 mt-2">
-                                    {item.description}
-                                </p>
-                            </button>
-                        );
-                    })}
-                </div>
-            </section>
-
-            {/* Security */}
-            <section className="card bg-base-200 border border-base-300 rounded-3xl p-6 shadow-sm space-y-4 text-center">
-                <div>
-                    <h2 className="font-heading text-lg font-bold text-base-content">Security</h2>
-                    <p className="text-xs font-ui text-base-content/60 mt-1 max-w-md mx-auto">
-                        {user?.hasPassword === false
-                            ? `You sign in with ${user.oauthProvider === 'google' ? 'Google' : 'GitHub'}. This account has no Raaz password.`
-                            : 'Update your account password. Changing your password invalidates all existing sessions and requires signing in again.'}
-                    </p>
-                </div>
-
-                <div className="flex justify-center">
-                    <button
-                        type="button"
-                        onClick={handleOpenPasswordModal}
-                        disabled={user?.hasPassword === false}
-                        className="btn btn-primary btn-sm h-9 px-4 text-primary-content font-semibold rounded-xl flex items-center gap-2"
-                    >
-                        <svg
-                            aria-hidden="true"
-                            className="h-4 w-4"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        >
-                            <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                        </svg>
-                        Password settings
-                    </button>
-                </div>
-            </section>
+                                <button
+                                    type="button"
+                                    onClick={handleOpenPasswordModal}
+                                    disabled={user.hasPassword === false}
+                                    className="btn btn-sm h-8 min-h-8 rounded-lg border-base-300 bg-base-200 px-3 font-medium text-base-content hover:bg-base-300"
+                                >
+                                    Password settings
+                                </button>
+                            </div>
+                            <div className="flex flex-wrap items-center justify-between gap-4 py-5">
+                                <h3 className="text-sm font-medium text-base-content">
+                                    Account access
+                                </h3>
+                                <button
+                                    type="button"
+                                    onClick={handleOpenDeactivate}
+                                    className="btn btn-error btn-outline btn-sm h-8 min-h-8 rounded-lg px-3"
+                                >
+                                    Deactivate Account
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </section>
+            </div>
 
             {isPasswordModalOpen && (
                 <Modal
@@ -622,28 +687,6 @@ export function SettingsPage() {
                     </form>
                 </Modal>
             )}
-
-            {/* Danger Zone: Deactivate Account */}
-            <section className="card bg-base-200 border border-error/40 rounded-3xl p-6 shadow-sm space-y-4 text-center">
-                <div>
-                    <h2 className="font-heading text-lg font-bold text-error">Danger Zone</h2>
-                    <p className="text-xs font-ui text-base-content/70 mt-1 max-w-md mx-auto">
-                        Deactivating your account immediately revokes all active sessions and blocks
-                        sign-in until a Platform Admin reactivates it. Your historical audit records
-                        remain preserved.
-                    </p>
-                </div>
-
-                <div className="flex justify-center">
-                    <button
-                        type="button"
-                        onClick={handleOpenDeactivate}
-                        className="btn btn-error btn-outline btn-sm h-9 rounded-xl px-4 font-semibold"
-                    >
-                        Deactivate Account
-                    </button>
-                </div>
-            </section>
 
             {isDeactivateOpen && (
                 <Modal

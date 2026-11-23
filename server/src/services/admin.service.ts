@@ -52,10 +52,13 @@ export async function listUsers(page: number, limit: number) {
 
 export async function listUsersCursor(cursor?: string, limit = 25) {
     const filter = cursor ? buildAdminUsersCursorCondition(decodeAdminUsersCursor(cursor)) : {};
-    const rows = await UserModel.find(filter)
-        .sort({ isPlatformAdmin: -1, createdAt: -1, _id: -1 })
-        .limit(limit + 1)
-        .lean();
+    const [rows, total] = await Promise.all([
+        UserModel.find(filter)
+            .sort({ isPlatformAdmin: -1, createdAt: -1, _id: -1 })
+            .limit(limit + 1)
+            .lean(),
+        UserModel.countDocuments(),
+    ]);
 
     const hasMore = rows.length > limit;
     const pageRows = hasMore ? rows.slice(0, limit) : rows;
@@ -70,6 +73,7 @@ export async function listUsersCursor(cursor?: string, limit = 25) {
         nextCursor,
         hasMore,
         limit,
+        total,
     };
 }
 

@@ -40,6 +40,7 @@ export async function listSecretsController(req: Request, res: Response): Promis
                 nextCursor: result.nextCursor,
                 hasMore: result.hasMore,
                 limit: result.limit,
+                total: result.total,
             }),
         );
         return;

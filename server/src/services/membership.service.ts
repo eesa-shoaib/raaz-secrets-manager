@@ -50,10 +50,13 @@ export async function listProjectMembersCursor(
     const baseFilter = { projectId: new Types.ObjectId(projectId) };
     const filter = decoded ? { $and: [baseFilter, buildCursorCondition(decoded)] } : baseFilter;
 
-    const rows = await ProjectMembershipModel.find(filter)
-        .sort({ createdAt: -1, _id: -1 })
-        .limit(query.limit + 1)
-        .lean();
+    const [rows, total] = await Promise.all([
+        ProjectMembershipModel.find(filter)
+            .sort({ createdAt: -1, _id: -1 })
+            .limit(query.limit + 1)
+            .lean(),
+        ProjectMembershipModel.countDocuments(baseFilter),
+    ]);
 
     const hasMore = rows.length > query.limit;
     const items = hasMore ? rows.slice(0, query.limit) : rows;
@@ -66,6 +69,7 @@ export async function listProjectMembersCursor(
         nextCursor,
         hasMore,
         limit: query.limit,
+        total,
     };
 }
 

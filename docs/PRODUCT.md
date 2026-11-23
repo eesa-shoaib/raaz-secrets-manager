@@ -30,8 +30,21 @@ FRONTEND.md remain the contract authorities.
 New OAuth accounts start active, non-admin and without project membership.
 Existing account email matches must not silently link identities or reactivate a
 disabled account. Provider tokens are temporary server-only credentials, never
-Raaz API tokens or stored project secrets. Organization SSO, repository access,
-provider avatar import and general account linking/unlinking remain deferred.
+Raaz API tokens or stored project secrets. Organization SSO, provider avatar import
+and general account linking/unlinking remain deferred.
+
+### Approved follow-up: GitHub import and authentication polish
+
+[GITHUB_IMPORT_TODO.md](./GITHUB_IMPORT_TODO.md) records planned, unimplemented work:
+one-time repository metadata import into Raaz projects, a persistent import entry
+point and support for repositories created after login, an explicit GitHub App
+connection with minimal permissions, GitHub username defaults, and themed provider
+icons. Repository access is approved only for this import flow, separate from
+identity-only login. Explicit GitHub connection for Google/password users is part
+of that plan; general account linking remains deferred. GitHub task-board import,
+secret-value retrieval, collaborator sync, and ongoing repository synchronization
+are outside this follow-up. Existing API/schema/frontend contracts must be updated
+before implementation.
 
 ## Problem
 

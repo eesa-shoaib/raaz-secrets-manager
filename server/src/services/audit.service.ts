@@ -92,10 +92,13 @@ export async function listProjectAuditEntriesCursor(projectId: string, filters: 
     };
     const filter = decoded ? { $and: [baseCriteria, buildCursorCondition(decoded)] } : baseCriteria;
 
-    const rows = await AuditLogEntryModel.find(filter)
-        .sort({ createdAt: -1, _id: -1 })
-        .limit(limit + 1)
-        .lean();
+    const [rows, total] = await Promise.all([
+        AuditLogEntryModel.find(filter)
+            .sort({ createdAt: -1, _id: -1 })
+            .limit(limit + 1)
+            .lean(),
+        AuditLogEntryModel.countDocuments(baseCriteria),
+    ]);
 
     const hasMore = rows.length > limit;
     const items = hasMore ? rows.slice(0, limit) : rows;
@@ -108,6 +111,7 @@ export async function listProjectAuditEntriesCursor(projectId: string, filters: 
         nextCursor,
         hasMore,
         limit,
+        total,
     };
 }
 
@@ -139,10 +143,13 @@ export async function listPlatformAuditEntriesCursor(filters: AdminAuditLogQuery
     };
     const filter = decoded ? { $and: [baseCriteria, buildCursorCondition(decoded)] } : baseCriteria;
 
-    const rows = await AuditLogEntryModel.find(filter)
-        .sort({ createdAt: -1, _id: -1 })
-        .limit(limit + 1)
-        .lean();
+    const [rows, total] = await Promise.all([
+        AuditLogEntryModel.find(filter)
+            .sort({ createdAt: -1, _id: -1 })
+            .limit(limit + 1)
+            .lean(),
+        AuditLogEntryModel.countDocuments(baseCriteria),
+    ]);
 
     const hasMore = rows.length > limit;
     const items = hasMore ? rows.slice(0, limit) : rows;
@@ -155,6 +162,7 @@ export async function listPlatformAuditEntriesCursor(filters: AdminAuditLogQuery
         nextCursor,
         hasMore,
         limit,
+        total,
     };
 }
 

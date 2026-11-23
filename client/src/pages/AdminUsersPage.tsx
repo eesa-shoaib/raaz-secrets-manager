@@ -210,10 +210,7 @@ export function AdminUsersPage() {
 
     return (
         <div className="space-y-6">
-            <PageHeader
-                title="User Management"
-                description="Manage platform administrators, account activation, and role changes across Raaz"
-            />
+            <PageHeader title="User Management" />
 
             <div className="border-b border-base-300">
                 <div
@@ -260,10 +257,7 @@ export function AdminUsersPage() {
                         onRetry={() => refetch()}
                     />
                 ) : users.length === 0 ? (
-                    <EmptyState
-                        title="No users found"
-                        description="Platform user accounts will appear here."
-                    />
+                    <EmptyState title="No users found" />
                 ) : (
                     <>
                         <AdminUsersTable
@@ -284,6 +278,9 @@ export function AdminUsersPage() {
                             onPrevious={handlePrevious}
                             onNext={handleNext}
                             pageNumber={cursorHistory.length + 1}
+                            totalPages={
+                                data ? Math.max(1, Math.ceil(data.total / data.limit)) : undefined
+                            }
                             itemCount={users.length}
                             isFetching={isFetching}
                             noun="users"
@@ -374,11 +371,6 @@ export function AdminUsersPage() {
                                 hasAuditFilters
                                     ? 'No matching audit entries'
                                     : 'No role or account changes recorded yet'
-                            }
-                            description={
-                                hasAuditFilters
-                                    ? 'No platform user audit entries match your filters.'
-                                    : 'Platform admin grants, revocations, activations, and deactivations appear here.'
                             }
                         />
                     ) : (
@@ -496,6 +488,16 @@ export function AdminUsersPage() {
                                 onPrevious={handleAuditPrevious}
                                 onNext={handleAuditNext}
                                 pageNumber={auditHistory.length + 1}
+                                totalPages={
+                                    auditQuery.data
+                                        ? Math.max(
+                                              1,
+                                              Math.ceil(
+                                                  auditQuery.data.total / auditQuery.data.limit,
+                                              ),
+                                          )
+                                        : undefined
+                                }
                                 itemCount={auditEntries.length}
                                 isFetching={auditQuery.isFetching}
                                 noun="entries"

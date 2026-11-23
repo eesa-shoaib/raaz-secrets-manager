@@ -17,6 +17,7 @@ vi.mock('../services/audit.service.js', () => ({
         data: [],
         nextCursor: null,
         hasMore: false,
+        total: 0,
         limit: 25,
     })),
     exportProjectAuditEntries: vi.fn(async () => []),

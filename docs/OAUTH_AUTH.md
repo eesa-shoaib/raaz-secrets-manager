@@ -19,6 +19,14 @@ Only show providers configured on the server. Provider denial, expired attempts,
 missing verified email and service failures return a clear generic notification
 without credentials or provider error bodies in the URL/UI.
 
+Both auth forms use decorative local provider icons, existing themed borders and
+text, and a spinner during redirect. GitHub uses a primary-colored mask of its
+[official Octicon](https://github.com/primer/octicons/blob/main/icons/mark-github-16.svg)
+(notice in `client/src/assets/github-mark.LICENSE.txt`). Google's
+[official G asset](https://developers.google.com/static/identity/images/g-logo.png)
+is also rendered as a primary-colored monochrome mask to match GitHub's icon.
+These local assets add no SDK, dependency, runtime third-party fetch, or OAuth scope.
+
 Successful first-time registration signs the user in and opens the projects
 page with no default membership. Returning identities resume the same Raaz user.
 No provider app has been registered and no live deployment has been performed by this change.

@@ -88,15 +88,7 @@ export function ErrorState({
     );
 }
 
-export function EmptyState({
-    title,
-    description,
-    action,
-}: {
-    title: string;
-    description: React.ReactNode;
-    action?: React.ReactNode;
-}) {
+export function EmptyState({ title, action }: { title: string; action?: React.ReactNode }) {
     return (
         <div className="card bg-base-200 border border-base-300 p-10 rounded-2xl text-center max-w-lg mx-auto my-8 space-y-4">
             <div className="w-12 h-12 rounded-full bg-primary/10 text-primary border border-primary/20 flex items-center justify-center mx-auto">
@@ -111,7 +103,6 @@ export function EmptyState({
             </div>
             <div className="space-y-1">
                 <h3 className="font-heading font-bold text-lg text-base-content">{title}</h3>
-                <div className="text-sm font-ui text-base-content/70">{description}</div>
             </div>
             {action && <div className="pt-2">{action}</div>}
         </div>

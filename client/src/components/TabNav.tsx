@@ -10,9 +10,10 @@ export interface TabNavItem {
 interface TabNavProps {
     items: TabNavItem[];
     className?: string;
+    state?: unknown;
 }
 
-export function TabNav({ items, className = '' }: TabNavProps) {
+export function TabNav({ items, className = '', state }: TabNavProps) {
     const visibleItems = items.filter((item) => item.visible !== false);
 
     return (
@@ -24,6 +25,7 @@ export function TabNav({ items, className = '' }: TabNavProps) {
                 <NavLink
                     key={item.to}
                     to={item.to}
+                    state={state}
                     className={({ isActive }) =>
                         `tab h-12 whitespace-nowrap !border-b-[3px] px-5 font-heading text-base font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${
                             isActive

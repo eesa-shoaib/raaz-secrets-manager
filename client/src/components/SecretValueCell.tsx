@@ -218,8 +218,9 @@ export function SecretValueCell({
                             type="button"
                             disabled={state === 'pending'}
                             onClick={handleRevealClick}
-                            className="btn btn-ghost btn-xs text-xs font-ui text-primary hover:bg-primary/10 px-2 font-medium rounded-lg gap-1"
+                            className="btn btn-ghost btn-xs btn-square shrink-0 rounded-lg text-primary hover:bg-primary/10"
                             aria-label={`Reveal secret ${secretKey}`}
+                            title="Reveal secret value"
                         >
                             {state === 'pending' ? (
                                 <span className="loading loading-spinner loading-xs text-primary"></span>
@@ -238,7 +239,6 @@ export function SecretValueCell({
                                         <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
                                         <circle cx="12" cy="12" r="3" />
                                     </svg>
-                                    <span>Reveal</span>
                                 </>
                             )}
                         </button>

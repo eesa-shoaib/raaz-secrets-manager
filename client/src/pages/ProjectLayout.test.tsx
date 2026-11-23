@@ -58,11 +58,11 @@ describe('project back navigation', () => {
         render(<ProjectLayout />);
         expect(screen.getByText('Archived')).toBeTruthy();
     });
-    it('navigates to the previous in-app page when history exists', () => {
+    it('returns to the projects list even when tab history exists', () => {
         window.history.replaceState({ idx: 1 }, '');
         render(<ProjectLayout />);
         fireEvent.click(screen.getByRole('button', { name: 'Go back' }));
-        expect(mocks.navigate).toHaveBeenCalledWith(-1);
+        expect(mocks.navigate).toHaveBeenCalledWith('/projects', { replace: true });
     });
     it('falls back to projects for a direct entry', () => {
         window.history.replaceState({ idx: 0 }, '');

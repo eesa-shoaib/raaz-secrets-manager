@@ -360,7 +360,8 @@
                     "200": {
                         "description": "Projects"
                     }
-                }
+                },
+                "description": "Cursor responses include total, counting all authorized rows matching the current filters before the cursor; total pages = ceil(total / limit)."
             },
             "post": {
                 "summary": "Create project",
@@ -467,7 +468,8 @@
                     "200": {
                         "description": "Members"
                     }
-                }
+                },
+                "description": "Cursor responses include total, counting all authorized rows matching the current filters before the cursor; total pages = ceil(total / limit)."
             },
             "post": {
                 "summary": "Add member",
@@ -583,7 +585,8 @@
                     "200": {
                         "description": "Masked secrets"
                     }
-                }
+                },
+                "description": "Cursor responses include total, counting all authorized rows matching the current filters before the cursor; total pages = ceil(total / limit)."
             },
             "post": {
                 "summary": "Create secret",
@@ -760,7 +763,8 @@
                     "200": {
                         "description": "Audit entries"
                     }
-                }
+                },
+                "description": "Cursor responses include total, counting all authorized rows matching the current filters before the cursor; total pages = ceil(total / limit)."
             }
         },
         "/account/deactivate": {
@@ -846,7 +850,8 @@
                     "200": {
                         "description": "Platform audit entries"
                     }
-                }
+                },
+                "description": "Cursor responses include total, counting all authorized rows matching the current filters before the cursor; total pages = ceil(total / limit)."
             }
         },
         "/admin/users": {
@@ -879,7 +884,8 @@
                     "200": {
                         "description": "Users"
                     }
-                }
+                },
+                "description": "Cursor responses include total, counting all authorized rows matching the current filters before the cursor; total pages = ceil(total / limit)."
             }
         },
         "/admin/users/{userId}": {

@@ -62,6 +62,7 @@ export async function listProjectsCursor(
     nextCursor: string | null;
     hasMore: boolean;
     limit: number;
+    total: number;
 }> {
     const scope = `projects:${userId}:${query.search ?? ''}`;
     const decoded = query.cursor ? decodeCursor(query.cursor, scope) : null;
@@ -69,7 +70,7 @@ export async function listProjectsCursor(
         userId: new Types.ObjectId(userId),
     }).lean();
     if (memberships.length === 0) {
-        return { data: [], nextCursor: null, hasMore: false, limit: query.limit };
+        return { data: [], nextCursor: null, hasMore: false, limit: query.limit, total: 0 };
     }
 
     const conditions: Record<string, unknown>[] = [
@@ -79,15 +80,19 @@ export async function listProjectsCursor(
         const pattern = new RegExp(escapeRegex(query.search), 'i');
         conditions.push({ $or: [{ name: pattern }, { description: pattern }] });
     }
+    const countFilter = conditions.length === 1 ? conditions[0] : { $and: [...conditions] };
     if (decoded) {
         conditions.push(buildCursorCondition(decoded));
     }
 
     const filter = conditions.length === 1 ? conditions[0] : { $and: conditions };
-    const rows = await ProjectModel.find(filter)
-        .sort({ createdAt: -1, _id: -1 })
-        .limit(query.limit + 1)
-        .lean();
+    const [rows, total] = await Promise.all([
+        ProjectModel.find(filter)
+            .sort({ createdAt: -1, _id: -1 })
+            .limit(query.limit + 1)
+            .lean(),
+        ProjectModel.countDocuments(countFilter),
+    ]);
 
     const hasMore = rows.length > query.limit;
     const items = hasMore ? rows.slice(0, query.limit) : rows;
@@ -108,6 +113,7 @@ export async function listProjectsCursor(
         nextCursor,
         hasMore,
         limit: query.limit,
+        total,
     };
 }
 

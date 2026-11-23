@@ -3,6 +3,8 @@ import { loginInputSchema, type LoginInput } from '@raaz/shared-schemas';
 import React, { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useLocation } from 'react-router-dom';
+import githubMark from '../assets/github-mark.svg';
+import googleMark from '../assets/google-g.png';
 import { FormField } from '../components/FormField';
 import { ShortLogo } from '../components/ShortLogo';
 import { useToast } from '../components/Toaster';
@@ -176,11 +178,29 @@ export function LoginPage() {
                                 type="button"
                                 disabled={oauth.pending || isSubmitting}
                                 onClick={() => oauth.continueWith(provider)}
-                                className="btn btn-outline btn-sm h-10 w-full rounded-md text-sm"
+                                className="btn btn-outline btn-sm relative h-10 min-h-10 w-full gap-3 rounded-md border-base-content/25 bg-base-300 px-3 text-sm text-base-content hover:border-primary hover:bg-base-200 hover:text-base-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50"
                             >
-                                {oauth.pending && oauth.pendingProvider === provider
-                                    ? 'Redirecting…'
-                                    : `Continue with ${provider === 'google' ? 'Google' : 'GitHub'}`}
+                                <span
+                                    aria-hidden="true"
+                                    className="absolute left-3 flex h-6 w-6 items-center justify-center"
+                                >
+                                    {oauth.pending && oauth.pendingProvider === provider ? (
+                                        <span className="loading loading-spinner loading-xs text-primary" />
+                                    ) : (
+                                        <span
+                                            className="h-5 w-5 bg-current text-primary [mask-position:center] [mask-repeat:no-repeat] [mask-size:contain]"
+                                            style={{
+                                                maskImage: `url(${provider === 'google' ? googleMark : githubMark})`,
+                                                WebkitMaskImage: `url(${provider === 'google' ? googleMark : githubMark})`,
+                                            }}
+                                        />
+                                    )}
+                                </span>
+                                <span>
+                                    {oauth.pending && oauth.pendingProvider === provider
+                                        ? 'Redirecting…'
+                                        : `Continue with ${provider === 'google' ? 'Google' : 'GitHub'}`}
+                                </span>
                             </button>
                         ))}
                     </div>

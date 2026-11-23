@@ -23,8 +23,12 @@ implementing each MVP 2 feature; unlisted follow-up work remains deferred.
 
 ## Google/GitHub authentication extension
 
-Login and signup compose provider buttons inline after the existing form. Fetch
-configured providers through the single Axios instance, POST a start request and
+Login and signup compose provider buttons inline after the existing form.
+Both forms include decorative local provider icons. Google and GitHub use
+matching monochrome masks in the primary theme color, without a white backing.
+Button text, borders, hover/focus, disabled states, spacing, and height follow the
+existing theme controls. Pending redirects replace the icon with a spinner.
+Fetch configured providers through the single Axios instance, POST a start request and
 navigate to the returned authorization URL. No provider SDK, popup or extra page.
 Provider metadata query key is `['auth', 'oauthProviders']`; starts use a non-retrying
 mutation. No new shared widget or page is added. Callback landing reloads auth state using the normal `/auth/me` flow; flags are
@@ -53,6 +57,13 @@ across all project tabs and stacks on mobile.
 
 Reuse one `UserAvatar` component with deterministic initials and broken-image
 fallback; display usernames with email available for identity disambiguation.
+
+The navbar account dropdown contains actions only: Account Settings, permitted
+administration links, and Sign Out. Do not repeat a "Signed in as" block, username,
+or email inside it; the existing account trigger can still identify the user.
+Page headers and empty states use concise titles and relevant actions without
+introductory descriptions. Keep actual project descriptions, field requirements,
+error messages, and confirmation guidance where they inform an action.
 
 ## 1. Route Map
 
@@ -153,16 +164,16 @@ A reveal never writes any query key. The secret row is keyed by secret id, so th
 
 **Shared visual treatment:** `<main>` uses the same `w-[84%] max-w-9xl mx-auto px-4 sm:px-6` container width as `NavBar` (`88%` outer wrapper inside viewport) so page content edges stay aligned with the header and no horizontal scrollbars occur on desktop. Project navigation uses underlined links; environment selection uses a separately labeled segmented control. Primary actions consistently use `btn-primary btn-sm h-9 text-primary-content`, ghost actions `btn-ghost btn-sm h-9`, and icon row actions `btn-ghost btn-xs btn-square rounded-lg`. Filled buttons have a dark noise texture, while page backgrounds, cards, panels, and modals (`rounded-3xl`) use a lighter texture. Ghost, link, outline, and transparent buttons stay clear. Keep text and focus indicators readable; visually check contrast when changing theme colors or texture strength.
 
-| Widget                  | Purpose                                                                                                       |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `AppShell`              | Skip link, `NavBar`, `<main id="main">`, `Toaster`                                                            |
-| `NavBar`                | Brand, Projects link, Admin link (Platform Admin only), user dropdown with avatar, Settings, Sign out.        |
-| `PageHeader`            | `<h1>` + optional actions slot                                                                                |
-| `TabNav`                | Project tabs (`Secrets`, `Members`, `Audit log`). `items: { to, label, visible? }[]`                          |
-| `SearchInput`           | Shared search input with leading magnifying-glass icon, consistent height (`h-9`), and clear button.          |
-| `StatusPage`            | Variants `not-found`, `unauthorized`                                                                          |
-| `ProjectArchivedNotice` | Replaces project chrome when `GET /projects/:id` returns 403                                                  |
-| `PaginationControls`    | Reusable First page / Previous / Next cursor navigation bar with page indicator, loading, and boundary states |
+| Widget                  | Purpose                                                                                                                                                                                                        |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AppShell`              | Skip link, `NavBar`, `<main id="main">`, `Toaster`                                                                                                                                                             |
+| `NavBar`                | Brand, Projects link, Admin link (Platform Admin only), user dropdown with avatar, Settings, Sign out.                                                                                                         |
+| `PageHeader`            | `<h1>` + optional actions slot                                                                                                                                                                                 |
+| `TabNav`                | Project tabs (`Secrets`, `Members`, `Audit log`). `items: { to, label, visible? }[]`                                                                                                                           |
+| `SearchInput`           | Shared search input with leading magnifying-glass icon, consistent height (`h-9`), and clear button.                                                                                                           |
+| `StatusPage`            | Variants `not-found`, `unauthorized`                                                                                                                                                                           |
+| `ProjectArchivedNotice` | Replaces project chrome when `GET /projects/:id` returns 403                                                                                                                                                   |
+| `PaginationControls`    | Reusable theme-colored first-page / previous / next arrow icon buttons with accessible labels and tooltips, compact current / total page indicator (accessible as "Page X of Y"), loading, and boundary states |
 
 ### 2.2 Feedback and state
 
@@ -171,7 +182,7 @@ A reveal never writes any query key. The secret row is keyed by secret id, so th
 | `FullPageState` | Variants `loading`, `error`. The only thing rendered during auth bootstrap.                                               |
 | `Skeleton`      | Shape prop: `table`, `card`, `header`                                                                                     |
 | `ErrorState`    | Inline query failure: message + Retry                                                                                     |
-| `EmptyState`    | Title, one sentence, optional action                                                                                      |
+| `EmptyState`    | Concise title and optional action; no explanatory description                                                             |
 | `InlineAlert`   | Variants `info`, `warning`, `error`                                                                                       |
 | `Toaster`       | Toast queue. Success auto-dismisses at 4 s; errors persist unless a duration is provided. Login errors dismiss after 4 s. |
 
@@ -188,18 +199,18 @@ A reveal never writes any query key. The secret row is keyed by secret id, so th
 
 ### 2.4 Domain
 
-| Widget            | Purpose                                                                                                                                           |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Badge`           | One component, variants `role`, `environment`, `projectStatus`, `auditResult`, `userStatus`. Text always present.                                 |
-| `UserAvatar`      | Private avatar image with cache-busting `?v=` query and deterministic initials fallback when unset or on error.                                   |
-| `ProjectCard`     | One project on the list showing project name and role (active card links; archived card shows status). Description/count live in `/projects/:id`. |
-| `EnvironmentTabs` | Tab strip above the secrets table. State is `?environment=`.                                                                                      |
-| `SecretsTable`    | Frame + column headers (`Key`, `Value`, `Actions`, without horizontal scrollbars)                                                                 |
-| `SecretRow`       | One secret: truncated key, icon Copy button, `SecretValueCell`, icon Edit/Delete buttons                                                          |
-| `SecretValueCell` | The reveal state machine, per row. Owns the value in local state; icon Copy/Hide buttons when revealed.                                           |
-| `MembersTable`    | Members list with `UserAvatar`, truncated email/username, and icon role-change / remove buttons                                                   |
-| `AuditLogTable`   | Project audit entries with actor username/email and `project_updated` / `project_renamed` labels                                                  |
-| `AdminUsersTable` | Platform users sorted admins-first, truncated emails, active/inactive icons, DaisyUI `kbd` self indicator, and Manage modal trigger.              |
+| Widget            | Purpose                                                                                                                                                                          |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Badge`           | One component, variants `role`, `environment`, `projectStatus`, `auditResult`, `userStatus`. Text always present.                                                                |
+| `UserAvatar`      | Private avatar image with cache-busting `?v=` query and deterministic initials fallback when unset or on error.                                                                  |
+| `ProjectCard`     | One project on the list showing project name and role (active card links; archived card shows status). Description/count live in `/projects/:id`.                                |
+| `EnvironmentTabs` | Tab strip above the secrets table. State is `?environment=`.                                                                                                                     |
+| `SecretsTable`    | Frame + column headers (`Key`, `Value`, `Actions`, without horizontal scrollbars)                                                                                                |
+| `SecretRow`       | One secret: truncated key, icon Copy button, `SecretValueCell`, icon Edit/Delete buttons                                                                                         |
+| `SecretValueCell` | The reveal state machine, per row. Owns the value in local state; theme-colored icon-only Reveal button with accessible label and tooltip; icon Copy/Hide buttons when revealed. |
+| `MembersTable`    | Members list with `UserAvatar`, truncated email/username, and icon role-change / remove buttons                                                                                  |
+| `AuditLogTable`   | Project audit entries with actor username/email and `project_updated` / `project_renamed` labels                                                                                 |
+| `AdminUsersTable` | Platform users sorted admins-first, truncated emails, active/inactive icons, DaisyUI `kbd` self indicator, and Manage modal trigger.                                             |
 
 ## 3. Page Specifications
 
@@ -267,9 +278,7 @@ noted, not omitted.
 
     - error — `ErrorState` + Retry;
 
-    - empty (story 10) — "You're not a member of any projects yet. Create
-      a project, or ask a Project Admin to add you using your email
-      address: **{me.email}**." Primary action: New project.
+    - empty (story 10) — "No projects yet." Primary action: New project.
 
 - **On create:** navigate to the new project's secrets page.
 
@@ -286,7 +295,14 @@ noted, not omitted.
 
 - **Layout:** full-width `TabNav` above a 2-column grid (no inner inset or horizontal scrollbar); routed content occupies the main column while a right-side `Project information` column aligns vertically with the table/key header below page controls and displays the project name, `description`, caller `role`, total `memberCount`, optional archived status, and an icon button (Project Admin only) opening the Edit Project Details modal. When viewing the Secrets tab, the `.env` action controls (**Generate `.env.example`**, **Import `.env`**, and **Export `.env`**) are rendered on the right side directly under the project description/information panel. On smaller screens, the columns stack.
 
-- **Back:** an inline back control returns to the previous in-app history entry; when opened directly, it returns to `/projects`. The project header does not display the database ID.
+- **Back:** the inline back control always returns to `/projects` from Secrets,
+  Members, and Audit Log, rather than stepping through tab history. Project cards
+  carry the projects list's cursor, cursor history, and search in router navigation
+  state; preserve that return state across project tabs. The projects route stores
+  its list state in its own history entry so browser Back also restores the page
+  and filter. Direct project entry returns to the first projects page. No secret
+  values or provider credentials enter navigation state. The project header does
+  not display the database ID.
 
 - **States:**
 
@@ -311,6 +327,10 @@ noted, not omitted.
 - **Widgets:** `EnvironmentTabs`, `SearchInput`, `SecretsTable`, `SecretRow`,
   `SecretValueCell`, `RevealConfirmDialog`, `Modal`, `ConfirmDialog`,
   `EmptyState`, `ErrorState`, `Skeleton`, `Toaster`.
+
+- **Environment selector:** disable DaisyUI's button-pop mount animation and
+  press scaling for these segmented buttons so opening a project does not make
+  the controls grow and shrink. Keep the existing dimensions and selection flow.
 
 - **Columns:** Key · Value · Actions. (`Last Accessed` and `Created` are omitted to keep the table compact without horizontal scrollbars; Copy key, Edit, and Delete use accessible icon buttons with tooltips and `aria-label`s.)
 
@@ -455,11 +475,32 @@ promise.
 **Self-service Account Profile, Security, and Theme Customization.**
 
 - **Guard:** `RequireAuth`.
+- **Layout:** compact settings navigation for Profile, Appearance, and Account
+  beside one active content section; navigation becomes a row on mobile. Reuse
+  the existing theme tokens, typography, inputs, avatar, and confirmation modals.
+  Use section dividers instead of stacked centered cards. Profile fields align
+  left with a 9rem picture preview to their right on wide screens. Save Profile
+  retains the existing primary button texture. Keep labels,
+  errors, upload limits, and confirmation consequences; omit repeated identity
+  blocks, introductory prose, theme descriptions, and active badges.
+  Settings have no shared enclosing panel: the 15rem desktop sidebar uses the
+  project details column's rounded `base-200` card, border, padding, and subtle
+  shadow, separated from the content by a clear gap. Selected navigation uses
+  the existing button texture, a darker fill, and bold primary-colored text, without a colored
+  edge or selected border. Fields retain a darker surface.
+  The picture's edit icon appears on hover or keyboard focus and
+  remains visible on touch devices; it opens the existing file picker. Keep
+  upload validation, pending states, and the separate Remove Photo action.
 - **Sections:**
     1. **Profile:** read-only email (`me.email`), optional `username` input (`3–30` lowercase `[a-z0-9_-]`, or clear to unset) saving via `PATCH /api/account/profile`, and profile picture controls (`UserAvatar` preview, Upload/Replace PNG/JPEG/WebP ≤ 2 MiB via `PUT /api/account/avatar`, Remove via `DELETE /api/account/avatar`).
-    2. **Appearance & Theme:** theme selection cards allowing users to instantly switch between 4 curated color palettes (`default`, `midnight`, `emerald`, `amethyst`). Previews each palette with a color swatch pill (base, surface, primary, accent, text), an active badge, and an animated check icon. Selection takes effect immediately across all application surfaces and persists in `localStorage`.
+    2. **Appearance:** compact theme options for 4 curated color palettes (`default`, `midnight`, `emerald`, `amethyst`), showing a name, palette swatches, and selected check mark. Equal-sized options fill the content width: four columns on wide screens, two on medium screens, and one on small screens. Selection takes effect immediately across all application surfaces and persists in `localStorage`.
     3. **Security:** `Password settings` button opening a Change / Update Password `Modal` with `Current password`, `New password` (`8–72` chars), and `Confirm new password` fields submitting `{ currentPassword, newPassword }` to `POST /api/auth/change-password`. Handles client-side mismatch/length validation, `401` wrong current password inline without logging out, `429` rate-limit errors, loading/pending lock, and clean form/error reset on close or cancel; `204` clears `queryClient` and redirects to `/login` with `state.reason = 'password-changed'`.
     4. **Danger Zone (Deactivate Account):** `Deactivate Account` opens a password-confirmed modal submitting `POST /api/account/deactivate`. Wrong password returns `401`, last active Platform Admin returns `409 CONFLICT`, and `204` clears `queryClient` and redirects to `/login` with `state.reason = 'account-deactivated'`.
+
+Security and deactivation compose compact rows within Account. OAuth-only users
+see their sign-in provider and use fresh provider confirmation for deactivation.
+Switching sections preserves unsaved username edits; no additional settings
+route, shared widget, or backend contract is introduced.
 
 ### 3.11 Theme Customization System
 

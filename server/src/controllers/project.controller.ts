@@ -43,6 +43,7 @@ export async function listProjectsController(req: Request, res: Response) {
                 nextCursor: result.nextCursor,
                 hasMore: result.hasMore,
                 limit: result.limit,
+                total: result.total,
             }),
         );
         return;

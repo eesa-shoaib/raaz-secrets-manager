@@ -313,6 +313,7 @@ describe('M2-02, M2-03 & M2-07 Account Profile, Avatar, Password Change & Admin 
         expect(p1.body.data).toHaveLength(2);
         expect(p1.body.data[0].isPlatformAdmin).toBe(true);
         expect(p1.body.hasMore).toBe(true);
+        expect(p1.body.total).toBe(4);
         expect(p1.body.nextCursor).toBeTruthy();
 
         const p2 = await request(app)
@@ -323,6 +324,7 @@ describe('M2-02, M2-03 & M2-07 Account Profile, Avatar, Password Change & Admin 
             .expect(200);
         expect(p2.body.data).toHaveLength(2);
         expect(p2.body.hasMore).toBe(false);
+        expect(p2.body.total).toBe(4);
         expect(p2.body.nextCursor).toBeNull();
 
         const ids1 = p1.body.data.map((u: { id: string }) => u.id);
@@ -386,6 +388,9 @@ describe('M2-02, M2-03 & M2-07 Account Profile, Avatar, Password Change & Admin 
             .get('/api/admin/audit-log?mode=cursor&limit=25')
             .set('Cookie', platCookie)
             .expect(200);
+        expect(adminAuditRes.body.total).toBe(
+            await AuditLogEntryModel.countDocuments({ projectId: null }),
+        );
         const actions = adminAuditRes.body.data.map((e: { action: string }) => e.action);
         expect(actions).toContain('platform_admin_granted');
         expect(actions).toContain('user_deactivated');

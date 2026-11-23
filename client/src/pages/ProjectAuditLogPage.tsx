@@ -269,10 +269,6 @@ export function ProjectAuditLogPage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <h2 className="text-xl font-heading font-bold text-base-content">Audit Log</h2>
-                    <p className="text-sm font-ui text-base-content/70 mt-0.5">
-                        Immutable, team-visible trail of all secret accesses, modifications, and
-                        membership changes
-                    </p>
                 </div>
 
                 {canExport && (
@@ -502,6 +498,9 @@ export function ProjectAuditLogPage() {
                         onPrevious={handlePrevious}
                         onNext={handleNext}
                         pageNumber={cursorHistory.length + 1}
+                        totalPages={
+                            data ? Math.max(1, Math.ceil(data.total / data.limit)) : undefined
+                        }
                         itemCount={entries.length}
                         isFetching={isFetching}
                         noun="entries"
@@ -513,11 +512,6 @@ export function ProjectAuditLogPage() {
                         hasActiveFilters
                             ? 'No audit entries match these filters'
                             : 'No activity yet'
-                    }
-                    description={
-                        hasActiveFilters
-                            ? 'Try adjusting or clearing your filters to see more entries.'
-                            : 'Activities performed in this project will appear here in reverse chronological order.'
                     }
                     action={
                         hasActiveFilters ? (
