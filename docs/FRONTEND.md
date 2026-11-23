@@ -467,11 +467,29 @@ promise.
 **Self-service Account Profile, Security, and Theme Customization.**
 
 - **Guard:** `RequireAuth`.
+- **Layout:** compact settings navigation for Profile, Appearance, and Account
+  beside one active content section; navigation becomes a row on mobile. Reuse
+  the existing theme tokens, typography, inputs, avatar, and confirmation modals.
+  Use section dividers instead of stacked centered cards. Profile fields align
+  left with a 6rem picture preview to their right on wide screens. Keep labels,
+  errors, upload limits, and confirmation consequences; omit repeated identity
+  blocks, introductory prose, theme descriptions, and active badges.
+  Settings have no shared enclosing panel: the 15rem desktop sidebar uses the
+  project details column's rounded `base-200` card, border, padding, and subtle
+  shadow, separated from the content by a clear gap. Selected navigation uses
+  the existing button texture, a darker fill, and bold text, without a colored
+  edge or selected border. Fields retain a darker surface.
+  The picture uses the existing upload and Remove Photo controls with validation.
 - **Sections:**
     1. **Profile:** read-only email (`me.email`), optional `username` input (`3–30` lowercase `[a-z0-9_-]`, or clear to unset) saving via `PATCH /api/account/profile`, and profile picture controls (`UserAvatar` preview, Upload/Replace PNG/JPEG/WebP ≤ 2 MiB via `PUT /api/account/avatar`, Remove via `DELETE /api/account/avatar`).
-    2. **Appearance & Theme:** theme selection cards allowing users to instantly switch between 4 curated color palettes (`default`, `midnight`, `emerald`, `amethyst`). Previews each palette with a color swatch pill (base, surface, primary, accent, text), an active badge, and an animated check icon. Selection takes effect immediately across all application surfaces and persists in `localStorage`.
+    2. **Appearance:** compact theme options for 4 curated color palettes (`default`, `midnight`, `emerald`, `amethyst`), showing a name, palette swatches, and selected check mark. Selection takes effect immediately across all application surfaces and persists in `localStorage`.
     3. **Security:** `Password settings` button opening a Change / Update Password `Modal` with `Current password`, `New password` (`8–72` chars), and `Confirm new password` fields submitting `{ currentPassword, newPassword }` to `POST /api/auth/change-password`. Handles client-side mismatch/length validation, `401` wrong current password inline without logging out, `429` rate-limit errors, loading/pending lock, and clean form/error reset on close or cancel; `204` clears `queryClient` and redirects to `/login` with `state.reason = 'password-changed'`.
     4. **Danger Zone (Deactivate Account):** `Deactivate Account` opens a password-confirmed modal submitting `POST /api/account/deactivate`. Wrong password returns `401`, last active Platform Admin returns `409 CONFLICT`, and `204` clears `queryClient` and redirects to `/login` with `state.reason = 'account-deactivated'`.
+
+Security and deactivation compose compact rows within Account. OAuth-only users
+see their sign-in provider and use fresh provider confirmation for deactivation.
+Switching sections preserves unsaved username edits; no additional settings
+route, shared widget, or backend contract is introduced.
 
 ### 3.11 Theme Customization System
 

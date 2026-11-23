@@ -98,7 +98,8 @@ describe('SettingsPage', () => {
         });
         vi.mocked(startOAuth).mockReturnValue(new Promise(() => {}));
         renderSettings();
-        expect(await screen.findByText(/This account has no Raaz password/)).toBeTruthy();
+        fireEvent.click(await screen.findByRole('button', { name: 'Account' }));
+        expect(screen.getByText('Signed in with Google')).toBeTruthy();
         expect(
             (screen.getByRole('button', { name: 'Password settings' }) as HTMLButtonElement)
                 .disabled,
@@ -108,6 +109,28 @@ describe('SettingsPage', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Confirm Deactivation' }));
         await waitFor(() => expect(startOAuth).toHaveBeenCalledWith('google', true));
         expect(accountApi.deactivateAccount).not.toHaveBeenCalled();
+    });
+
+    it('preserves a profile draft when switching compact settings sections', async () => {
+        renderSettings();
+        const username = await screen.findByLabelText('Username');
+        expect((screen.getByLabelText('Email') as HTMLInputElement).readOnly).toBe(true);
+        fireEvent.change(username, { target: { value: 'unsaved_name' } });
+
+        fireEvent.click(screen.getByRole('button', { name: 'Appearance' }));
+        expect(screen.queryByLabelText('Username')).toBeNull();
+        expect(
+            screen.getByRole('button', { name: 'Appearance' }).getAttribute('aria-current'),
+        ).toBe('page');
+        expect(screen.queryByRole('button', { name: 'Deactivate Account' })).toBeNull();
+
+        fireEvent.click(screen.getByRole('button', { name: 'Account' }));
+        expect(screen.getByRole('button', { name: 'Password settings' })).toBeTruthy();
+        expect(screen.queryByRole('button', { name: /Select Default theme/i })).toBeNull();
+
+        fireEvent.click(screen.getByRole('button', { name: 'Profile' }));
+        expect((screen.getByLabelText('Username') as HTMLInputElement).value).toBe('unsaved_name');
+        expect(accountApi.updateProfile).not.toHaveBeenCalled();
     });
 
     it('updates username and handles 409 username conflict inline', async () => {
@@ -173,6 +196,7 @@ describe('SettingsPage', () => {
 
     it('opens Password settings modal, validates confirm password, handles 401/429, resets on cancel, and redirects on 204', async () => {
         const { client } = renderSettings();
+        fireEvent.click(await screen.findByRole('button', { name: 'Account' }));
         await waitFor(() => {
             expect(screen.getByRole('button', { name: /Password settings/i })).toBeTruthy();
         });
@@ -282,6 +306,7 @@ describe('SettingsPage', () => {
         };
 
         const { client } = renderSettings();
+        fireEvent.click(await screen.findByRole('button', { name: 'Account' }));
         await waitFor(() => {
             expect(screen.getByRole('button', { name: 'Deactivate Account' })).toBeTruthy();
         });
@@ -341,9 +366,10 @@ describe('SettingsPage', () => {
         document.documentElement.removeAttribute('data-theme');
 
         renderSettings();
+        fireEvent.click(await screen.findByRole('button', { name: 'Appearance' }));
 
         await waitFor(() => {
-            expect(screen.getByText('Appearance & Theme')).toBeTruthy();
+            expect(screen.getByRole('heading', { name: 'Appearance' })).toBeTruthy();
         });
 
         // Verify all 4 themes are rendered
