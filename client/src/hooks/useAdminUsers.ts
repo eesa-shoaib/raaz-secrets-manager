@@ -15,8 +15,9 @@ export function useAdminUsers(params: AdminUsersParams = {}) {
     const cursor = params.cursor ?? null;
 
     return useQuery({
-        queryKey: queryKeys.adminUsers({ cursor, limit }),
-        queryFn: () => getAdminUsers({ cursor: cursor ?? undefined, limit }),
+        queryKey: queryKeys.adminUsers({ cursor, limit, isActive: params.isActive }),
+        queryFn: () =>
+            getAdminUsers({ cursor: cursor ?? undefined, limit, isActive: params.isActive }),
         placeholderData: keepPreviousData,
         retry: (failureCount, error: unknown) => {
             if (isApiError(error) && (error.status === 403 || error.status === 404)) {

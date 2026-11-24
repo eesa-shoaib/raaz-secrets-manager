@@ -53,7 +53,7 @@ export const queryKeys = {
     audit: (projectId: string, filters?: Record<string, unknown>) =>
         filters ? (['audit', projectId, filters] as const) : (['audit', projectId] as const),
     auditPrefix: (projectId: string) => ['audit', projectId] as const,
-    adminUsers: (filters?: { cursor?: string | null; limit?: number }) =>
+    adminUsers: (filters?: { isActive?: boolean; cursor?: string | null; limit?: number }) =>
         ['admin', 'users', filters ?? {}] as const,
     adminUsersPrefix: ['admin', 'users'] as const,
     adminAudit: (filters?: Record<string, unknown>) => ['admin', 'audit', filters ?? {}] as const,
