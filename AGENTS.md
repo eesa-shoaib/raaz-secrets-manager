@@ -81,7 +81,7 @@ CSRF (Origin check) → authenticate → requireProjectRole | requireProjectRole
 - Membership check runs **before** the status check, always. Reversing it leaks the existence of archived projects.
 - No membership → `404` (not logged). Member with insufficient role → `403` (logged as a denied `AuditLogEntry` when the action has an `action` enum value).
 - Membership routes (`POST/PATCH/DELETE .../members`) use `requireProjectRoleOrPlatformAdmin`, a separate middleware, not a flag on `requireProjectRole`.
-- `/admin/*` routes use `requirePlatformAdmin` only; they never return project or secret data.
+- `/admin/*` routes use `requirePlatformAdmin` only; the owner-approved `/admin/projects` summary exposes only name, status, created date and member count. No admin route exposes secrets or membership-only project details.
 - Rate limiters: login/signup run before `authenticate` (per IP); reveal runs after `authenticate`, before `requireProjectRole` (per user id).
 - The one authorization decision made in the service layer: Developer writes (create/edit) are restricted to `development`, because the environment isn't known until the body or document is loaded. The service writes its own denied audit entry.
 - Production reveal without `confirm: true` is `422 VALIDATION_ERROR` and is **not** logged as denied. It's a request-shape check, not a role gate. Don't merge it with the Developer write restriction.
@@ -158,7 +158,7 @@ MVP_2_BOARD.md and update the authoritative API/schema/frontend contracts before
 implementing them. All other cuts remain deferred:
 
 - Admin UI (`/admin/users`, `/admin/projects`, `/admin/audit-log`) and `RequirePlatformAdmin`. The `PATCH /api/admin/users/:userId` and `GET /api/admin/users` backend endpoints **do** exist.
-- Project archive/restore (`Project.status` and `requireProjectStatus` exist and are tested against a directly seeded archived project; nothing sets `archived`).
+- Project archive/restore was cut from MVP 1 and is now approved in the project-management follow-up; follow the implemented admin metadata/status contracts in API.md.
 - Project rename / environment editing (no `PATCH /projects/:projectId`). Environments are always `development`, `staging`, `production`.
 - Audit log pagination (single request, `limit` ≤ 100, no `page`), three filters only (action, result, environment).
 - Non-goals: key rotation, secret versioning, service accounts/API tokens, break-glass access, email verification, password reset, per-account login limiters.
@@ -226,7 +226,7 @@ MVP 1 is closed at the owner’s direction; `MVP_BOARD.md` is its historical rec
 - Changing the middleware order, the AAD format, the cookie/CSRF policy, or any boot-time validation.
 - Adding a dependency (the stack is deliberately small; e.g. bcryptjs over native `bcrypt` is intentional for Render's free tier).
 - Adding a widget, route, or endpoint not in the docs.
-- Anything that would make a Platform Admin see project or secret data without a `ProjectMembership`.
+- Anything that would make a Platform Admin see secret or membership-only project data without a `ProjectMembership`; the owner-approved `/admin/projects` metadata summary is the documented exception.
 - Blocking Platform Admin self-grant of `projectAdmin`: noted in API.md as a reasonable hardening step but **not** built in this scope.
 
 ## Deployment notes (planned MVP 2 release gate)
@@ -235,3 +235,7 @@ MVP 1 is closed at the owner’s direction; `MVP_BOARD.md` is its historical rec
 - `trust proxy` must be the **exact** hop count (count Vercel when rewriting); too low or too high both break the per-IP limiter.
 - `helmet` covers only the API. The SPA needs its own CSP via `vercel.json` headers.
 - Unset `PLATFORM_ADMIN_EMAIL` / `PLATFORM_ADMIN_PASSWORD` after the first successful boot in any persistent environment.
+
+Owner-approved project-management follow-up in PRODUCT/API supersedes the older
+archive/global-metadata cuts above. `/admin/projects` exposes only the documented
+metadata projection; project deletion requires Project Admin membership.
