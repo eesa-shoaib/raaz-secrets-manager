@@ -190,6 +190,7 @@ export async function writeAuditEntry(params: WriteAuditEntryParams): Promise<vo
         'member_role_changed',
         'member_removed',
         'project_created',
+        'project_deleted',
         'project_renamed',
         'project_updated',
         'project_environments_changed',

@@ -39,13 +39,18 @@ async function getMemberCountsMap(projectIds: Types.ObjectId[]): Promise<Map<str
     return new Map(counts.map((entry) => [entry._id.toString(), entry.count]));
 }
 
-export async function listProjectsForUser(userId: string, search?: string): Promise<ProjectView[]> {
+export async function listProjectsForUser(
+    userId: string,
+    search?: string,
+    status?: 'active' | 'archived',
+): Promise<ProjectView[]> {
     const memberships = await ProjectMembershipModel.find({
         userId: new Types.ObjectId(userId),
     }).lean();
     if (memberships.length === 0) return [];
     const filter: Record<string, unknown> = {
         _id: { $in: memberships.map((membership) => membership.projectId) },
+        ...(status ? { status } : {}),
     };
     if (search) {
         const pattern = new RegExp(escapeRegex(search), 'i');
@@ -65,7 +70,7 @@ export async function listProjectsForUser(userId: string, search?: string): Prom
 
 export async function listProjectsCursor(
     userId: string,
-    query: { cursor?: string; limit: number; search?: string },
+    query: { cursor?: string; limit: number; search?: string; status?: 'active' | 'archived' },
 ): Promise<{
     data: ProjectView[];
     nextCursor: string | null;
@@ -73,7 +78,8 @@ export async function listProjectsCursor(
     limit: number;
     total: number;
 }> {
-    const scope = `projects:${userId}:${query.search ?? ''}`;
+    const scope =
+        `projects:${userId}:${query.search ?? ''}` + (query.status ? `:${query.status}` : '');
     const decoded = query.cursor ? decodeCursor(query.cursor, scope) : null;
     const memberships = await ProjectMembershipModel.find({
         userId: new Types.ObjectId(userId),
@@ -89,6 +95,7 @@ export async function listProjectsCursor(
         const pattern = new RegExp(escapeRegex(query.search), 'i');
         conditions.push({ $or: [{ name: pattern }, { description: pattern }] });
     }
+    if (query.status) conditions.push({ status: query.status });
     const countFilter = conditions.length === 1 ? conditions[0] : { $and: [...conditions] };
     if (decoded) {
         conditions.push(buildCursorCondition(decoded));

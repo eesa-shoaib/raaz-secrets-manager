@@ -12,6 +12,7 @@ import {
     escapeRegex,
 } from '../utils/pagination.js';
 import { writeAuditEntry } from './audit.service.js';
+import { lockActiveProject } from './project-write.service.js';
 
 function toSecretSummary(
     secret: Pick<
@@ -171,6 +172,7 @@ export async function createSecretInTransaction(
     value: string,
     session: mongoose.ClientSession,
 ): Promise<SecretDoc> {
+    await lockActiveProject(projectId, session);
     const secretId = new Types.ObjectId();
     const encrypted = encrypt(value, projectId, secretId.toString(), environment);
     const secret = new SecretModel({
@@ -410,6 +412,7 @@ export async function importSecrets(
         let skipped = 0;
 
         await session.withTransaction(async () => {
+            await lockActiveProject(projectId, session);
             created = 0;
             updated = 0;
             skipped = 0;

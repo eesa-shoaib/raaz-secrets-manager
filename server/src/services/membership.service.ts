@@ -3,8 +3,14 @@ import { ProjectModel } from '../models/Project.js';
 import { ProjectMembershipModel, type ProjectMembershipDoc } from '../models/ProjectMembership.js';
 import { UserModel } from '../models/User.js';
 import { AppError } from '../utils/app-error.js';
-import { buildCursorCondition, decodeCursor, encodeCursor } from '../utils/pagination.js';
+import {
+    buildCursorCondition,
+    decodeCursor,
+    encodeCursor,
+    escapeRegex,
+} from '../utils/pagination.js';
 import { writeAuditEntry } from './audit.service.js';
+import { lockActiveProject } from './project-write.service.js';
 
 async function hydrateMemberRows(
     memberships: (Pick<ProjectMembershipDoc, 'userId' | 'role' | 'createdAt'> & {
@@ -86,6 +92,7 @@ export async function addProjectMember(
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
+        await lockActiveProject(projectId, session);
         await createMembership(user._id.toString(), projectId, role, session);
         if (role === 'projectAdmin') await incrementAdminCount(projectId, session);
         await writeAuditEntry({
