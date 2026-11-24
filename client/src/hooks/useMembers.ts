@@ -1,6 +1,7 @@
 import type { AddMemberInput, UpdateMemberRoleInput } from '@raaz/shared-schemas';
 import { keepPreviousData, useQuery, useMutation } from '@tanstack/react-query';
 import {
+    searchMemberCandidates,
     getMembers,
     getMembersPage,
     addMember,
@@ -84,5 +85,19 @@ export function useAddMember(projectId: string) {
                 queryClient.invalidateQueries({ queryKey: queryKeys.projects });
             }
         },
+    });
+}
+
+export function useMemberCandidates(
+    projectId: string,
+    search: string,
+    cursor: string | undefined,
+    enabled: boolean,
+) {
+    return useQuery({
+        queryKey: ['memberCandidates', projectId, search, cursor],
+        queryFn: () => searchMemberCandidates(projectId, search, cursor),
+        enabled: enabled && search.length >= 2,
+        staleTime: 0,
     });
 }

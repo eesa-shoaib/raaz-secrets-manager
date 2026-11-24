@@ -7,12 +7,20 @@ const state = vi.hoisted(() => ({
     change: vi.fn(),
     remove: vi.fn(),
     toast: vi.fn(),
+    add: vi.fn(),
 }));
 vi.mock('react-router-dom', () => ({ useParams: () => ({ projectId: 'project-id' }) }));
 vi.mock('../hooks/usePermissions', () => ({
     usePermissions: () => ({ can: () => (state.canManage ? 'enabled' : 'hidden') }),
 }));
 vi.mock('../hooks/useMembers', () => ({
+    useMemberCandidates: () => ({
+        data: {
+            data: [{ id: 'candidate', email: 'alice@example.test', username: 'alice' }],
+            nextCursor: null,
+        },
+        isFetching: false,
+    }),
     useMembersPage: () => ({
         data: {
             data: [
@@ -34,7 +42,7 @@ vi.mock('../hooks/useMembers', () => ({
         isFetching: false,
         isError: false,
     }),
-    useAddMember: () => ({ mutateAsync: vi.fn(), isPending: false }),
+    useAddMember: () => ({ mutateAsync: state.add, isPending: false }),
     useChangeMemberRole: () => ({ mutateAsync: state.change, isPending: false }),
     useRemoveMember: () => ({ mutateAsync: state.remove, isPending: false }),
 }));
@@ -111,4 +119,23 @@ describe('member management', () => {
         expect(screen.queryByRole('button', { name: /Change role for/ })).toBeNull();
         expect(screen.queryByRole('button', { name: /Remove member@/ })).toBeNull();
     });
+});
+
+it('selects a username suggestion and adds the matching email with an explicit role', async () => {
+    state.canManage = true;
+    state.add.mockResolvedValue(undefined);
+    const { default: MembersPage } = await import('./MembersPage');
+    render(<MembersPage />);
+    fireEvent.click(screen.getByRole('button', { name: 'Add Member' }));
+    fireEvent.change(screen.getByLabelText(/Email or username/), { target: { value: 'ali' } });
+    fireEvent.click(await screen.findByRole('button', { name: /@alice alice@example.test/ }));
+    expect((screen.getByLabelText(/Email or username/) as HTMLInputElement).value).toBe(
+        'alice@example.test',
+    );
+    fireEvent.change(screen.getByLabelText(/Project Role/), { target: { value: 'developer' } });
+    const buttons = screen.getAllByRole('button', { name: 'Add Member' });
+    fireEvent.click(buttons[buttons.length - 1]);
+    await waitFor(() =>
+        expect(state.add).toHaveBeenCalledWith({ email: 'alice@example.test', role: 'developer' }),
+    );
 });

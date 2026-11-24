@@ -1,3 +1,4 @@
+import { memberCandidatesResponseSchema } from '@raaz/shared-schemas';
 import type {
     AddMemberInput,
     CursorPaginatedResponse,
@@ -58,4 +59,11 @@ export async function addMember(
     >(`/projects/${projectId}/members`, data);
     const body = res.data as { member?: MemberResponse } & MemberResponse;
     return body.member ?? body;
+}
+
+export async function searchMemberCandidates(projectId: string, search: string, cursor?: string) {
+    const response = await apiClient.get(`/projects/${projectId}/members/candidates`, {
+        params: { search, cursor },
+    });
+    return memberCandidatesResponseSchema.parse(response.data);
 }
