@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 const projectsListStateSchema = z.object({
     search: z.string(),
+    status: z.enum(['active', 'archived']).optional(),
     cursor: z.string().nullable(),
     cursorHistory: z.array(z.string().nullable()),
 });

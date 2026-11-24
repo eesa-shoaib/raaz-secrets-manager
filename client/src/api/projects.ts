@@ -12,6 +12,7 @@ export interface ProjectsPageParams {
     cursor?: string | null;
     limit?: number;
     search?: string;
+    status?: 'active' | 'archived';
 }
 
 export async function getProjects(): Promise<ProjectResponse[]> {
@@ -30,6 +31,7 @@ export async function getProjectsPage(
         mode: 'cursor',
         limit: params.limit ?? PROJECTS_PAGE_SIZE,
     };
+    if (params.status) query.status = params.status;
     if (params.cursor) query.cursor = params.cursor;
     if (params.search && params.search.trim()) query.search = params.search.trim();
 

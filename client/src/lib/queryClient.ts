@@ -28,8 +28,12 @@ export const queryClient = new QueryClient({
 export const queryKeys = {
     me: ['me'] as const,
     projects: ['projects'] as const,
-    projectsList: (filters?: { search?: string; cursor?: string | null; limit?: number }) =>
-        ['projects', 'list', filters ?? {}] as const,
+    projectsList: (filters?: {
+        status?: 'active' | 'archived';
+        search?: string;
+        cursor?: string | null;
+        limit?: number;
+    }) => ['projects', 'list', filters ?? {}] as const,
     project: (id: string) => ['project', id] as const,
     secrets: (
         projectId: string,

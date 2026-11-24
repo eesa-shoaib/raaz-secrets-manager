@@ -11,6 +11,7 @@ import { Skeleton } from '../components/LoadingSkeleton';
 import { Modal } from '../components/Modal';
 import { TabNav } from '../components/TabNav';
 import { useToast } from '../components/Toaster';
+import { useDeleteProject } from '../hooks/useAdminProjects';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { usePermissions } from '../hooks/usePermissions';
 import { useProject, useUpdateProject } from '../hooks/useProjects';
@@ -35,6 +36,9 @@ export function ProjectLayout() {
 
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [editError, setEditError] = useState<string | null>(null);
+    const deletion = useDeleteProject(validProjectId || '');
+    const [deleteOpen, setDeleteOpen] = useState(false);
+    const [confirmName, setConfirmName] = useState('');
 
     const {
         register,
@@ -271,8 +275,91 @@ export function ProjectLayout() {
                         </dl>
                     </div>
                     <div id="project-sidebar-env-actions" />
+                    {can('project.delete') === 'enabled' && (
+                        <div className="rounded-3xl border border-base-300 bg-base-200 p-6 shadow-sm space-y-3">
+                            <h2 className="font-heading font-semibold">Delete project</h2>{' '}
+                            <button
+                                type="button"
+                                className="btn btn-error btn-sm rounded-lg"
+                                onClick={() => {
+                                    deletion.reset();
+                                    setConfirmName('');
+                                    setDeleteOpen(true);
+                                }}
+                            >
+                                Delete project
+                            </button>
+                        </div>
+                    )}
                 </aside>
             </div>
+
+            {deleteOpen && (
+                <Modal
+                    isOpen
+                    onClose={() => {
+                        if (!deletion.isPending) setDeleteOpen(false);
+                    }}
+                    title="Delete project"
+                >
+                    <form
+                        className="space-y-4"
+                        onSubmit={(event) => {
+                            event.preventDefault();
+                            if (confirmName !== project.name) return;
+                            deletion.mutate(confirmName, {
+                                onSuccess: () => {
+                                    toast.success('Project deleted');
+                                    navigate('/projects', { replace: true, state: returnState });
+                                },
+                            });
+                        }}
+                    >
+                        <p className="text-sm">
+                            Permanently delete <strong>{project.name}</strong>, its secrets, and
+                            memberships? Audit history is retained. The GitHub repository will not
+                            be deleted.
+                        </p>
+                        <FormField label="Type the project name to confirm" required>
+                            {({ id, ...props }) => (
+                                <input
+                                    id={id}
+                                    {...props}
+                                    value={confirmName}
+                                    onChange={(event) => setConfirmName(event.target.value)}
+                                    disabled={deletion.isPending}
+                                    autoComplete="off"
+                                    className="input input-bordered w-full bg-base-300"
+                                />
+                            )}
+                        </FormField>
+                        {deletion.isError && (
+                            <p role="alert" className="text-sm text-error">
+                                {isApiError(deletion.error)
+                                    ? deletion.error.message
+                                    : 'Unable to delete project'}
+                            </p>
+                        )}
+                        <div className="flex justify-end gap-3">
+                            <button
+                                type="button"
+                                className="btn btn-neutral btn-sm"
+                                disabled={deletion.isPending}
+                                onClick={() => setDeleteOpen(false)}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                className="btn btn-error btn-sm"
+                                disabled={deletion.isPending || confirmName !== project.name}
+                            >
+                                {deletion.isPending ? 'Deleting…' : 'Delete project'}
+                            </button>
+                        </div>
+                    </form>
+                </Modal>
+            )}
 
             {canEditProject && (
                 <Modal
