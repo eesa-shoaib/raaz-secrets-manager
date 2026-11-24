@@ -9,7 +9,15 @@ export const createSecretSchema = z.object({
     value: z.string().max(4096),
 });
 export type CreateSecretInput = z.infer<typeof createSecretSchema>;
-export const editSecretSchema = z.object({ value: z.string().max(4096) });
+export const editSecretSchema = z
+    .object({
+        key: z.string().regex(secretKeyRegex).optional(),
+        value: z.string().max(4096).optional(),
+    })
+    .strict()
+    .refine((input) => input.key !== undefined || input.value !== undefined, {
+        message: 'Provide a key or value',
+    });
 export type EditSecretInput = z.infer<typeof editSecretSchema>;
 export const revealSecretSchema = z.object({ confirm: z.boolean().optional() });
 export type RevealSecretInput = z.infer<typeof revealSecretSchema>;

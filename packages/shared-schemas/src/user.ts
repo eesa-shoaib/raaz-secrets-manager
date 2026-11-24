@@ -90,6 +90,10 @@ export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 
 export const adminUsersQuerySchema = z
     .object({
+        isActive: z
+            .enum(['true', 'false'])
+            .transform((value) => value === 'true')
+            .optional(),
         page: z.coerce.number().int().min(1).optional(),
         cursor: z.string().trim().min(1).max(512).optional(),
         mode: z.enum(['page', 'cursor']).optional(),
@@ -109,3 +113,14 @@ export const adminUsersQuerySchema = z
         };
     });
 export type AdminUsersQuery = z.infer<typeof adminUsersQuerySchema>;
+
+export const memberCandidateQuerySchema = z.object({
+    search: z.string().trim().min(2).max(100),
+    cursor: z.string().max(2048).optional(),
+});
+export const memberCandidatesResponseSchema = z.object({
+    data: z.array(
+        z.object({ id: z.string(), email: z.string().email(), username: z.string().nullable() }),
+    ),
+    nextCursor: z.string().nullable(),
+});
