@@ -136,3 +136,14 @@ Example-file seeding requires Contents read-only in addition to Metadata. Existi
 installations must approve that permission change. Only root `.env.example` or
 `env.example` is read; original values are discarded. Imported development mocks
 are `MOCK_VALUE_REPLACE_ME` and must be replaced before use.
+
+### MongoDB DNS timeouts after switching networks
+
+`queryTxt ETIMEOUT` occurs during DNS discovery, before Atlas authentication; an
+IP access-list update does not fix that lookup. Use Atlas Connect → Drivers and
+disable the SRV connection-string option to obtain a standard `mongodb://` URI.
+Keep the generated replica-set/authSource settings and TLS enabled. If IPv6
+routing is unreliable, the Node driver supports `family=4` in the URI. Verify a
+read-only ping before replacing local configuration and restart the backend.
+Never print connection strings or commit `.env`. Prefer SRV again once DNS works;
+standard seed lists need review if the cluster topology changes.

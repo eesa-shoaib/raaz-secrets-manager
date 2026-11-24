@@ -10,7 +10,7 @@ Lists mask values. Users explicitly reveal secrets, with confirmation required f
 
 Access combines one global flag with three per-project roles:
 
-- **Platform Admin** (`isPlatformAdmin`) manages user accounts across the whole instance. The admin endpoints exist and the `/admin/users` page covers promotion, demotion, and deactivation. Platform Admins get no shortcut into project or secret data.
+- **Platform Admin** (`isPlatformAdmin`) manages user accounts across the whole instance. The `/admin/users` page manages promotion, demotion, and deactivation. `/admin/projects` lists project summaries and supports archive/restore. Project contents and secrets still require membership.
 - **Project Admin** has full control of one project: its secrets, its members, and their roles.
 - **Developer** has free rein in `development`. In `staging` and `production` they can reveal a value, and that reveal is logged.
 - **Auditor** sees secret metadata and the audit history but never a decrypted value.
@@ -131,3 +131,8 @@ Use Import from GitHub on Projects to connect, select a repository, and review i
 Root `.env.example` (fallback `env.example`) keys can seed development mocks. Source values are discarded; replace `MOCK_VALUE_REPLACE_ME` before use. Missing files create no mocks. Existing installations must approve Contents access and reconnect if prompted; disable seeding to import metadata without it. GitHub Actions secret values cannot be retrieved.
 
 Refresh to see new repositories. Selected-repository installations need access granted first; all-repositories installations include them automatically. Imports scan up to 2000 repositories per installation; narrow app access beyond that limit.
+
+Project Admins can delete an active Raaz project from its information panel by
+typing its exact name. Deletion removes local secrets and memberships, retains
+audit history, and never deletes a linked GitHub repository. Archived projects
+must be restored first.

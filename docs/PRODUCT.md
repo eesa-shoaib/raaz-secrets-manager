@@ -120,7 +120,7 @@ This table is the single source of truth for scope; other docs link here.
 | 5 — Project Admin manages their team                | None          | Add, change role, and remove are included in the MVP                                                                            | MVP                      |
 | 6 — Project Admin reviews project activity          | Partial       | Read-only log with 3 filters kept; MVP 1 capped at 100 most recent; add cursor pagination and CSV/JSON export in MVP 2          | MVP 2                    |
 | 7 — Platform Admin deactivates a malicious user     | UI only       | `GET /api/admin/users` and `PATCH /api/admin/users/:userId` retained; add UI in MVP 2                                           | MVP 2                    |
-| 8 — Platform Admin archives a project               | Full          | No archive/restore endpoint or UI. `Project.status` and the status check exist, but nothing sets `archived`                     | Post-MVP                 |
+| 8 — Platform Admin archives a project               | Full          | Owner-approved admin metadata list and audited archive/restore; Project Admin deletion retains audit history                    | Active follow-up         |
 | — Project rename / description editing              | Full          | No project update endpoint in MVP 1; add member-scoped Project Admin editing in MVP 2                                           | MVP 2                    |
 | — Environment editing                               | Full          | Keep development, staging and production fixed                                                                                  | Post-MVP                 |
 | — Platform project overview and project-level audit | Partial       | `/admin/projects` deferred; `/admin/users` includes platform user role/activation audit log only (no project/secret data)       | MVP 2 / Post-MVP         |
@@ -144,7 +144,7 @@ public profile, extra settings hub, theme customization or gamification is plann
 | Authenticated password change with current-password verification and session invalidation                                                                                    | Not included                                  | MVP 2                 |
 | Server-side pagination for projects, secrets, members, project audit and Platform Admin user lists                                                                           | Audit capped; admin users already page/limit  | MVP 2                 |
 | Replica-set security tests, browser smoke evidence, hosted deployment and recovery rehearsal                                                                                 | Unfinished verification / deployment deferred | MVP 2 release gates   |
-| Password reset by email, email verification, project archive/restore, editable environments                                                                                  | Not included                                  | Deferred beyond MVP 2 |
+| Password reset by email, email verification, editable environments                                                                                                           | Not included                                  | Deferred beyond MVP 2 |
 | CLI/API tokens, secret versioning, master-key rotation, global project/audit views                                                                                           | Not included                                  | Deferred beyond MVP 2 |
 
 ## User Stories & Acceptance Criteria
@@ -253,7 +253,7 @@ stays visible as archived, just locked.)
   ARCHITECTURE.md's Project status check for the full behavior.
 - Restoring a project to `active` restores existing membership access.
 
-**Post-MVP.** No archive/restore endpoint exists in the MVP. `Project.status` and the status check are in place, but nothing sets `archived` yet.
+Archive/restore is now approved as a follow-up; API.md defines the admin status endpoint.
 
 ### 9. Platform Admin does not implicitly see decrypted secrets
 
@@ -261,7 +261,7 @@ stays visible as archived, just locked.)
 platform management **so that** the most powerful role isn't also the
 biggest single point of decryption risk.
 
-- Given a Platform Admin is not a member of a specific project, when they request anything under that project's `/projects/:projectId/*` routes, then they get `404` like any non-member, and no `/admin/*` route returns any project or secret data (the platform user list is not project data). (A platform-wide project overview showing name, member count and secret count is post-MVP and must stay metadata-only when it ships.)
+- Given a Platform Admin is not a member of a specific project, when they request anything under that project's `/projects/:projectId/*` routes, then they get `404` like any non-member, and admin routes do not grant secret access. The approved `/admin/projects` overview exposes only name, status, created date and member count.
 - **Scope of this guarantee, stated precisely:** "implicitly" is the
   load-bearing word. A Platform Admin can still _explicitly_ grant
   themselves a `ProjectMembership` with **any** role — including
@@ -357,3 +357,16 @@ true`. Without this, promoting an account that happens to be
   record.
 - Denied project actions write a denied audit record before returning
   `403`, or return `500 INTERNAL_ERROR` if that audit write fails.
+
+Approved member-form improvement: project administrators may search active accounts
+by email or username and select suggestions before assigning an explicit role.
+
+## Approved project management follow-up
+
+Owner-approved scope: Platform Admin project management at `/admin/projects`,
+with a searchable cursor-paginated metadata list and archive/restore actions.
+This explicitly supersedes the prior deferred archive/restore and global project
+metadata cuts. Platform Admin status never grants secret values, secret metadata,
+or membership-only project detail access. Project Admin members may permanently
+delete active Raaz projects after confirming their exact name. GitHub repositories
+are never modified. Platform Admins do not gain a global delete permission.

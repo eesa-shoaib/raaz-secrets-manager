@@ -315,3 +315,12 @@ GitHub import may also create normal encrypted Secret records in development
 from root example-file keys. Source file values are never stored. These use the
 existing Secret schema, AAD, creator attribution, and create audit entries; no
 new field or audit action is introduced.
+
+Project management uses existing `project_archived`/`project_restored` actions and
+adds project-scoped `project_deleted`. Platform Admins update Project.status
+through the audited status endpoint. Project Admins may delete active projects:
+Project, Secret, and ProjectMembership documents are removed in one transaction,
+while AuditLogEntry documents and historical project IDs remain append-only.
+There is no external GitHub deletion or new secret access for Platform Admins.
+Project `__v` provides a shared transaction write fence for child-record creation
+versus deletion, without changing public updatedAt or adding user-visible fields.

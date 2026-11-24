@@ -420,3 +420,24 @@ Code for provider sign-in/signup and OAuth-only account handling is implemented;
 [OAUTH_AUTH.md](./OAUTH_AUTH.md) documents setup, account policy and remaining live
 provider/hosting validation. Keep completed MVP 2 tasks intact. Provider credentials
 are not configured or committed by this change; live deployment is not implied.
+
+## Owner-approved project management and member search
+
+- [x] Platform Admin summary/search/pagination and audited archive/restore.
+- [x] Project Admin exact-name deletion, local cascade, retained audits, no GitHub deletion.
+- [x] Add-member email/username suggestions with scoped access and pagination.
+
+Acceptance evidence (2026-11-24): `REQUIRE_TEST_DB=true npm test -w server`
+passed 115 tests across 21 files against disposable replica-set databases with no
+skips. `npm test -w client` passed 96 tests across 23 files. `npm run build`,
+`npm run lint`, `npm run format:check`, and `git diff --check` passed. Existing
+lint and bundle-size advisories remain. API tests cover safe admin projection,
+search/pagination, membership boundaries, archive/restore idempotency, exact-name
+deletion, audit rollback, and retained history. UI tests cover account selection,
+archive confirmation/cancellation/errors and typed deletion confirmation.
+
+Local integration setup initially stalled on TXT DNS discovery after a network
+change. The ignored local URI was replaced with verified standard seed hosts,
+TLS, and IPv4 after a successful read-only ping; no credentials were committed.
+See RUNBOOK.md for the general DNS fallback procedure. Hosted visual acceptance
+is not claimed by these automated checks.
