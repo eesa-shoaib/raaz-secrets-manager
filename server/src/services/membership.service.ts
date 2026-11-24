@@ -271,3 +271,36 @@ export async function removeProjectAdminCount(
         throw new AppError(409, 'CONFLICT', 'Cannot remove the last project admin');
     }
 }
+
+export async function searchMemberCandidates(projectId: string, search: string, cursor?: string) {
+    const scope = `memberCandidates:${projectId}:${search.toLowerCase()}`;
+    const decoded = cursor ? decodeCursor(cursor, scope) : null;
+    const members = await ProjectMembershipModel.find({ projectId }).select('userId').lean();
+    const pattern = new RegExp(escapeRegex(search), 'i');
+    const conditions: Record<string, unknown>[] = [
+        {
+            isActive: true,
+            _id: { $nin: members.map((member) => member.userId) },
+            $or: [{ email: pattern }, { username: pattern }],
+        },
+    ];
+    if (decoded) conditions.push(buildCursorCondition(decoded));
+    const rows = await UserModel.find({ $and: conditions })
+        .select('_id email username createdAt')
+        .sort({ createdAt: -1, _id: -1 })
+        .limit(11)
+        .lean();
+    const data = rows.slice(0, 10);
+    const last = data.at(-1);
+    return {
+        data: data.map((user) => ({
+            id: user._id.toString(),
+            email: user.email,
+            username: user.username ?? null,
+        })),
+        nextCursor:
+            rows.length > 10 && last
+                ? encodeCursor(scope, last.createdAt, last._id.toString())
+                : null,
+    };
+}

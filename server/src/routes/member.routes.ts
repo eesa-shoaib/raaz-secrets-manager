@@ -1,7 +1,8 @@
-import { projectMembersQuerySchema } from '@raaz/shared-schemas';
+import { memberCandidateQuerySchema, projectMembersQuerySchema } from '@raaz/shared-schemas';
 import { Router } from 'express';
 import { z } from 'zod';
 import {
+    searchMemberCandidatesController,
     addMemberController,
     changeMemberRoleController,
     listMembersController,
@@ -27,6 +28,14 @@ router.get(
     requireProjectRole('projectAdmin', 'developer', 'auditor'),
     requireProjectStatus,
     asyncHandler(listMembersController),
+);
+router.get(
+    '/candidates',
+    authenticate,
+    validate(projectParams.extend({ query: memberCandidateQuerySchema })),
+    requireProjectRole('projectAdmin'),
+    requireProjectStatus,
+    asyncHandler(searchMemberCandidatesController),
 );
 router.post(
     '/',
