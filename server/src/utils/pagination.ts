@@ -83,19 +83,32 @@ export function encodeAdminUsersCursor(
     isPlatformAdmin: boolean,
     createdAt: Date | string,
     id: string,
+    isActive?: boolean,
 ): string {
     const iso =
         createdAt instanceof Date ? createdAt.toISOString() : new Date(createdAt).toISOString();
     return Buffer.from(
-        JSON.stringify({ scope: 'admin:users', isPlatformAdmin, createdAt: iso, id }),
+        JSON.stringify({
+            scope: 'admin:users',
+            isPlatformAdmin,
+            createdAt: iso,
+            id,
+            ...(isActive === undefined ? {} : { isActive }),
+        }),
         'utf8',
     ).toString('base64url');
 }
 
-export function decodeAdminUsersCursor(cursor: string): DecodedAdminUsersCursor {
+export function decodeAdminUsersCursor(
+    cursor: string,
+    isActive?: boolean,
+): DecodedAdminUsersCursor {
     try {
         const json = Buffer.from(cursor, 'base64url').toString('utf8');
-        const parsed = adminUsersCursorPayloadSchema.parse(JSON.parse(json));
+        const raw = JSON.parse(json);
+        if (raw.isActive !== isActive)
+            throw new AppError(422, 'VALIDATION_ERROR', 'Invalid pagination cursor');
+        const parsed = adminUsersCursorPayloadSchema.parse(raw);
         const date = new Date(parsed.createdAt);
         if (Number.isNaN(date.getTime())) {
             throw new AppError(422, 'VALIDATION_ERROR', 'Invalid pagination cursor');
