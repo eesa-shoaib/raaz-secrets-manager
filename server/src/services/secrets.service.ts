@@ -204,7 +204,8 @@ export async function editSecret(
     userId: string,
     projectId: string,
     secretId: string,
-    value: string,
+    value: string | undefined,
+    key?: string,
 ): Promise<void> {
     const secretObjectId = new Types.ObjectId(secretId);
 
@@ -240,7 +241,9 @@ export async function editSecret(
         );
     }
 
-    const encrypted = encrypt(value, projectId, secretId, oldSecret.environment);
+    if (value === undefined && (key === undefined || key === oldSecret.key)) return;
+    const encrypted =
+        value === undefined ? {} : encrypt(value, projectId, secretId, oldSecret.environment);
 
     const session = await mongoose.startSession();
     try {
@@ -249,10 +252,8 @@ export async function editSecret(
                 { _id: secretObjectId, projectId },
                 {
                     $set: {
-                        ciphertext: encrypted.ciphertext,
-                        iv: encrypted.iv,
-                        authTag: encrypted.authTag,
-                        encryptionKeyVersion: encrypted.encryptionKeyVersion,
+                        ...encrypted,
+                        ...(key === undefined ? {} : { key }),
                         lastEditedBy: userId,
                         updatedAt: new Date(),
                     },
@@ -266,12 +267,20 @@ export async function editSecret(
                 userId,
                 projectId,
                 secretId,
-                secretKey: oldSecret.key,
+                secretKey: key ?? oldSecret.key,
                 environment: oldSecret.environment,
                 action: 'edit',
                 result: 'allowed',
             });
         });
+    } catch (error) {
+        if (typeof error === 'object' && error !== null && 'code' in error && error.code === 11000)
+            throw new AppError(
+                409,
+                'CONFLICT',
+                'A secret with that key already exists in this environment',
+            );
+        throw error;
     } finally {
         await session.endSession();
     }
