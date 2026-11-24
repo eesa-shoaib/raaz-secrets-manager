@@ -216,9 +216,31 @@ export function ProjectLayout() {
                                 </button>
                             )}
                         </div>
-                        <h1 className="mt-2 break-words font-heading text-xl font-bold text-base-content">
-                            {project.name}
-                        </h1>
+                        <div className="mt-2 flex items-center justify-between gap-3">
+                            <h1 className="min-w-0 break-words font-heading text-xl font-bold text-base-content">
+                                {project.name}
+                            </h1>{' '}
+                            {project.githubRepository && (
+                                <a
+                                    href={project.githubRepository.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    aria-label={`Open ${project.githubRepository.owner}/${project.githubRepository.name} on GitHub`}
+                                    title="Open repository on GitHub"
+                                    className="btn btn-primary btn-sm btn-square shrink-0 rounded-lg"
+                                >
+                                    <span
+                                        aria-hidden="true"
+                                        className="h-5 w-5 bg-current [mask-size:contain] [mask-repeat:no-repeat] [mask-position:center]"
+                                        style={{
+                                            maskImage: `url(${githubMark})`,
+                                            WebkitMaskImage: `url(${githubMark})`,
+                                        }}
+                                    />
+                                </a>
+                            )}
+                        </div>
+
                         {project.description ? (
                             <p className="mt-2 break-words whitespace-pre-wrap font-ui text-sm text-base-content/75">
                                 {project.description}
@@ -227,25 +249,6 @@ export function ProjectLayout() {
                             <p className="mt-2 font-ui text-sm italic text-base-content/45">
                                 No description provided.
                             </p>
-                        )}
-                        {project.githubRepository && (
-                            <a
-                                href={project.githubRepository.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                aria-label={`Open ${project.githubRepository.owner}/${project.githubRepository.name} on GitHub`}
-                                title="Open repository on GitHub"
-                                className="btn btn-primary btn-sm btn-square mt-3 rounded-lg"
-                            >
-                                <span
-                                    aria-hidden="true"
-                                    className="h-5 w-5 bg-current [mask-size:contain] [mask-repeat:no-repeat] [mask-position:center]"
-                                    style={{
-                                        maskImage: `url(${githubMark})`,
-                                        WebkitMaskImage: `url(${githubMark})`,
-                                    }}
-                                />
-                            </a>
                         )}
                         <dl className="mt-5 space-y-3 border-t border-base-300 pt-4 text-sm">
                             <div className="flex flex-wrap items-center justify-between gap-2">
