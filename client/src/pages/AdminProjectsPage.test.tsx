@@ -70,7 +70,7 @@ it('requires archive confirmation and supports status and literal search filters
             expect.objectContaining({ search: '.*' }),
         ),
     );
-    fireEvent.change(screen.getByLabelText('Project status'), { target: { value: 'archived' } });
+    fireEvent.click(screen.getByRole('tab', { name: 'Archived' }));
     await waitFor(() =>
         expect(api.getAdminProjects).toHaveBeenLastCalledWith(
             expect.objectContaining({ status: 'archived' }),
