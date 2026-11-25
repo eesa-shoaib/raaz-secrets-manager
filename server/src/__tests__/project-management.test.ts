@@ -77,6 +77,8 @@ const remove = (cookie: string, confirmName = 'App.*One') =>
         .set('Origin', origin)
         .set('Cookie', cookie)
         .send({ confirmName });
+const audit = (cookie: string, query: Record<string, unknown> = {}) =>
+    request(app).get('/api/admin/projects/audit-log').set('Cookie', cookie).query(query);
 it('limits the admin view to metadata, searches literally and paginates without granting project access', async () => {
     await list(owner).expect(403);
     await request(app).get('/api/admin/projects').expect(401);
@@ -169,4 +171,35 @@ it('requires project-admin membership and exact confirmation, retains audits, an
     await remove(owner).expect(404);
     const listing = await list(admin).expect(200);
     expect(listing.body.total).toBe(0);
+    const deleted = await audit(admin, { action: 'project_deleted' }).expect(200);
+    const allowedDelete = deleted.body.data.find(
+        (entry: { result: string }) => entry.result === 'allowed',
+    );
+    expect(allowedDelete.projectId).toBe(projectId);
+    expect(allowedDelete.projectName).toBe('App.*One');
+}, 20000);
+it('exposes only project lifecycle audits to Platform Admins', async () => {
+    await audit(owner).expect(403);
+    await request(app).get('/api/admin/projects/audit-log').expect(401);
+    await status('archived').expect(204);
+    await status('active').expect(204);
+
+    const result = await audit(admin).expect(200);
+    expect(result.body.data.map((entry: { action: string }) => entry.action)).toEqual([
+        'project_restored',
+        'project_archived',
+        'project_created',
+    ]);
+    expect(result.body.data[0]).toMatchObject({
+        projectId,
+        projectName: 'App.*One',
+        result: 'allowed',
+    });
+    expect(result.body.data[0]).not.toHaveProperty('secretKey');
+    expect(result.body.data[0]).not.toHaveProperty('environment');
+
+    const filtered = await audit(admin, { action: 'project_archived' }).expect(200);
+    expect(filtered.body.total).toBe(1);
+    expect(filtered.body.data[0].action).toBe('project_archived');
+    await audit(admin, { action: 'reveal' }).expect(422);
 }, 20000);

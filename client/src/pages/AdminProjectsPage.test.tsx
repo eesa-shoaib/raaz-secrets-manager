@@ -9,6 +9,7 @@ import { ApiError } from '../lib/errorHandling';
 import AdminProjectsPage from './AdminProjectsPage';
 vi.mock('../api/adminProjects', () => ({
     getAdminProjects: vi.fn(),
+    getAdminProjectAuditLog: vi.fn(),
     setAdminProjectStatus: vi.fn(),
     deleteProject: vi.fn(),
 }));
@@ -36,6 +37,29 @@ beforeEach(() => {
         nextCursor: null,
     });
     vi.mocked(api.setAdminProjectStatus).mockResolvedValue(undefined);
+    vi.mocked(api.getAdminProjectAuditLog).mockResolvedValue({
+        data: [
+            {
+                id: 'audit-1',
+                action: 'project_archived',
+                result: 'allowed',
+                createdAt: new Date(),
+                user: {
+                    id: 'admin-1',
+                    email: 'admin@example.test',
+                    username: 'admin',
+                    hasAvatar: false,
+                    avatarUpdatedAt: null,
+                },
+                projectId: 'project-id',
+                projectName: 'Example API',
+            },
+        ],
+        total: 1,
+        limit: 25,
+        hasMore: false,
+        nextCursor: null,
+    });
 });
 afterEach(cleanup);
 function show() {
@@ -86,4 +110,27 @@ it('keeps a failed status change visible in the confirmation dialog', async () =
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Archive' }));
     expect((await screen.findByRole('alert')).textContent).toContain('Unable to save project');
     expect(screen.getByRole('dialog')).toBeTruthy();
+});
+
+it('shows project lifecycle audit entries with action and result filters', async () => {
+    show();
+    fireEvent.click(screen.getByRole('tab', { name: 'Audit Log' }));
+    expect(await screen.findByText('Example API')).toBeTruthy();
+    expect(screen.getByText('@admin')).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('Filter project audit by action'), {
+        target: { value: 'project_archived' },
+    });
+    await waitFor(() =>
+        expect(api.getAdminProjectAuditLog).toHaveBeenLastCalledWith(
+            expect.objectContaining({ action: 'project_archived' }),
+        ),
+    );
+    fireEvent.change(screen.getByLabelText('Filter project audit by result'), {
+        target: { value: 'denied' },
+    });
+    await waitFor(() =>
+        expect(api.getAdminProjectAuditLog).toHaveBeenLastCalledWith(
+            expect.objectContaining({ action: 'project_archived', result: 'denied' }),
+        ),
+    );
 });
