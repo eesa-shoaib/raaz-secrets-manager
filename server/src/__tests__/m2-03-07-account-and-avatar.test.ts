@@ -331,6 +331,27 @@ describe('M2-02, M2-03 & M2-07 Account Profile, Avatar, Password Change & Admin 
         const ids2 = p2.body.data.map((u: { id: string }) => u.id);
         expect(new Set([...ids1, ...ids2]).size).toBe(4);
 
+        // Active-status filter survives validation and cursor pagination
+        const active1 = await request(app)
+            .get('/api/admin/users?mode=cursor&limit=2&isActive=true')
+            .set('Cookie', platCookie)
+            .expect(200);
+        expect(active1.body.total).toBe(4);
+        expect(active1.body.data.every((u: { isActive: boolean }) => u.isActive)).toBe(true);
+        const active2 = await request(app)
+            .get(
+                `/api/admin/users?mode=cursor&limit=2&isActive=true&cursor=${encodeURIComponent(active1.body.nextCursor)}`,
+            )
+            .set('Cookie', platCookie)
+            .expect(200);
+        expect(active2.body.data).toHaveLength(2);
+        const inactive = await request(app)
+            .get('/api/admin/users?mode=cursor&limit=2&isActive=false')
+            .set('Cookie', platCookie)
+            .expect(200);
+        expect(inactive.body.total).toBe(0);
+        expect(inactive.body.data).toHaveLength(0);
+
         // Mixing page and cursor returns 422
         await request(app)
             .get(`/api/admin/users?page=1&cursor=${encodeURIComponent(p1.body.nextCursor)}`)

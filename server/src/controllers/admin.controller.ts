@@ -1,9 +1,9 @@
 import {
     adminAuditLogQuerySchema,
-    adminUsersQuerySchema,
     auditLogEntrySchema,
     createCursorPaginatedResponseSchema,
     publicUserSchema,
+    type AdminUsersQuery,
 } from '@raaz/shared-schemas';
 import type { Request, Response } from 'express';
 import { listUsers, listUsersCursor, updateUser } from '../services/admin.service.js';
@@ -13,7 +13,7 @@ const paginatedUsersSchema = createCursorPaginatedResponseSchema(publicUserSchem
 const paginatedAuditSchema = createCursorPaginatedResponseSchema(auditLogEntrySchema);
 
 export async function listUsersController(req: Request, res: Response): Promise<void> {
-    const query = adminUsersQuerySchema.parse(req.query);
+    const query = req.query as unknown as AdminUsersQuery;
     if (query.mode === 'cursor') {
         res.json(
             paginatedUsersSchema.parse(
