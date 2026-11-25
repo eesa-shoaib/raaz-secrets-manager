@@ -82,7 +82,7 @@ error messages, and confirmation guidance where they inform an action.
 | 11  | `/admin`                                    | redirect → `/admin/users`           | `RequireAuth` + `RequirePlatformAdmin` | —                                                                                                                                                                                                                                                                                                                    | MVP 2                |
 | 12  | `/admin/users`                              | `AdminUsersPage`                    | as #11                                 | `GET/PATCH /api/admin/users/:userId`                                                                                                                                                                                                                                                                                 | MVP 2                |
 | 13  | `/settings`                                 | `SettingsPage`                      | `RequireAuth`                          | `PATCH /api/account/profile`, `PUT/DELETE /api/account/avatar`, `POST /api/auth/change-password`                                                                                                                                                                                                                     | MVP 2                |
-| 14  | `/admin/projects`                           | `AdminProjectsPage`                 | as #11                                 | `GET /admin/projects`, `PATCH /admin/projects/:projectId/status`                                                                                                                                                                                                                                                     | **active follow-up** |
+| 14  | `/admin/projects`                           | `AdminProjectsPage`                 | as #11                                 | `GET /admin/projects`, `PATCH /admin/projects/:projectId/status`, `GET /api/admin/projects/audit-log`                                                                                                                                                                                                                 | **active follow-up** |
 | 15  | `/admin/audit-log`                          | `AdminAuditLogPage`                 | as #11                                 | endpoint not built (post-MVP)                                                                                                                                                                                                                                                                                        | **post-MVP**         |
 
 **Active routes: 1–14.** Route 15 remains deferred.
@@ -798,8 +798,17 @@ the authorized modal is open. Changing search clears the cursor and selection.
 `/admin/projects` is an approved page under RequirePlatformAdmin. Compose existing
 PageHeader, SearchInput, PaginationControls, status/error states and confirmation
 Modal inline. Navbar links Platform Admins to project management. Query keys:
-`['adminProjects', search, status, cursor]`. Mutations never retry and refresh the
-admin list plus project/project-list queries. Archive/restore require confirmation.
+`['adminProjects', search, status, cursor]` and
+`['adminProjects', 'audit', { action, result, cursor, limit }]`. Mutations never
+retry and refresh the admin list plus project/project-list queries. Archive/restore
+require confirmation. The page mirrors `/admin/users` with Projects and Audit Log
+tabs: the Audit Log tab renders a 25-row cursor-paginated lifecycle table
+(`project_created`, `project_renamed`, `project_updated`,
+`project_environments_changed`, `project_archived`, `project_restored`,
+`project_deleted`) with Action and Result filters, Clear filters, `UserAvatar`
+actors, project name, archive/restore/delete transitions and a Result column,
+using the same card/table/PaginationControls composition as the Manage Users audit
+tab. The endpoint never returns secrets, environments or membership data.
 Project details offers Delete project through `usePermissions('project.delete')`;
 require exact name confirmation, warn that secrets and memberships are removed,
 and redirect to Projects with caches invalidated on success. Errors leave the
