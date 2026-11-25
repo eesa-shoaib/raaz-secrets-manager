@@ -159,6 +159,7 @@ export async function createProject(
                 session,
                 userId,
                 projectId: project._id.toString(),
+                projectName: project.name,
                 action: 'project_created',
                 result: 'allowed',
             });
@@ -234,6 +235,7 @@ export async function updateProjectDetails(
                 session,
                 userId: actorUserId,
                 projectId,
+                projectName: project.name,
                 action,
                 result: 'allowed',
             });

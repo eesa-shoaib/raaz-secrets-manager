@@ -1,4 +1,5 @@
 import {
+    adminProjectAuditLogQuerySchema,
     adminProjectsQuerySchema,
     projectStatusInputSchema,
     adminAuditLogQuerySchema,
@@ -13,6 +14,7 @@ import {
     updateUserController,
 } from '../controllers/admin.controller.js';
 import {
+    listAdminProjectAuditController,
     listAdminProjectsController,
     setProjectStatusController,
 } from '../controllers/project-management.controller.js';
@@ -54,6 +56,13 @@ router.get(
     requirePlatformAdmin,
     validate(auditQuery),
     asyncHandler(listAdminAuditController),
+);
+router.get(
+    '/projects/audit-log',
+    authenticate,
+    requirePlatformAdmin,
+    validate(z.object({ query: adminProjectAuditLogQuerySchema })),
+    asyncHandler(listAdminProjectAuditController),
 );
 router.get(
     '/projects',

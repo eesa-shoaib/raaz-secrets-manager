@@ -69,6 +69,7 @@ export async function setProjectStatus(
                 session,
                 userId,
                 projectId,
+                projectName: project.name,
                 action: status === 'archived' ? 'project_archived' : 'project_restored',
                 result: 'allowed',
             });
@@ -94,6 +95,7 @@ export async function deleteProject(userId: string, projectId: string, confirmNa
                 session,
                 userId,
                 projectId,
+                projectName: project.name,
                 action: 'project_deleted',
                 result: 'allowed',
             });
