@@ -67,25 +67,25 @@ error messages, and confirmation guidance where they inform an action.
 
 ## 1. Route Map
 
-| \#  | Path                                        | Page                                | Guard                                  | API                                                                                                                                                                                                                                                                                                                  | Phase        |
-| --- | ------------------------------------------- | ----------------------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
-| 1   | `/`                                         | redirect → `/projects`              | —                                      | —                                                                                                                                                                                                                                                                                                                    | 1            |
-| 2   | `/login`                                    | `LoginPage`                         | `PublicOnly`                           | `POST /api/auth/login`, `GET /api/auth/me`                                                                                                                                                                                                                                                                           | 2            |
-| 3   | `/signup`                                   | `SignupPage`                        | `PublicOnly`                           | `POST /api/auth/signup`                                                                                                                                                                                                                                                                                              | 2            |
-| 4   | `/projects`                                 | `ProjectsPage`                      | `RequireAuth`                          | `GET /api/projects`, `POST /api/projects`                                                                                                                                                                                                                                                                            | 2            |
-| 5   | `/projects/:projectId`                      | `ProjectLayout`                     | `RequireAuth` + member                 | `GET/PATCH /api/projects/:projectId` (includes `role` and `memberCount`)                                                                                                                                                                                                                                             | 2            |
-| 6   | `/projects/:projectId/secrets?environment=` | `SecretsPage`                       | as #5                                  | `GET/POST /api/projects/:projectId/secrets`; `GET /api/projects/:projectId/secrets/env-example`; `POST /api/projects/:projectId/secrets/import`; `POST /api/projects/:projectId/secrets/export`; `PATCH/DELETE /api/projects/:projectId/secrets/:secretId`; `POST /api/projects/:projectId/secrets/:secretId/reveal` | 3            |
-| 7   | `/projects/:projectId/members`              | `MembersPage`                       | as #5                                  | `GET/POST /api/projects/:projectId/members`; `PATCH/DELETE /api/projects/:projectId/members/:userId`                                                                                                                                                                                                                 | 4            |
-| 8   | `/projects/:projectId/audit-log`            | `ProjectAuditLogPage`               | as #5                                  | `GET /api/projects/:projectId/audit-log` (cursor-paginated); `GET /api/projects/:projectId/audit-log/export`                                                                                                                                                                                                         | 4            |
-| 9   | `/unauthorized`                             | `StatusPage variant="unauthorized"` | none                                   | —                                                                                                                                                                                                                                                                                                                    | 1            |
-| 10  | `*`                                         | `StatusPage variant="not-found"`    | none                                   | —                                                                                                                                                                                                                                                                                                                    | 1            |
-| 11  | `/admin`                                    | redirect → `/admin/users`           | `RequireAuth` + `RequirePlatformAdmin` | —                                                                                                                                                                                                                                                                                                                    | MVP 2        |
-| 12  | `/admin/users`                              | `AdminUsersPage`                    | as #11                                 | `GET/PATCH /api/admin/users/:userId`                                                                                                                                                                                                                                                                                 | MVP 2        |
-| 13  | `/settings`                                 | `SettingsPage`                      | `RequireAuth`                          | `PATCH /api/account/profile`, `PUT/DELETE /api/account/avatar`, `POST /api/auth/change-password`                                                                                                                                                                                                                     | MVP 2        |
-| 14  | `/admin/projects`                           | `AdminProjectsPage`                 | as #11                                 | endpoints not built (post-MVP)                                                                                                                                                                                                                                                                                       | **post-MVP** |
-| 15  | `/admin/audit-log`                          | `AdminAuditLogPage`                 | as #11                                 | endpoint not built (post-MVP)                                                                                                                                                                                                                                                                                        | **post-MVP** |
+| \#  | Path                                        | Page                                | Guard                                  | API                                                                                                                                                                                                                                                                                                                  | Phase                |
+| --- | ------------------------------------------- | ----------------------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
+| 1   | `/`                                         | redirect → `/projects`              | —                                      | —                                                                                                                                                                                                                                                                                                                    | 1                    |
+| 2   | `/login`                                    | `LoginPage`                         | `PublicOnly`                           | `POST /api/auth/login`, `GET /api/auth/me`                                                                                                                                                                                                                                                                           | 2                    |
+| 3   | `/signup`                                   | `SignupPage`                        | `PublicOnly`                           | `POST /api/auth/signup`                                                                                                                                                                                                                                                                                              | 2                    |
+| 4   | `/projects`                                 | `ProjectsPage`                      | `RequireAuth`                          | `GET /api/projects`, `POST /api/projects`                                                                                                                                                                                                                                                                            | 2                    |
+| 5   | `/projects/:projectId`                      | `ProjectLayout`                     | `RequireAuth` + member                 | `GET/PATCH /api/projects/:projectId` (includes `role` and `memberCount`)                                                                                                                                                                                                                                             | 2                    |
+| 6   | `/projects/:projectId/secrets?environment=` | `SecretsPage`                       | as #5                                  | `GET/POST /api/projects/:projectId/secrets`; `GET /api/projects/:projectId/secrets/env-example`; `POST /api/projects/:projectId/secrets/import`; `POST /api/projects/:projectId/secrets/export`; `PATCH/DELETE /api/projects/:projectId/secrets/:secretId`; `POST /api/projects/:projectId/secrets/:secretId/reveal` | 3                    |
+| 7   | `/projects/:projectId/members`              | `MembersPage`                       | as #5                                  | `GET/POST /api/projects/:projectId/members`; `PATCH/DELETE /api/projects/:projectId/members/:userId`                                                                                                                                                                                                                 | 4                    |
+| 8   | `/projects/:projectId/audit-log`            | `ProjectAuditLogPage`               | as #5                                  | `GET /api/projects/:projectId/audit-log` (cursor-paginated); `GET /api/projects/:projectId/audit-log/export`                                                                                                                                                                                                         | 4                    |
+| 9   | `/unauthorized`                             | `StatusPage variant="unauthorized"` | none                                   | —                                                                                                                                                                                                                                                                                                                    | 1                    |
+| 10  | `*`                                         | `StatusPage variant="not-found"`    | none                                   | —                                                                                                                                                                                                                                                                                                                    | 1                    |
+| 11  | `/admin`                                    | redirect → `/admin/users`           | `RequireAuth` + `RequirePlatformAdmin` | —                                                                                                                                                                                                                                                                                                                    | MVP 2                |
+| 12  | `/admin/users`                              | `AdminUsersPage`                    | as #11                                 | `GET/PATCH /api/admin/users/:userId`                                                                                                                                                                                                                                                                                 | MVP 2                |
+| 13  | `/settings`                                 | `SettingsPage`                      | `RequireAuth`                          | `PATCH /api/account/profile`, `PUT/DELETE /api/account/avatar`, `POST /api/auth/change-password`                                                                                                                                                                                                                     | MVP 2                |
+| 14  | `/admin/projects`                           | `AdminProjectsPage`                 | as #11                                 | `GET /admin/projects`, `PATCH /admin/projects/:projectId/status`, `GET /api/admin/projects/audit-log`                                                                                                                                                                                                                | **active follow-up** |
+| 15  | `/admin/audit-log`                          | `AdminAuditLogPage`                 | as #11                                 | endpoint not built (post-MVP)                                                                                                                                                                                                                                                                                        | **post-MVP**         |
 
-**Active routes: 1–13.** Routes 14–15 remain deferred post-MVP.
+**Active routes: 1–14.** Route 15 remains deferred.
 
 Every active endpoint has a client function in `client/src/api/`. Response shapes are defined in API.md and there are no open contract issues in this scope; if one is found, record it in API.md, not here.
 
@@ -257,7 +257,7 @@ noted, not omitted.
 
 **The dashboard. Stories 5 and 10.**
 
-- **Data:** `useProjectsPage({ cursor, limit: 9, search })` → `GET /projects?mode=cursor&limit=9`. Paginates **9 projects per page** (a 3×3 grid on desktop) using cursor pagination (`First page` / `Previous` / `Next`), resetting cursor history whenever the search query changes or clears. Each entry carries `status` and the caller's `role`; archived entries (post-MVP) render as locked cards.
+- **Data:** `useProjectsPage({ cursor, limit: 9, search })` → `GET /projects?mode=cursor&limit=9`. Paginates **9 projects per page** (a 3×3 grid on desktop) using cursor pagination (`First page` / `Previous` / `Next`), resetting cursor history whenever the search query changes or clears. Each entry carries `status` and the caller's `role`; archived entries render as locked cards.
 
 - Active project cards show only the project name and caller's role without displaying description, member count, status, database IDs, or environment labels. Archived cards display their status. IDs remain in links and API requests.
 
@@ -266,11 +266,11 @@ noted, not omitted.
 
 - **Controls:**
 
-| Control                  | Behavior                                                                                      |
-| ------------------------ | --------------------------------------------------------------------------------------------- |
-| New project              | Any authenticated. Opens one-field dialog (`name`).                                           |
-| `ProjectCard` (active)   | Links to `/projects/:id/secrets`                                                              |
-| `ProjectCard` (archived) | Post-MVP (nothing can archive yet). Not a link. "Archived — a Platform Admin can restore it." |
+| Control                  | Behavior                                                  |
+| ------------------------ | --------------------------------------------------------- |
+| New project              | Any authenticated. Opens one-field dialog (`name`).       |
+| `ProjectCard` (active)   | Links to `/projects/:id/secrets`                          |
+| `ProjectCard` (archived) | Not a link. "Archived — a Platform Admin can restore it." |
 
 - **States:**
 
@@ -309,7 +309,7 @@ noted, not omitted.
     - `404` → `StatusPage variant="not-found"` — a missing project and a
       no-membership project are identical by design;
 
-    - `403` → `ProjectArchivedNotice` — post-MVP (unreachable until archive ships; in the MVP, treat as "other error");
+    - `403` → the existing forbidden StatusPage; archived projects must be restored by a Platform Admin;
 
     - other error → `ErrorState` + Retry.
 
@@ -548,7 +548,7 @@ disabled with reason, `H` = hidden, `—` = route unreachable.
 | `/admin/users`               | H             | H               | H                 | H       | E              |
 | `/settings` (own account)    | E             | E               | E                 | E       | E              |
 
-¹ Platform Admin without membership gets 404 on project-scoped routes (`/projects/:id/*`). A platform-wide project overview is post-MVP.
+¹ Platform Admin without membership gets 404 on project-scoped routes (`/projects/:id/*`). The approved admin overview exposes only its safe metadata summary.
 
 The permission helper is one small module (`lib/permissions.ts`), one
 function `can(role, action, environment?) → 'enabled' | 'disabled' | 'hidden'`, consumed through `usePermissions(projectId)`. Not a generic
@@ -788,3 +788,47 @@ disconnected status. Disconnect still requires confirmation.
 AppShell and Navbar share centered responsive widths and a `max-w-7xl` cap,
 with matching horizontal padding. Mobile keeps a 1rem outer gutter; larger
 screens use proportional side margins.
+
+Add member searches email and username after a 250ms debounce and two characters.
+Compose suggestions inline in the existing modal; selecting one fills its email.
+Show loading/error/empty states and a next-page icon button for cursor pagination.
+Use `['memberCandidates', projectId, search, cursor]` query keys. Fetch only while
+the authorized modal is open. Changing search clears the cursor and selection.
+
+`/admin/projects` is an approved page under RequirePlatformAdmin. Compose existing
+PageHeader, SearchInput, PaginationControls, status/error states and confirmation
+Modal inline. Navbar links Platform Admins to project management. Query keys:
+`['adminProjects', search, status, cursor]` and
+`['adminProjects', 'audit', { action, result, cursor, limit }]`. Mutations never
+retry and refresh the admin list plus project/project-list queries. Archive/restore
+require confirmation. The page mirrors `/admin/users` with Projects and Audit Log
+tabs: the Audit Log tab renders a 25-row cursor-paginated lifecycle table
+(`project_created`, `project_renamed`, `project_updated`,
+`project_environments_changed`, `project_archived`, `project_restored`,
+`project_deleted`) with Action and Result filters, Clear filters, `UserAvatar`
+actors, project name, archive/restore/delete transitions and a Result column,
+using the same card/table/PaginationControls composition as the Manage Users audit
+tab. The endpoint never returns secrets, environments or membership data.
+Project details offers Delete project through `usePermissions('project.delete')`;
+require exact name confirmation, warn that secrets and memberships are removed,
+and redirect to Projects with caches invalidated on success. Errors leave the
+confirmation open. No new shared widget is introduced.
+
+Owner-approved `/admin/projects` uses RequirePlatformAdmin and existing AppShell,
+PageHeader, SearchInput, PaginationControls and inline table/status confirmation.
+List only name, status, member count and created date. Status actions confirm
+archive/restore; there is no link into membership-protected project contents.
+Project information adds a Project Admin-only Delete project control using
+`usePermissions(projectId).can('project.delete')`, an exact-name confirmation,
+and a clear warning that local secrets/memberships are removed but GitHub is not.
+On successful delete, clear that project's caches and return to Projects while
+preserving its dashboard navigation state. Query key: ['adminProjects', filters].
+
+Active/Archived tabs replace admin status selectors for users/projects, and the
+home dashboard initially shows only active projects. Preserve the selected home
+status in navigation state with its search/cursor history. Status changes reset
+pagination. Secret edit exposes key name plus an explicit Replace value option;
+unselected means preserve the value, selected permits replacement including an
+empty string. The GitHub icon sits beside the project name. Project Admin delete
+moves to a separate bottom card after project details and the .env action area,
+within the same right column; confirmation behavior stays unchanged.

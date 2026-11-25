@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { addMemberSchema, type AddMemberInput, type MemberResponse } from '@raaz/shared-schemas';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
 import { ConfirmDialog } from '../components/ConfirmDialog';
@@ -12,6 +12,7 @@ import { PaginationControls } from '../components/PaginationControls';
 import { useToast } from '../components/Toaster';
 import { UserAvatar } from '../components/UserAvatar';
 import {
+    useMemberCandidates,
     useMembersPage,
     useAddMember,
     useChangeMemberRole,
@@ -115,6 +116,7 @@ export function MembersPage() {
         handleSubmit,
         reset,
         setError,
+        setValue,
         formState: { errors },
     } = useForm<AddMemberInput>({
         resolver: zodResolver(addMemberSchema),
@@ -125,8 +127,30 @@ export function MembersPage() {
         },
     });
 
+    const [accountSearch, setAccountSearch] = useState('');
+    const [candidateSearch, setCandidateSearch] = useState('');
+    const [candidateCursor, setCandidateCursor] = useState<string | undefined>();
+    const [selectedEmail, setSelectedEmail] = useState<string | null>(null);
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setCandidateSearch(accountSearch.trim());
+            setCandidateCursor(undefined);
+        }, 250);
+        return () => clearTimeout(timer);
+    }, [accountSearch]);
+    const candidates = useMemberCandidates(
+        projectId!,
+        candidateSearch,
+        candidateCursor,
+        isModalOpen && !selectedEmail,
+    );
+
     const handleOpenModal = () => {
         reset({ email: '', role: undefined });
+        setAccountSearch('');
+        setCandidateSearch('');
+        setCandidateCursor(undefined);
+        setSelectedEmail(null);
         setModalError(null);
         setIsModalOpen(true);
     };
@@ -368,25 +392,99 @@ export function MembersPage() {
                     )}
 
                     <FormField
-                        label="Email Address"
-                        hint="User must have an existing Raaz account"
+                        label="Email or username"
+                        hint="Search for an existing Raaz account"
                         error={errors.email?.message}
                         required
                     >
                         {({ id, ...props }) => (
                             <input
                                 id={id}
-                                type="email"
+                                type="text"
                                 placeholder="colleague@example.com"
                                 autoFocus
                                 className={`input input-bordered w-full bg-base-300 rounded-xl focus:border-primary text-sm font-ui ${
                                     errors.email ? 'input-error' : ''
                                 }`}
-                                {...register('email')}
+                                value={accountSearch}
+                                onChange={(event) => {
+                                    setAccountSearch(event.target.value);
+                                    setSelectedEmail(null);
+                                    setValue('email', event.target.value.trim(), {
+                                        shouldValidate: false,
+                                    });
+                                }}
                                 {...props}
                             />
                         )}
                     </FormField>
+
+                    {!selectedEmail &&
+                        accountSearch.trim() === candidateSearch &&
+                        candidateSearch.length >= 2 && (
+                            <div className="space-y-2" aria-label="Matching accounts">
+                                {candidates.isFetching ? (
+                                    <p role="status" className="text-sm">
+                                        Searching…
+                                    </p>
+                                ) : candidates.isError ? (
+                                    <p role="alert" className="text-sm text-error">
+                                        Unable to search accounts. Try again.
+                                    </p>
+                                ) : candidates.data?.data.length === 0 ? (
+                                    <p className="text-sm text-base-content/70">
+                                        No matching accounts
+                                    </p>
+                                ) : null}
+                                {!candidates.isFetching &&
+                                    candidates.data?.data.map((account) => (
+                                        <button
+                                            key={account.id}
+                                            type="button"
+                                            className="block w-full rounded-lg bg-base-300 p-3 text-left text-sm hover:bg-primary/10 focus-visible:outline focus-visible:outline-primary"
+                                            onClick={() => {
+                                                setValue('email', account.email, {
+                                                    shouldValidate: true,
+                                                });
+                                                setAccountSearch(account.email);
+                                                setSelectedEmail(account.email);
+                                            }}
+                                        >
+                                            {account.username && (
+                                                <span className="block font-semibold">
+                                                    @{account.username}
+                                                </span>
+                                            )}
+                                            <span>{account.email}</span>
+                                        </button>
+                                    ))}
+                                {candidates.data?.nextCursor && (
+                                    <button
+                                        type="button"
+                                        className="btn btn-neutral btn-sm btn-square"
+                                        aria-label="Next matching accounts"
+                                        title="Next matching accounts"
+                                        disabled={candidates.isFetching}
+                                        onClick={() =>
+                                            setCandidateCursor(candidates.data!.nextCursor!)
+                                        }
+                                    >
+                                        <svg
+                                            aria-hidden="true"
+                                            className="h-4 w-4"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                        >
+                                            <path d="m9 5 7 7-7 7" />
+                                        </svg>
+                                    </button>
+                                )}
+                            </div>
+                        )}
 
                     <FormField
                         label="Project Role"

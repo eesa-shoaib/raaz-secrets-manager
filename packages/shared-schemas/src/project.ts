@@ -58,6 +58,7 @@ export type ProjectResponse = z.infer<typeof projectResponseSchema>;
 export type Project = ProjectResponse;
 
 export const projectsListQuerySchema = z.object({
+    status: projectStatusEnum.optional(),
     cursor: z.string().trim().min(1).max(512).optional(),
     limit: z.coerce.number().int().min(1).max(100).default(25),
     search: z.string().trim().max(100).optional(),
@@ -92,3 +93,21 @@ export const projectMembersQuerySchema = z.object({
     page: z.never({ message: 'Offset page parameter is not supported' }).optional(),
 });
 export type ProjectMembersQuery = z.infer<typeof projectMembersQuerySchema>;
+
+export const adminProjectsQuerySchema = z.object({
+    search: z.string().trim().max(100).default(''),
+    cursor: z.string().max(2048).optional(),
+    status: projectStatusEnum.optional(),
+    limit: z.coerce.number().int().min(1).max(100).default(25),
+});
+export const adminProjectResponseSchema = z.object({
+    id: z.string(),
+    name: z.string(),
+    status: projectStatusEnum,
+    createdAt: z.coerce.date(),
+    memberCount: z.number().int().min(0),
+});
+export const projectStatusInputSchema = z.object({ status: projectStatusEnum }).strict();
+export const deleteProjectInputSchema = z
+    .object({ confirmName: z.string().min(1).max(100) })
+    .strict();

@@ -128,6 +128,7 @@ describe('ProjectsPage 9-item pagination', () => {
                     cursor: null,
                     limit: 9,
                     search: 'Project',
+                    status: 'active',
                 }),
             );
             await waitFor(() =>
@@ -153,6 +154,7 @@ describe('ProjectsPage 9-item pagination', () => {
                 cursor: 'cursor-page-2',
                 limit: 9,
                 search: 'Project',
+                status: 'active',
             });
             expect((screen.getByLabelText('Search projects') as HTMLInputElement).value).toBe(
                 'Project',
@@ -210,6 +212,7 @@ describe('ProjectsPage 9-item pagination', () => {
             cursor: null,
             limit: 9,
             search: undefined,
+            status: 'active',
         });
         expect(
             (screen.getByRole('button', { name: 'First page' }) as HTMLButtonElement).disabled,
@@ -229,6 +232,7 @@ describe('ProjectsPage 9-item pagination', () => {
             cursor: 'cursor-page-2',
             limit: 9,
             search: undefined,
+            status: 'active',
         });
 
         // Navigate to page 3
@@ -242,6 +246,7 @@ describe('ProjectsPage 9-item pagination', () => {
             cursor: 'cursor-page-3',
             limit: 9,
             search: undefined,
+            status: 'active',
         });
         expect((screen.getByRole('button', { name: 'Next' }) as HTMLButtonElement).disabled).toBe(
             true,
@@ -318,6 +323,7 @@ describe('ProjectsPage 9-item pagination', () => {
                     cursor: null,
                     limit: 9,
                     search: 'Project 1',
+                    status: 'active',
                 });
             },
             { timeout: 1000 },

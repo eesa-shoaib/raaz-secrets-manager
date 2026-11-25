@@ -1,4 +1,7 @@
 import {
+    adminProjectAuditLogQuerySchema,
+    adminProjectsQuerySchema,
+    projectStatusInputSchema,
     adminAuditLogQuerySchema,
     adminUsersQuerySchema,
     updateUserSchema,
@@ -10,6 +13,11 @@ import {
     listUsersController,
     updateUserController,
 } from '../controllers/admin.controller.js';
+import {
+    listAdminProjectAuditController,
+    listAdminProjectsController,
+    setProjectStatusController,
+} from '../controllers/project-management.controller.js';
 import { authenticate } from '../middleware/authenticate.middleware.js';
 import { requirePlatformAdmin } from '../middleware/require-platform-admin.middleware.js';
 import { validate } from '../middleware/validate.middleware.js';
@@ -48,5 +56,31 @@ router.get(
     requirePlatformAdmin,
     validate(auditQuery),
     asyncHandler(listAdminAuditController),
+);
+router.get(
+    '/projects/audit-log',
+    authenticate,
+    requirePlatformAdmin,
+    validate(z.object({ query: adminProjectAuditLogQuerySchema })),
+    asyncHandler(listAdminProjectAuditController),
+);
+router.get(
+    '/projects',
+    authenticate,
+    requirePlatformAdmin,
+    validate(z.object({ query: adminProjectsQuerySchema })),
+    asyncHandler(listAdminProjectsController),
+);
+router.patch(
+    '/projects/:projectId/status',
+    authenticate,
+    requirePlatformAdmin,
+    validate(
+        z.object({
+            params: z.object({ projectId: z.string().regex(/^[a-f\d]{24}$/i) }),
+            body: projectStatusInputSchema,
+        }),
+    ),
+    asyncHandler(setProjectStatusController),
 );
 export const adminRoutes = router;

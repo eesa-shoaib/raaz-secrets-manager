@@ -38,26 +38,30 @@ function publicUser(user: {
     });
 }
 
-export async function listUsers(page: number, limit: number) {
+export async function listUsers(page: number, limit: number, isActive?: boolean) {
+    const filter = isActive === undefined ? {} : { isActive };
     const [users, total] = await Promise.all([
-        UserModel.find()
+        UserModel.find(filter)
             .sort({ isPlatformAdmin: -1, createdAt: -1, _id: -1 })
             .skip((page - 1) * limit)
             .limit(limit)
             .lean(),
-        UserModel.countDocuments(),
+        UserModel.countDocuments(filter),
     ]);
     return { data: users.map(publicUser), page, limit, total };
 }
 
-export async function listUsersCursor(cursor?: string, limit = 25) {
-    const filter = cursor ? buildAdminUsersCursorCondition(decodeAdminUsersCursor(cursor)) : {};
+export async function listUsersCursor(cursor?: string, limit = 25, isActive?: boolean) {
+    const base = isActive === undefined ? {} : { isActive };
+    const filter = cursor
+        ? { $and: [base, buildAdminUsersCursorCondition(decodeAdminUsersCursor(cursor, isActive))] }
+        : base;
     const [rows, total] = await Promise.all([
         UserModel.find(filter)
             .sort({ isPlatformAdmin: -1, createdAt: -1, _id: -1 })
             .limit(limit + 1)
             .lean(),
-        UserModel.countDocuments(),
+        UserModel.countDocuments(base),
     ]);
 
     const hasMore = rows.length > limit;
@@ -65,7 +69,12 @@ export async function listUsersCursor(cursor?: string, limit = 25) {
     const last = pageRows.at(-1);
     const nextCursor =
         hasMore && last
-            ? encodeAdminUsersCursor(last.isPlatformAdmin, last.createdAt, last._id.toString())
+            ? encodeAdminUsersCursor(
+                  last.isPlatformAdmin,
+                  last.createdAt,
+                  last._id.toString(),
+                  isActive,
+              )
             : null;
 
     return {

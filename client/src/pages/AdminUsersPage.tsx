@@ -92,6 +92,7 @@ export function AdminUsersPage() {
     const { toast } = useToast();
 
     const [activeTab, setActiveTab] = useState<AdminTab>('users');
+    const [activeUsers, setActiveUsers] = useState(true);
 
     // Users list state
     const [cursor, setCursor] = useState<string | null>(null);
@@ -109,6 +110,7 @@ export function AdminUsersPage() {
     const [resultFilter, setResultFilter] = useState<AuditResultFilter>('');
 
     const { data, isLoading, isFetching, isError, error, refetch } = useAdminUsers({
+        isActive: activeUsers,
         cursor,
         limit: 25,
     });
@@ -250,6 +252,30 @@ export function AdminUsersPage() {
                 </div>
             </div>
 
+            {activeTab === 'users' && (
+                <div
+                    role="tablist"
+                    aria-label="User status"
+                    className="tabs tabs-boxed bg-base-200 w-fit"
+                >
+                    {[true, false].map((value) => (
+                        <button
+                            key={String(value)}
+                            type="button"
+                            role="tab"
+                            aria-selected={activeUsers === value}
+                            className={`tab ${activeUsers === value ? 'tab-active text-primary button-textured' : ''}`}
+                            onClick={() => {
+                                setActiveUsers(value);
+                                setCursor(null);
+                                setCursorHistory([]);
+                            }}
+                        >
+                            {value ? 'Active' : 'Archived'}
+                        </button>
+                    ))}
+                </div>
+            )}
             {activeTab === 'users' ? (
                 isLoading ? (
                     <Skeleton shape="table" count={5} />

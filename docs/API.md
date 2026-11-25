@@ -163,9 +163,12 @@ around.
 | Export `.env` (decrypted)             | ✅             | ✅                      | ✅                  | ✅ (with `confirm: true`) | ❌ (403, logged as denied) | ❌ (404)                                     |
 | View project's audit log              | ✅             | ✅                      | ✅                  | ✅                        | ✅                         | ❌ (platform-wide audit view is post-MVP)    |
 | Export project's audit log (CSV/JSON) | ✅             | ❌ (403)                | ❌ (403)            | ❌ (403)                  | ✅                         | ❌ (404)                                     |
+| Search accounts to add as members     | ✅             | ❌ (403)                | ❌ (403)            | ❌ (403)                  | ❌ (403)                   | ❌ (404)                                     |
+| Delete active project                 | ✅             | ❌ (403)                | ❌ (403)            | ❌ (403)                  | ❌ (403)                   | ❌ (404)                                     |
+| View platform project metadata        | ❌             | ❌                      | ❌                  | ❌                        | ❌                         | ✅                                           |
 | Add project member                    | ✅             | ❌                      | ❌                  | ❌                        | ❌                         | ✅                                           |
 | Change/remove project member          | ✅             | ❌                      | ❌                  | ❌                        | ❌                         | ✅                                           |
-| Archive/restore project (post-MVP)    | ❌             | ❌                      | ❌                  | ❌                        | ❌                         | ✅                                           |
+| Archive/restore project               | ❌             | ❌                      | ❌                  | ❌                        | ❌                         | ✅                                           |
 | Deactivate/reactivate a user          | ❌             | ❌                      | ❌                  | ❌                        | ❌                         | ✅                                           |
 | Promote/demote Platform Admin         | ❌             | ❌                      | ❌                  | ❌                        | ❌                         | ✅                                           |
 | Edit own profile / avatar / passwd    | ✅ (self)      | ✅ (self)               | ✅ (self)           | ✅ (self)                 | ✅ (self)                  | ✅ (self)                                    |
@@ -181,7 +184,7 @@ on top of it.)
 
 - "Add, change role, or remove project member" — endpoints and project-admin UI are active. A Platform Admin without membership can use the membership endpoints but cannot open project data.
 - "Edit project name / description" — `PATCH /api/projects/:projectId` is Project Admin-only (`requireProjectRole('projectAdmin')`). Environment editing remains deferred.
-- "Archive/restore project" and `/admin/projects` — post-MVP; no endpoints in this build.
+- Archive/restore and `/admin/projects` are owner-approved follow-up features; see Project management contracts below.
 - "Deactivate/reactivate", "Promote/demote", and "Platform user audit log" — `GET /api/admin/users`, `PATCH /api/admin/users/:userId`, `GET /api/admin/audit-log`, and `/admin/users` UI (plus self-deactivation via `POST /api/account/deactivate` on `/settings`).
 - "View project's audit log" — read-only table with 3 filters and cursor pagination (`default 25`, `max 100`).
 
@@ -209,7 +212,7 @@ Notes on cells that are easy to get wrong:
   knows the project exists; archiving isn't existence-hiding the way a
   missing membership is. The project still shows up, with
   `status: 'archived'`, in `GET /api/projects` — it just can't be drilled
-  into further until restored. `/admin/*` routes aren't project-scoped and don't pass through the check. In the MVP no endpoint sets `archived`, so this behavior is specified and middleware-tested but not reachable end-to-end. See ARCHITECTURE.md's Project status check.
+  into further until restored. `/admin/*` routes aren't project-scoped and don't pass through the check. The approved admin status endpoint sets `archived` and can restore it. See ARCHITECTURE.md's Project status check.
 - **A Platform Admin acting on membership routes without a
   `ProjectMembership`** goes through `requireProjectRoleOrPlatformAdmin`,
   not plain `requireProjectRole` — see ARCHITECTURE.md's RBAC Pipeline.
@@ -344,13 +347,14 @@ Environment editing (and the `PATCH /api/projects/:projectId` endpoint that woul
 
 ### Platform Admin
 
-| Method | Path                                                    | Access            | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| ------ | ------------------------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| GET    | `/api/admin/users?cursor=&limit=&page=`                 | `isPlatformAdmin` | Sorted with Platform Admins first (`{ isPlatformAdmin: -1, createdAt: -1, _id: -1 }`). Supports both cursor pagination (`?cursor=&limit=`, or `?mode=cursor`, returning `{ data, nextCursor, hasMore, limit, total }`) and legacy page pagination (`?page=1&limit=20`, returning `{ data, page, limit, total }`). Passing both `page` and `cursor` returns `422 VALIDATION_ERROR`. Each item conforms to `publicUserSchema`.                                                                                                                                                                                                                                                                                                                     |
-| PATCH  | `/api/admin/users/:userId`                              | `isPlatformAdmin` | Body: `{ isActive? , isPlatformAdmin? }` — promotes/demotes or activates/deactivates a user. Returns `409 CONFLICT` instead of applying the change if it would leave zero users with both `isPlatformAdmin: true` and `isActive: true` — covers demoting _or_ deactivating the last one, self included. Otherwise returns `403 FORBIDDEN` if the caller attempts to revoke their own Platform Admin role or deactivate their own account from `/admin/users` (users must deactivate their own accounts via `POST /api/account/deactivate`). Increments `tokenVersion` on deactivation or Platform Admin revocation. Writes `user_activated`/`user_deactivated`/`platform_admin_granted`/`platform_admin_revoked` audit entries (no `projectId`). |
-| GET    | `/api/admin/audit-log?action=&result=&cursor=&limit=25` | `isPlatformAdmin` | Cursor-paginated platform-wide audit entries (`projectId: null` only; supports `platform_admin_granted`, `platform_admin_revoked`, `user_activated`, `user_deactivated`, plus `password_changed`/`profile_updated`/`avatar_updated`/`avatar_removed`/`bootstrap_admin` when unfiltered). Never returns project-scoped entries or secret metadata.                                                                                                                                                                                                                                                                                                                                                                                                |
+| Method | Path                                                             | Access            | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ------ | ---------------------------------------------------------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/api/admin/users?cursor=&limit=&page=`                          | `isPlatformAdmin` | Sorted with Platform Admins first (`{ isPlatformAdmin: -1, createdAt: -1, _id: -1 }`). Supports both cursor pagination (`?cursor=&limit=`, or `?mode=cursor`, returning `{ data, nextCursor, hasMore, limit, total }`) and legacy page pagination (`?page=1&limit=20`, returning `{ data, page, limit, total }`). Passing both `page` and `cursor` returns `422 VALIDATION_ERROR`. Each item conforms to `publicUserSchema`.                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| PATCH  | `/api/admin/users/:userId`                                       | `isPlatformAdmin` | Body: `{ isActive? , isPlatformAdmin? }` — promotes/demotes or activates/deactivates a user. Returns `409 CONFLICT` instead of applying the change if it would leave zero users with both `isPlatformAdmin: true` and `isActive: true` — covers demoting _or_ deactivating the last one, self included. Otherwise returns `403 FORBIDDEN` if the caller attempts to revoke their own Platform Admin role or deactivate their own account from `/admin/users` (users must deactivate their own accounts via `POST /api/account/deactivate`). Increments `tokenVersion` on deactivation or Platform Admin revocation. Writes `user_activated`/`user_deactivated`/`platform_admin_granted`/`platform_admin_revoked` audit entries (no `projectId`).                                                                                              |
+| GET    | `/api/admin/audit-log?action=&result=&cursor=&limit=25`          | `isPlatformAdmin` | Cursor-paginated platform-wide audit entries (`projectId: null` only; supports `platform_admin_granted`, `platform_admin_revoked`, `user_activated`, `user_deactivated`, plus `password_changed`/`profile_updated`/`avatar_updated`/`avatar_removed`/`bootstrap_admin` when unfiltered). Never returns project-scoped entries or secret metadata.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| GET    | `/api/admin/projects/audit-log?action=&result=&cursor=&limit=25` | `isPlatformAdmin` | Cursor-paginated project-lifecycle audit entries. Only `project_created`, `project_renamed`, `project_updated`, `project_environments_changed`, `project_archived`, `project_restored`, and `project_deleted` are returned (any project-scoped action otherwise is excluded). Each entry contains `id`, `action`, `result`, `createdAt`, `user`, `projectId`, and `projectName` (snapshot stored on the entry, with a `Project` lookup fallback for older rows). `projectName` is `null` only when the project cannot be resolved. Never returns `secretKey`, `environment`, `targetUser`, `previousRole`, or `newRole` — those cannot occur in the lifecycle actions and are stripped by the response schema. Supports `action` and `result` filters plus cursor pagination (`default 25`, `max 100`, ordered `{ createdAt: -1, _id: -1 }`). |
 
-Note: `/admin/projects` (platform project overview and archive/restore) remains post-MVP and is not built. Platform Audit Log (`GET /api/admin/audit-log`) returns only platform-wide (`projectId: null`) user role and account events; no admin route returns any `Project` or `Secret` data — not `ciphertext`, and in this build not even project or secret counts or names. A Platform Admin can reveal a secret only by holding a `ProjectMembership` on that specific project.
+Note: `/admin/projects` exposes only the approved metadata summary and archive/restore actions. Platform Audit Log (`GET /api/admin/audit-log`) returns only platform-wide (`projectId: null`) account events. Project lifecycle history is available separately at `GET /api/admin/projects/audit-log`; both admin audit endpoints omit secret data and never grant project detail/reveal access without membership. Project archive, restore and deletion audit entries remain project-scoped.
 
 ## GitHub repository connection and import
 
@@ -407,3 +411,58 @@ limited to 30 characters, suffixes for collisions, bounded attempts). Existing
 usernames never change automatically. Each successful automatic username claim
 and its `profile_updated` audit entry commit together; exhausted collisions leave
 username unset without blocking sign-in. Stable provider subject remains identity.
+
+## Member candidate search
+
+GET `/api/projects/:projectId/members/candidates?search=&cursor=` uses authenticate,
+validate, requireProjectRole(projectAdmin), then requireProjectStatus.
+Platform Admin status alone does not grant search access.
+Search is 2–100 characters, literal and case-insensitive across email/username.
+Return up to 10 active non-members as `{ data: [{ id, email, username }],
+nextCursor }`, ordered by createdAt/id descending. Cursor is bound to project/search.
+Non-members receive 404, insufficient members 403, archived projects 403.
+Responses never include credentials or admin flags. Existing POST member-by-email
+remains unchanged; selecting a suggestion supplies its email.
+
+## Project management contracts (owner approved)
+
+- GET `/api/admin/projects?search=&cursor=&limit=25&status=`: Platform Admin only;
+  search <=100 literal characters, limit 1–100, optional active/archived filter.
+  Standard cursor envelope contains only `{ id, name, status, createdAt, memberCount }`.
+  No descriptions, source repositories, secret counts, keys, or values are exposed.
+- PATCH `/api/admin/projects/:projectId/status`: Platform Admin only;
+  `{ status: 'active' | 'archived' }`. 204; idempotent no-op writes no duplicate audit.
+  Status mutation and project_archived/project_restored audit commit atomically.
+  Archive blocks project access without removing secrets or memberships.
+- GET `/api/admin/projects/audit-log?action=&result=&cursor=&limit=25`: Platform Admin
+  only; project-lifecycle audit entries (`project_created`, `project_renamed`,
+  `project_updated`, `project_environments_changed`, `project_archived`,
+  `project_restored`, `project_deleted`). Standard cursor envelope; each entry has
+  `id, action, result, createdAt, user, projectId, projectName`. Entry-level
+  `projectName` is a snapshot so deleted projects stay readable, with a `Project`
+  lookup fallback for older rows. Secret, environment, membership and role fields
+  are never returned. This is separate from platform-wide `GET /api/admin/audit-log`,
+  which stays `projectId: null` only.
+- DELETE `/api/projects/:projectId`: Origin → authenticate → validate →
+  requireProjectRole(projectAdmin) → requireProjectStatus → controller/service.
+  Body `{ confirmName: exactProjectName }`; 422 for a mismatch. Transaction deletes
+  project, secrets and memberships and appends project_deleted. Existing audit
+  records remain append-only. Non-member 404; other members 403 with denied audit;
+  Platform Admin non-member 404; archived projects must first be restored. 204.
+  Deletion never sends a request to GitHub. Audit failure rolls back every change.
+
+These contracts supersede the earlier deferred global metadata/archiving cuts.
+
+## Status tabs and editable secret names
+
+Home and admin project tabs query `status=active|archived`, with Active selected
+initially. Status is optional for backward-compatible list calls; filtering and
+totals happen before pagination. Project cursors bind status into their scope.
+Admin user tabs query `isActive=true|false` (Archived means deactivated); omit the
+filter to retain legacy all-user behavior. Counts and cursors follow the filter.
+PATCH secret accepts `{ key?, value? }` with at least one field. Keys obey the
+existing uppercase key validation and per-project/environment uniqueness; a
+collision is 409. A name-only update retains the stored ciphertext and never
+decrypts. Value updates still use fresh IVs. Rename/value changes and the edit
+audit commit together; the audit uses the resulting key. Existing permissions,
+Developer environment restrictions and cross-project scoping remain unchanged.

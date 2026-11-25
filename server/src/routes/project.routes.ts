@@ -1,10 +1,12 @@
 import {
+    deleteProjectInputSchema,
     createProjectSchema,
     projectsListQuerySchema,
     updateProjectSchema,
 } from '@raaz/shared-schemas';
 import { Router } from 'express';
 import { z } from 'zod';
+import { deleteProjectController } from '../controllers/project-management.controller.js';
 import {
     createProjectController,
     getProjectController,
@@ -49,4 +51,14 @@ router.patch(
     asyncHandler(updateProjectController),
 );
 
+router.delete(
+    '/:projectId',
+    authenticate,
+    validate(
+        z.object({ params: z.object({ projectId: objectId }), body: deleteProjectInputSchema }),
+    ),
+    requireProjectRole('projectAdmin'),
+    requireProjectStatus,
+    asyncHandler(deleteProjectController),
+);
 export const projectRoutes = router;

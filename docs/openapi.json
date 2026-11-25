@@ -516,6 +516,66 @@
                         "description": "Not found or not a member"
                     }
                 }
+            },
+            "delete": {
+                "summary": "Permanently delete a Raaz project",
+                "description": "Project Admin membership required; active projects only. Deletes local secrets/memberships, retains audit history, never deletes GitHub repositories.",
+                "parameters": [
+                    {
+                        "name": "projectId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[a-fA-F0-9]{24}$"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/Origin"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": ["confirmName"],
+                                "properties": {
+                                    "confirmName": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 100
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Deleted with retained project_deleted audit"
+                    },
+                    "409": {
+                        "description": "Concurrent lifecycle change"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Insufficient access, CSRF mismatch, or archived project"
+                    },
+                    "404": {
+                        "description": "Missing project or no membership"
+                    },
+                    "422": {
+                        "description": "Invalid input"
+                    },
+                    "500": {
+                        "description": "Internal or transactional audit failure"
+                    }
+                }
             }
         },
         "/projects/{projectId}/members": {
@@ -1575,6 +1635,242 @@
                     }
                 },
                 "description": "Verify user/installation access and create a project, membership, and optional example-key mock secrets in one audited transaction. Retry returns the existing accessible project without altering secrets."
+            }
+        },
+        "/projects/{projectId}/members/candidates": {
+            "get": {
+                "summary": "Search active accounts to add to a project",
+                "description": "Project Admin membership required; Platform Admin status alone is insufficient. Excludes inactive users and existing members. Literal email/username search; 10 results per scoped cursor page.",
+                "parameters": [
+                    {
+                        "name": "projectId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[a-fA-F0-9]{24}$"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "minLength": 2,
+                            "maxLength": 100
+                        }
+                    },
+                    {
+                        "name": "cursor",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 2048
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{ data: [{ id, email, username }], nextCursor }"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Insufficient role or archived project"
+                    },
+                    "404": {
+                        "description": "No membership or missing project"
+                    },
+                    "422": {
+                        "description": "Invalid search or cursor"
+                    }
+                }
+            }
+        },
+        "/admin/projects": {
+            "get": {
+                "summary": "List platform project summaries",
+                "description": "Platform Admin only. Returns name, status, createdAt and memberCount, never secrets or membership-protected details.",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 100
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": ["active", "archived"]
+                        }
+                    },
+                    {
+                        "name": "cursor",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 2048
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100,
+                            "default": 25
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Cursor envelope: data [{id,name,status,createdAt,memberCount}], nextCursor, hasMore, total, limit"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Insufficient access, CSRF mismatch, or archived project"
+                    },
+                    "404": {
+                        "description": "Missing project or no membership"
+                    },
+                    "422": {
+                        "description": "Invalid input"
+                    },
+                    "500": {
+                        "description": "Internal or transactional audit failure"
+                    }
+                }
+            }
+        },
+        "/admin/projects/audit-log": {
+            "get": {
+                "summary": "Project lifecycle audit log",
+                "description": "Platform Admin only. Returns project-scoped lifecycle actions only; never secret, environment, membership or role metadata. Each entry carries projectId and a projectName snapshot (with Project lookup fallback) so deleted projects remain readable.",
+                "parameters": [
+                    {
+                        "name": "action",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "project_created",
+                                "project_renamed",
+                                "project_updated",
+                                "project_environments_changed",
+                                "project_archived",
+                                "project_restored",
+                                "project_deleted"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "result",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": ["allowed", "denied"]
+                        }
+                    },
+                    {
+                        "name": "cursor",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 512
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100,
+                            "default": 25
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Cursor envelope: data [{id,action,result,createdAt,user,projectId,projectName}], nextCursor, hasMore, total, limit"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Platform Admin required"
+                    },
+                    "422": {
+                        "description": "Invalid filter or cursor"
+                    }
+                }
+            }
+        },
+        "/admin/projects/{projectId}/status": {
+            "patch": {
+                "summary": "Archive or restore a project",
+                "description": "Platform Admin only; status and project-scoped audit commit atomically. Idempotent.",
+                "parameters": [
+                    {
+                        "name": "projectId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[a-fA-F0-9]{24}$"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/Origin"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": ["status"],
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "enum": ["active", "archived"]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Status saved"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Insufficient access, CSRF mismatch, or archived project"
+                    },
+                    "404": {
+                        "description": "Missing project or no membership"
+                    },
+                    "422": {
+                        "description": "Invalid input"
+                    },
+                    "500": {
+                        "description": "Internal or transactional audit failure"
+                    }
+                }
             }
         }
     }

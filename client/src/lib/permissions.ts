@@ -3,6 +3,7 @@ export type Role = 'projectAdmin' | 'developer' | 'auditor' | null;
 export type Environment = 'development' | 'staging' | 'production';
 
 export type Action =
+    | 'project.delete'
     | 'project.edit'
     | 'secrets.list'
     | 'secrets.env-example'
@@ -22,6 +23,7 @@ export type Action =
 const permissionMatrix: Record<Exclude<Role, null>, Record<Action, Permission>> = {
     projectAdmin: {
         'project.edit': 'enabled',
+        'project.delete': 'enabled',
         'secrets.list': 'enabled',
         'secrets.env-example': 'enabled',
         'secrets.import': 'enabled',
@@ -39,6 +41,7 @@ const permissionMatrix: Record<Exclude<Role, null>, Record<Action, Permission>> 
     },
     developer: {
         'project.edit': 'hidden',
+        'project.delete': 'hidden',
         'secrets.list': 'enabled',
         'secrets.env-example': 'enabled',
         'secrets.import': 'disabled',
@@ -56,6 +59,7 @@ const permissionMatrix: Record<Exclude<Role, null>, Record<Action, Permission>> 
     },
     auditor: {
         'project.edit': 'hidden',
+        'project.delete': 'hidden',
         'secrets.list': 'enabled',
         'secrets.env-example': 'enabled',
         'secrets.import': 'hidden',

@@ -75,6 +75,7 @@ list. This table is the full set; not all are required for local dev.
 | `PLATFORM_ADMIN_EMAIL` / `PLATFORM_ADMIN_PASSWORD` | No, but needed once                              | Set on first boot only, to seed the very first Platform Admin — see PRODUCT.md story 11                                                                                                                                  |
 | `SIGNUP_ALLOWED_DOMAINS`                           | No (defaults to open signup)                     | Comma-separated email domains (e.g. `acme.com,acme.io`); if set, signup rejects any other domain — see API.md's `/auth/signup` row                                                                                       |
 | `LOG_LEVEL`                                        | No (defaults to `info`)                          |                                                                                                                                                                                                                          |
+| `LOG_FORMAT`                                       | No                                               | Dev logs render as readable lines by default (`NODE_ENV !== production`); set `json` for raw pino JSON output. Production always uses JSON.                                                                              |
 
 ### Client (`client/.env`)
 

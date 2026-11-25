@@ -137,6 +137,7 @@ export function SecretsPage() {
     // Mutations
     const createMutation = useCreateSecret(projectId!, currentEnv);
     const editMutation = useEditSecret(projectId!, currentEnv);
+    const [replaceEditValue, setReplaceEditValue] = useState(false);
     const deleteMutation = useDeleteSecret(projectId!, currentEnv);
     const envExampleMutation = useGenerateEnvExample(projectId!);
     const importMutation = useImportSecrets(projectId!, currentEnv);
@@ -254,7 +255,8 @@ export function SecretsPage() {
 
     const handleOpenEdit = (secret: SecretResponse) => {
         setEditingSecret(secret);
-        resetEdit({ value: '' });
+        resetEdit({ key: secret.key, value: '' });
+        setReplaceEditValue(false);
         setEditError(null);
     };
 
@@ -270,9 +272,10 @@ export function SecretsPage() {
         try {
             await editMutation.mutateAsync({
                 secretId: editingSecret.id,
-                data,
+                data: { key: data.key, ...(replaceEditValue ? { value: data.value ?? '' } : {}) },
             });
-            toast.success(`Secret ${editingSecret.key} updated successfully`);
+            setSecretValueRevision((revision) => revision + 1);
+            toast.success(`Secret ${data.key ?? editingSecret.key} updated successfully`);
             handleCloseEdit();
         } catch (err: unknown) {
             if (isApiError(err)) {
@@ -997,26 +1000,49 @@ export function SecretsPage() {
                         </div>
                     </div>
 
-                    <FormField
-                        label="New Secret Value"
-                        hint="For security, the current value is not displayed. Enter a new value to replace it."
-                        error={editErrors.value?.message}
-                        required
-                    >
+                    <FormField label="Key name" error={editErrors.key?.message} required>
                         {({ id, ...props }) => (
-                            <textarea
+                            <input
                                 id={id}
-                                rows={4}
-                                autoFocus
-                                placeholder="Enter new secret value..."
-                                className={`textarea textarea-bordered w-full bg-base-300 rounded-xl focus:border-primary text-sm font-mono ${
-                                    editErrors.value ? 'textarea-error' : ''
-                                }`}
-                                {...registerEdit('value')}
                                 {...props}
+                                {...registerEdit('key')}
+                                className="input input-bordered w-full bg-base-300 rounded-xl font-mono"
                             />
                         )}
                     </FormField>
+                    <label className="flex items-center gap-3 text-sm">
+                        <input
+                            type="checkbox"
+                            className="checkbox checkbox-primary checkbox-sm"
+                            checked={replaceEditValue}
+                            onChange={(event) => setReplaceEditValue(event.target.checked)}
+                        />
+                        Replace value
+                    </label>
+                    {replaceEditValue && (
+                        <>
+                            <FormField
+                                label="New Secret Value"
+                                hint="For security, the current value is not displayed. Enter a new value to replace it."
+                                error={editErrors.value?.message}
+                                required
+                            >
+                                {({ id, ...props }) => (
+                                    <textarea
+                                        id={id}
+                                        rows={4}
+                                        autoFocus
+                                        placeholder="Enter new secret value..."
+                                        className={`textarea textarea-bordered w-full bg-base-300 rounded-xl focus:border-primary text-sm font-mono ${
+                                            editErrors.value ? 'textarea-error' : ''
+                                        }`}
+                                        {...registerEdit('value')}
+                                        {...props}
+                                    />
+                                )}
+                            </FormField>
+                        </>
+                    )}
 
                     <div className="flex items-center justify-end gap-3 pt-4 border-t border-base-300">
                         <button

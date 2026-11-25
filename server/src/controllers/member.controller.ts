@@ -1,10 +1,12 @@
 import {
+    memberCandidatesResponseSchema,
     createCursorPaginatedResponseSchema,
     memberResponseSchema,
     type ProjectMembersQuery,
 } from '@raaz/shared-schemas';
 import type { Request, Response } from 'express';
 import {
+    searchMemberCandidates,
     addProjectMember,
     changeProjectMemberRole,
     listProjectMembers,
@@ -54,4 +56,16 @@ export async function changeMemberRoleController(req: Request, res: Response) {
 export async function removeMemberController(req: Request, res: Response) {
     await removeProjectMember(req.user!.id, req.params.projectId, req.params.userId);
     res.json({ message: 'Member removed' });
+}
+
+export async function searchMemberCandidatesController(req: Request, res: Response) {
+    res.json(
+        memberCandidatesResponseSchema.parse(
+            await searchMemberCandidates(
+                req.params.projectId,
+                String(req.query.search),
+                req.query.cursor as string | undefined,
+            ),
+        ),
+    );
 }

@@ -34,6 +34,8 @@ export function requireProjectRole(...allowedRoles: ('projectAdmin' | 'developer
                                 ? 'delete'
                                 : 'reveal',
                 });
+            } else if (req.method === 'DELETE' && req.route?.path === '/:projectId') {
+                await writeDeniedAuditEntry({ userId, projectId, action: 'project_deleted' });
             } else if (req.method === 'PATCH') {
                 const hasNameOnly =
                     typeof req.body?.name === 'string' && req.body?.description === undefined;

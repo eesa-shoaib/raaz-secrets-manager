@@ -36,6 +36,7 @@ export function ProjectsPage() {
     const navigate = useNavigate();
     const listState = readProjectsListState(location.state) ?? initialProjectsListState;
     const { search: debouncedSearch, cursor, cursorHistory } = listState;
+    const status = listState.status ?? 'active';
     const [searchInput, setSearchInput] = useState(listState.search);
     const github = useGitHubConnection('projects');
     const client = useQueryClient();
@@ -109,15 +110,16 @@ export function ProjectsPage() {
         const trimmed = searchInput.trim();
         if (trimmed === debouncedSearch) return;
         const timer = setTimeout(() => {
-            updateListState({ search: trimmed, cursor: null, cursorHistory: [] });
+            updateListState({ status, search: trimmed, cursor: null, cursorHistory: [] });
         }, 250);
         return () => clearTimeout(timer);
-    }, [searchInput, debouncedSearch, updateListState]);
+    }, [searchInput, debouncedSearch, status, updateListState]);
 
     const { data, isLoading, isFetching, isError, error, refetch } = useProjectsPage({
         cursor,
         limit: PROJECTS_PAGE_SIZE,
         search: debouncedSearch || undefined,
+        status,
     });
     const projects = data?.data ?? [];
     const { mutateAsync: createProject, isPending: isCreating } = useCreateProject();
@@ -245,6 +247,31 @@ export function ProjectsPage() {
                 }
             />
 
+            <div
+                role="tablist"
+                aria-label="Project status"
+                className="tabs tabs-boxed bg-base-200 w-fit"
+            >
+                {(['active', 'archived'] as const).map((value) => (
+                    <button
+                        key={value}
+                        type="button"
+                        role="tab"
+                        aria-selected={status === value}
+                        className={`tab ${status === value ? 'tab-active text-primary button-textured' : ''}`}
+                        onClick={() =>
+                            updateListState({
+                                ...listState,
+                                status: value,
+                                cursor: null,
+                                cursorHistory: [],
+                            })
+                        }
+                    >
+                        {value === 'active' ? 'Active' : 'Archived'}
+                    </button>
+                ))}
+            </div>
             {isLoading ? (
                 <Skeleton shape="card" count={3} />
             ) : isError ? (
@@ -296,7 +323,7 @@ export function ProjectsPage() {
                 />
             ) : (
                 <EmptyState
-                    title="No projects yet"
+                    title={status === 'archived' ? 'No archived projects' : 'No projects yet'}
                     action={
                         <button
                             type="button"

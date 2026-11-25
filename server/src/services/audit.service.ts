@@ -1,11 +1,15 @@
 import {
+    adminProjectAuditEntrySchema,
     auditLogEntrySchema,
+    projectManagementAuditActionEnum,
     type AdminAuditLogQuery,
+    type AdminProjectAuditLogQuery,
     type AuditLogExportQuery,
     type AuditLogQuery,
 } from '@raaz/shared-schemas';
 import { Types, type ClientSession } from 'mongoose';
 import { AuditLogEntryModel, type AuditLogEntryDoc } from '../models/AuditLogEntry.js';
+import { ProjectModel } from '../models/Project.js';
 import { UserModel } from '../models/User.js';
 import { buildCursorCondition, decodeCursor, encodeCursor } from '../utils/pagination.js';
 
@@ -166,10 +170,66 @@ export async function listPlatformAuditEntriesCursor(filters: AdminAuditLogQuery
     };
 }
 
+export async function listAdminProjectAuditEntriesCursor(filters: AdminProjectAuditLogQuery) {
+    const limit = filters.limit ?? 25;
+    const scope = `admin:project-audit:${filters.action ?? ''}:${filters.result ?? ''}`;
+    const decoded = filters.cursor ? decodeCursor(filters.cursor, scope) : null;
+
+    const baseCriteria: Record<string, unknown> = {
+        projectId: { $ne: null },
+        action: filters.action ?? { $in: [...projectManagementAuditActionEnum.options] },
+        ...(filters.result !== undefined ? { result: filters.result } : {}),
+    };
+    const filter = decoded ? { $and: [baseCriteria, buildCursorCondition(decoded)] } : baseCriteria;
+
+    const [rows, total] = await Promise.all([
+        AuditLogEntryModel.find(filter)
+            .sort({ createdAt: -1, _id: -1 })
+            .limit(limit + 1)
+            .lean(),
+        AuditLogEntryModel.countDocuments(baseCriteria),
+    ]);
+
+    const hasMore = rows.length > limit;
+    const items = hasMore ? rows.slice(0, limit) : rows;
+    const last = items[items.length - 1];
+    const nextCursor =
+        hasMore && last ? encodeCursor(scope, last.createdAt, last._id.toString()) : null;
+
+    const [hydrated, projects] = await Promise.all([
+        hydrateAuditEntries(items),
+        ProjectModel.find({
+            _id: {
+                $in: items
+                    .map((entry) => entry.projectId)
+                    .filter((id): id is Types.ObjectId => id != null),
+            },
+        })
+            .select('name')
+            .lean(),
+    ]);
+    const names = new Map(projects.map((project) => [project._id.toString(), project.name]));
+
+    return {
+        data: items.map((row, index) =>
+            adminProjectAuditEntrySchema.parse({
+                ...hydrated[index],
+                projectId: row.projectId!.toString(),
+                projectName: row.projectName ?? names.get(row.projectId!.toString()) ?? null,
+            }),
+        ),
+        nextCursor,
+        hasMore,
+        limit,
+        total,
+    };
+}
+
 interface WriteAuditEntryParams {
     session?: ClientSession;
     userId: string;
     projectId?: string | null;
+    projectName?: string | null;
     secretId?: string | null;
     secretKey?: string | null;
     targetUserId?: string | null;
@@ -190,6 +250,7 @@ export async function writeAuditEntry(params: WriteAuditEntryParams): Promise<vo
         'member_role_changed',
         'member_removed',
         'project_created',
+        'project_deleted',
         'project_renamed',
         'project_updated',
         'project_environments_changed',
@@ -218,6 +279,7 @@ export async function writeAuditEntry(params: WriteAuditEntryParams): Promise<vo
     const entry = new AuditLogEntryModel({
         userId: new Types.ObjectId(params.userId),
         projectId: params.projectId ? new Types.ObjectId(params.projectId) : undefined,
+        projectName: params.projectName,
         secretId: params.secretId ? new Types.ObjectId(params.secretId) : undefined,
         secretKey: params.secretKey,
         targetUserId: params.targetUserId ? new Types.ObjectId(params.targetUserId) : undefined,

@@ -23,10 +23,11 @@ export function useProjectsPage(params: ProjectsPageParams = {}) {
     const limit = params.limit ?? PROJECTS_PAGE_SIZE;
     const cursor = params.cursor ?? null;
     const search = params.search?.trim() || undefined;
+    const status = params.status;
 
     return useQuery({
-        queryKey: queryKeys.projectsList({ cursor, limit, search }),
-        queryFn: () => getProjectsPage({ cursor, limit, search }),
+        queryKey: queryKeys.projectsList({ cursor, limit, search, status }),
+        queryFn: () => getProjectsPage({ cursor, limit, search, status }),
         placeholderData: keepPreviousData,
     });
 }

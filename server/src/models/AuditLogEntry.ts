@@ -6,6 +6,7 @@ export type { AuditAction };
 export interface AuditLogEntryDoc extends Document {
     userId: mongoose.Types.ObjectId;
     projectId: mongoose.Types.ObjectId | null;
+    projectName: string | null;
     secretId: mongoose.Types.ObjectId | null;
     secretKey: string | null;
     targetUserId: mongoose.Types.ObjectId | null;
@@ -21,6 +22,8 @@ const auditSchema = new mongoose.Schema<AuditLogEntryDoc>(
     {
         userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
         projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', default: null },
+        // Snapshot so lifecycle history stays readable after the project is deleted.
+        projectName: { type: String, default: null },
         secretId: { type: mongoose.Schema.Types.ObjectId, ref: 'Secret', default: null },
         secretKey: { type: String, default: null },
         targetUserId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },

@@ -58,7 +58,7 @@ const editSchema = z.object({
     params: listSchema.shape.params.extend({
         secretId: z.string().regex(/^[a-f\d]{24}$/i, 'Invalid ObjectId'),
     }),
-    body: editSecretSchema.strict(),
+    body: editSecretSchema,
 });
 
 const deleteSchema = z.object({

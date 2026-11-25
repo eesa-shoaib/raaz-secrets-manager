@@ -30,6 +30,7 @@ const PROJECT_ACTIONS: { value: AuditAction; label: string }[] = [
     { value: 'project_renamed', label: 'Rename project' },
     { value: 'project_updated', label: 'Update project details' },
     { value: 'project_environments_changed', label: 'Change environments' },
+    { value: 'project_deleted', label: 'Delete project' },
     { value: 'project_archived', label: 'Archive project' },
     { value: 'project_restored', label: 'Restore project' },
 ];
@@ -46,6 +47,7 @@ const ACTION_LABELS: Record<string, string> = {
     project_renamed: 'Rename project',
     project_updated: 'Update project details',
     project_environments_changed: 'Change environments',
+    project_deleted: 'Delete project',
     project_archived: 'Archive project',
     project_restored: 'Restore project',
     user_activated: 'Activate user',

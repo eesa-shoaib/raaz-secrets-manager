@@ -71,8 +71,8 @@ export async function createSecretController(req: Request, res: Response): Promi
 }
 
 export async function editSecretController(req: Request, res: Response): Promise<void> {
-    const { value } = req.body;
-    await editSecret(req.user!.id, req.params.projectId, req.params.secretId, value);
+    const { value, key } = req.body;
+    await editSecret(req.user!.id, req.params.projectId, req.params.secretId, value, key);
 
     const secret = await getSecretMetadata(req.params.projectId, req.params.secretId);
     if (!secret) {

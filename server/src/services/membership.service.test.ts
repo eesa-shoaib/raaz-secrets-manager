@@ -1,3 +1,4 @@
+vi.mock('./project-write.service.js', () => ({ lockActiveProject: vi.fn() }));
 import mongoose from 'mongoose';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AuditLogEntryModel } from '../models/AuditLogEntry.js';

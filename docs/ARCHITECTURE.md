@@ -526,3 +526,11 @@ login continues to discard its temporary tokens. Optional GitHub App configurati
 is checked when used, not added to boot validation. Disconnect removes local
 credentials and attempts transactionally with audit; users can revoke the app
 through Manage GitHub access. GitHub outage does not prevent local disconnect.
+
+Project management is now owner-approved: `/admin/projects` exposes only the safe
+metadata summary contract in API.md; secret access still requires membership.
+Project deletion, cascade removal and project_deleted audit are one transaction;
+audit history is retained. Entity creation/import transactions acquire a write
+on the active Project (`__v` increment, timestamps disabled) so deletion cannot
+race a late secret/member insert into leaving orphan records. Archive/restore
+also writes the same project and audits atomically. No GitHub delete API is used.

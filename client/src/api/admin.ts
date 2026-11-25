@@ -9,6 +9,7 @@ import type {
 import apiClient from './axios';
 
 export interface AdminUsersParams {
+    isActive?: boolean;
     cursor?: string | null;
     limit?: number;
 }
@@ -27,6 +28,7 @@ export async function getAdminUsers(
         mode: 'cursor',
         limit: params.limit ?? 25,
     };
+    if (params.isActive !== undefined) query.isActive = params.isActive;
     if (params.cursor) {
         query.cursor = params.cursor;
     }

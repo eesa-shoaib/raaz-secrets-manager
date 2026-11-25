@@ -69,6 +69,16 @@ export function Navbar() {
                                     Users
                                 </NavLink>
                             )}
+                            {user.isPlatformAdmin && (
+                                <NavLink
+                                    to="/admin/projects"
+                                    className={({ isActive }) =>
+                                        `px-3 py-1.5 rounded-lg text-base font-heading font-medium transition-colors ${isActive ? 'bg-base-300 text-base-content font-bold' : 'text-base-content/70 hover:text-base-content hover:bg-base-300/60'}`
+                                    }
+                                >
+                                    Manage projects
+                                </NavLink>
+                            )}
                         </nav>
                     )}
                 </div>
@@ -154,6 +164,27 @@ export function Navbar() {
                                                     <path d="m9 12 2 2 4-4" />
                                                 </svg>
                                                 Manage Users
+                                            </Link>
+                                        )}
+                                        {user.isPlatformAdmin && (
+                                            <Link
+                                                to="/admin/projects"
+                                                onClick={() => setDropdownOpen(false)}
+                                                className="w-full text-left px-3 py-2 text-sm text-base-content hover:bg-base-300 hover:text-primary rounded-xl transition-colors font-medium flex items-center gap-2 group"
+                                            >
+                                                <svg
+                                                    aria-hidden="true"
+                                                    className="h-4 w-4 text-primary/80"
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="2"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                >
+                                                    <path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
+                                                </svg>
+                                                Manage projects
                                             </Link>
                                         )}
                                         <button

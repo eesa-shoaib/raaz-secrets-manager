@@ -7,6 +7,7 @@ import { ToastProvider } from '../components/Toaster';
 import { AuthProvider } from '../context/AuthContext';
 import { ThemeProvider } from '../context/ThemeContext';
 import { queryClient } from '../lib/queryClient';
+import AdminProjectsPage from './AdminProjectsPage';
 import AdminUsersPage from './AdminUsersPage';
 import LoginPage from './LoginPage';
 import MembersPage from './MembersPage';
@@ -41,6 +42,10 @@ export function App() {
                                         <Route path="/projects" element={<ProjectsPage />} />
                                         <Route path="/settings" element={<SettingsPage />} />
                                         <Route element={<RequirePlatformAdmin />}>
+                                            <Route
+                                                path="/admin/projects"
+                                                element={<AdminProjectsPage />}
+                                            />
                                             <Route
                                                 path="/admin/users"
                                                 element={<AdminUsersPage />}
