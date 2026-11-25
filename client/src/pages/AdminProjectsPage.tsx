@@ -188,17 +188,16 @@ export default function AdminProjectsPage() {
                         ))}
                     </div>
                     {page.isPending ? (
-                        <p role="status">Loading projects…</p>
+                        <Skeleton shape="table" count={5} />
                     ) : page.isError ? (
-                        <div role="alert" className="space-y-3">
-                            <p>Unable to load projects.</p>
-                            <button
-                                className="btn btn-neutral btn-sm"
-                                onClick={() => page.refetch()}
-                            >
-                                Retry
-                            </button>
-                        </div>
+                        <ErrorState
+                            message={
+                                isApiError(page.error)
+                                    ? page.error.message
+                                    : 'Failed to load projects'
+                            }
+                            onRetry={() => page.refetch()}
+                        />
                     ) : (
                         <>
                             <div className="overflow-x-auto rounded-2xl border border-base-300 bg-base-200">
