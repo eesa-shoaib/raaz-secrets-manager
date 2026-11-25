@@ -16,10 +16,7 @@ export function useAdminProjects(filters: AdminProjectFilters) {
         placeholderData: keepPreviousData,
     });
 }
-export function useAdminProjectAuditLog(
-    params: AdminProjectAuditParams = {},
-    enabled = true,
-) {
+export function useAdminProjectAuditLog(params: AdminProjectAuditParams = {}, enabled = true) {
     const limit = params.limit ?? 25;
     const cursor = params.cursor ?? null;
     return useQuery({

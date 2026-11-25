@@ -215,8 +215,7 @@ export async function listAdminProjectAuditEntriesCursor(filters: AdminProjectAu
             adminProjectAuditEntrySchema.parse({
                 ...hydrated[index],
                 projectId: row.projectId!.toString(),
-                projectName:
-                    row.projectName ?? names.get(row.projectId!.toString()) ?? null,
+                projectName: row.projectName ?? names.get(row.projectId!.toString()) ?? null,
             }),
         ),
         nextCursor,

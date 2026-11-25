@@ -24,9 +24,7 @@ export async function getAdminProjects(filters: AdminProjectFilters) {
     return schema.parse((await apiClient.get('/admin/projects', { params: filters })).data);
 }
 export async function getAdminProjectAuditLog(params: AdminProjectAuditParams = {}) {
-    return auditSchema.parse(
-        (await apiClient.get('/admin/projects/audit-log', { params })).data,
-    );
+    return auditSchema.parse((await apiClient.get('/admin/projects/audit-log', { params })).data);
 }
 export async function setAdminProjectStatus(projectId: string, status: 'active' | 'archived') {
     await apiClient.patch(`/admin/projects/${projectId}/status`, { status });

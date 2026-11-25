@@ -37,6 +37,8 @@ describe('formatDevLog', () => {
             msg: 'Unhandled request error',
         });
 
-        expect(line).toBe('10:11:12 ERROR Unhandled request error\n  Error: boom\n      at handler');
+        expect(line).toBe(
+            '10:11:12 ERROR Unhandled request error\n  Error: boom\n      at handler',
+        );
     });
 });

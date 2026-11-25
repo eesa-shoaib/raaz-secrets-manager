@@ -378,9 +378,7 @@ export default function AdminProjectsPage() {
                                     <tbody className="divide-y divide-base-300/60">
                                         {auditEntries.map((entry) => {
                                             const d = new Date(entry.createdAt);
-                                            const iso = isNaN(d.getTime())
-                                                ? ''
-                                                : d.toISOString();
+                                            const iso = isNaN(d.getTime()) ? '' : d.toISOString();
                                             const transition = getProjectActionTransition(
                                                 entry.action,
                                             );
@@ -393,14 +391,11 @@ export default function AdminProjectsPage() {
                                                         <time dateTime={iso} title={iso}>
                                                             {isNaN(d.getTime())
                                                                 ? '—'
-                                                                : d.toLocaleDateString(
-                                                                      undefined,
-                                                                      {
-                                                                          year: 'numeric',
-                                                                          month: 'short',
-                                                                          day: 'numeric',
-                                                                      },
-                                                                  )}
+                                                                : d.toLocaleDateString(undefined, {
+                                                                      year: 'numeric',
+                                                                      month: 'short',
+                                                                      day: 'numeric',
+                                                                  })}
                                                         </time>
                                                     </td>
                                                     <td className="py-4">
