@@ -1,16 +1,44 @@
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import {
+    getAdminProjectAuditLog,
     getAdminProjects,
     setAdminProjectStatus,
     deleteProject,
+    type AdminProjectAuditParams,
     type AdminProjectFilters,
 } from '../api/adminProjects';
+import { isApiError } from '../lib/errorHandling';
 import { queryKeys } from '../lib/queryClient';
 export function useAdminProjects(filters: AdminProjectFilters) {
     return useQuery({
         queryKey: ['adminProjects', filters],
         queryFn: () => getAdminProjects(filters),
         placeholderData: keepPreviousData,
+    });
+}
+export function useAdminProjectAuditLog(
+    params: AdminProjectAuditParams = {},
+    enabled = true,
+) {
+    const limit = params.limit ?? 25;
+    const cursor = params.cursor ?? null;
+    return useQuery({
+        queryKey: ['adminProjects', 'audit', { ...params, cursor, limit }],
+        queryFn: () =>
+            getAdminProjectAuditLog({
+                action: params.action,
+                result: params.result,
+                cursor: cursor ?? undefined,
+                limit,
+            }),
+        enabled,
+        placeholderData: keepPreviousData,
+        retry: (failureCount, error: unknown) => {
+            if (isApiError(error) && (error.status === 403 || error.status === 404)) {
+                return false;
+            }
+            return failureCount < 1;
+        },
     });
 }
 export function useSetAdminProjectStatus() {
